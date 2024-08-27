@@ -1,0 +1,28 @@
+name: flutter_core_example
+description: "Demonstrates how to use the flutter_core plugin."
+publish_to: "none"
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  flutter_core:
+    path: ../
+
+  cupertino_icons: ^1.0.6
+  flutter_localization: ^0.2.0
+
+dev_dependencies:
+  integration_test:
+    sdk: flutter
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^3.0.0
+  very_good_analysis: ^6.0.0
+
+flutter:
+  uses-material-design: true
