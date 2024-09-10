@@ -18,7 +18,6 @@ class CoreReorderableListView extends StatefulWidget {
     required List<Widget> children,
     required this.onReorder,
     super.key,
-  
     this.onReorderStart,
     this.onReorderEnd,
     this.itemExtent,
@@ -54,7 +53,6 @@ class CoreReorderableListView extends StatefulWidget {
     required this.itemCount,
     required this.onReorder,
     super.key,
-
     this.onReorderStart,
     this.onReorderEnd,
     this.itemExtent,
@@ -122,16 +120,22 @@ class CoreReorderableListView extends StatefulWidget {
 class _CoreReorderableListViewState extends State<CoreReorderableListView> {
   late final ScrollController _scrollController;
   bool _showIndicator = false;
+  ScrollController? _primaryScrollController;
+  late ScrollPosition _position;
 
   @override
   void initState() {
     super.initState();
     _scrollController = widget.scrollController ?? ScrollController();
     _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _primaryScrollController = PrimaryScrollController.maybeOf(context)?..attach(_position = _scrollController.position);
+    });
   }
 
   @override
   void dispose() {
+    _primaryScrollController?.detach(_position);
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
@@ -221,7 +225,7 @@ class _CoreReorderableListViewState extends State<CoreReorderableListView> {
                     return Material(
                       color: Colors.transparent,
                       key: itemGlobalKey,
-                      child:  ReorderableDelayedDragStartListener(index: index, child: item) ,
+                      child: ReorderableDelayedDragStartListener(index: index, child: item),
                     );
                   },
                   itemCount: _showIndicator ? widget.itemCount + 1 : widget.itemCount,
@@ -281,7 +285,7 @@ class _CoreReorderableListViewState extends State<CoreReorderableListView> {
                     return Material(
                       color: Colors.transparent,
                       key: itemGlobalKey,
-                      child:  ReorderableDelayedDragStartListener(index: index, child: item) ,
+                      child: ReorderableDelayedDragStartListener(index: index, child: item),
                     );
                   },
                   itemCount: _showIndicator ? widget.itemCount + 1 : widget.itemCount,
@@ -311,8 +315,9 @@ final class _ListViewAdaptiveIndicator extends StatelessWidget {
   }
 }
 
+/// iOS style custom scroll view with refresh indicator.
 @immutable
-final class _CustomScrollView extends StatelessWidget {
+final class _CustomScrollView extends StatefulWidget {
   const _CustomScrollView({
     required this.sliver,
   });
@@ -320,26 +325,63 @@ final class _CustomScrollView extends StatelessWidget {
   final Widget sliver;
 
   @override
+  State<_CustomScrollView> createState() => _CustomScrollViewState();
+}
+
+class _CustomScrollViewState extends State<_CustomScrollView> {
+  /// Whether the scroll view is at the top.
+  ///
+  /// This is used to determine whether to show the refresh indicator.
+  var _isAtTop = true;
+  @override
   Widget build(BuildContext context) {
     final state = context.findAncestorStateOfType<_CoreReorderableListViewState>();
     if (state.isNull) return emptyBox;
     final widget = state!.widget;
-    return CustomScrollView(
-      physics: widget.physics,
-      cacheExtent: widget.cacheExtent,
-      clipBehavior: widget.clipBehavior,
-      controller: state._scrollController,
-      dragStartBehavior: widget.dragStartBehavior,
-      keyboardDismissBehavior: widget.keyboardDismissBehavior,
-      primary: widget.primary,
-      restorationId: widget.restorationId,
-      reverse: widget.reverse,
-      scrollDirection: widget.scrollDirection,
-      shrinkWrap: widget.shrinkWrap,
-      slivers: [
-        CupertinoSliverRefreshControl(onRefresh: widget.onRefresh),
-        SliverPadding(padding: widget.padding ?? EdgeInsets.zero, sliver: sliver),
-      ],
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        /// Check if the scroll view is at the top.
+        ///
+        /// True when scroll offset <= 0. False otherwise.
+        if (notification is ScrollStartNotification) {
+          if (state._scrollController.offset <= 0 && !_isAtTop) {
+            scheduleMicrotask(() {
+              if (mounted) {
+                setState(() {
+                  _isAtTop = true;
+                });
+              }
+            });
+          } else if (state._scrollController.offset > 0 && _isAtTop) {
+            scheduleMicrotask(() {
+              if (mounted) {
+                setState(() {
+                  _isAtTop = false;
+                });
+              }
+            });
+          }
+        }
+        return false;
+      },
+      child: CustomScrollView(
+        physics: widget.physics,
+        cacheExtent: widget.cacheExtent,
+        clipBehavior: widget.clipBehavior,
+        controller: state._scrollController,
+        dragStartBehavior: widget.dragStartBehavior,
+        keyboardDismissBehavior: widget.keyboardDismissBehavior,
+        primary: widget.primary,
+        restorationId: widget.restorationId,
+        reverse: widget.reverse,
+        scrollDirection: widget.scrollDirection,
+        shrinkWrap: widget.shrinkWrap,
+        slivers: [
+          /// Show the refresh indicator only when the scroll view is at the top.
+          if (_isAtTop) CupertinoSliverRefreshControl(onRefresh: widget.onRefresh),
+          SliverPadding(padding: widget.padding ?? EdgeInsets.zero, sliver: this.widget.sliver),
+        ],
+      ),
     );
   }
 }

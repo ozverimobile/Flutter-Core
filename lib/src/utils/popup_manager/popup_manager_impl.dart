@@ -941,57 +941,60 @@ class PopupManager implements IPopupManager {
       TargetPlatform.iOS || TargetPlatform.macOS => showModalBottomSheet<int>(
           id: id,
           context: currentContext,
-          builder: (context) => Container(
-            color: backgroundColor,
-            height: 300,
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: title.isNotNull
-                              ? DefaultTextStyle(
-                                  style: context.textTheme.headlineSmall!,
-                                  child: title!,
-                                )
-                              : CupertinoButton(
-                                  child: Text(cancelButtonLabel ?? MaterialLocalizations.of(context).cancelButtonLabel),
-                                  onPressed: () {
-                                    hidePopup<int>(id: id);
-                                  },
-                                ),
+          builder: (context) => CupertinoTheme(
+            data: CupertinoThemeData(brightness: context.theme.brightness),
+            child: Container(
+              color: backgroundColor,
+              height: 300,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: title.isNotNull
+                                ? DefaultTextStyle(
+                                    style: context.textTheme.headlineSmall!,
+                                    child: title!,
+                                  )
+                                : CupertinoButton(
+                                    child: Text(cancelButtonLabel ?? MaterialLocalizations.of(context).cancelButtonLabel),
+                                    onPressed: () {
+                                      hidePopup<int>(id: id);
+                                    },
+                                  ),
+                          ),
                         ),
-                      ),
-                      CupertinoButton(
-                        child: Text(okButtonLabel ?? MaterialLocalizations.of(context).okButtonLabel),
-                        onPressed: () {
-                          hidePopup<int>(id: id, result: selectedItemIndex ?? 0);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: SafeArea(
-                    child: CupertinoPicker(
-                      itemExtent: 40,
-                      onSelectedItemChanged: (value) => selectedItemIndex = value,
-                      children: children
-                          .map(
-                            (element) => Center(
-                              child: element,
-                            ),
-                          )
-                          .toList(),
+                        CupertinoButton(
+                          child: Text(okButtonLabel ?? MaterialLocalizations.of(context).okButtonLabel),
+                          onPressed: () {
+                            hidePopup<int>(id: id, result: selectedItemIndex ?? 0);
+                          },
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: SafeArea(
+                      child: CupertinoPicker(
+                        itemExtent: 40,
+                        onSelectedItemChanged: (value) => selectedItemIndex = value,
+                        children: children
+                            .map(
+                              (element) => Center(
+                                child: element,
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -1186,7 +1189,7 @@ class PopupManager implements IPopupManager {
                 onPressed: () => hidePopup<String>(id: id),
                 child: Text(cancelButtonLabel ?? MaterialLocalizations.of(context).cancelButtonLabel),
               ),
-              TextButton(
+              FilledButton(
                 onPressed: () => hidePopup<String>(id: id, result: textController.text),
                 child: Text(okButtonLabel ?? MaterialLocalizations.of(context).okButtonLabel),
               ),
@@ -1220,40 +1223,43 @@ class PopupManager implements IPopupManager {
       TargetPlatform.iOS || TargetPlatform.macOS => showCupertinoDialog<void>(
           context: context,
           id: id,
-          builder: (context) => CupertinoAlertDialog(
-            title: Text(title ?? updateAvailableLabel),
-            content: Text(
-              message ?? (isForceUpdate ? forceUpdateMessage : optionalUpdateMessage),
+          builder: (context) => CupertinoTheme(
+            data: CupertinoThemeData(brightness: context.theme.brightness),
+            child: CupertinoAlertDialog(
+              title: Text(title ?? updateAvailableLabel),
+              content: Text(
+                message ?? (isForceUpdate ? forceUpdateMessage : optionalUpdateMessage),
+              ),
+              actions: isForceUpdate
+                  ? [
+                      CupertinoDialogAction(
+                        onPressed: () => Core.updateApp(
+                          androidPackageName: androidPackageName,
+                          iOSAppId: iOSAppId,
+                          huaweiAppId: huaweiAppId,
+                          iosLaunchIntune: iosLaunchIntune,
+                        ),
+                        child: const Text(updateLabel),
+                      ),
+                    ]
+                  : [
+                      CupertinoDialogAction(
+                        onPressed: () => hidePopup<void>(id: id),
+                        isDestructiveAction: true,
+                        child: const Text(dismissLabel),
+                      ),
+                      CupertinoDialogAction(
+                        onPressed: () => Core.updateApp(
+                          androidPackageName: androidPackageName,
+                          iOSAppId: iOSAppId,
+                          huaweiAppId: huaweiAppId,
+                          iosLaunchIntune: iosLaunchIntune,
+                        ),
+                        isDefaultAction: true,
+                        child: const Text(updateLabel),
+                      ),
+                    ],
             ),
-            actions: isForceUpdate
-                ? [
-                    CupertinoDialogAction(
-                      onPressed: () => Core.updateApp(
-                        androidPackageName: androidPackageName,
-                        iOSAppId: iOSAppId,
-                        huaweiAppId: huaweiAppId,
-                        iosLaunchIntune: iosLaunchIntune,
-                      ),
-                      child: const Text(updateLabel),
-                    ),
-                  ]
-                : [
-                    CupertinoDialogAction(
-                      onPressed: () => hidePopup<void>(id: id),
-                      isDestructiveAction: true,
-                      child: const Text(dismissLabel),
-                    ),
-                    CupertinoDialogAction(
-                      onPressed: () => Core.updateApp(
-                        androidPackageName: androidPackageName,
-                        iOSAppId: iOSAppId,
-                        huaweiAppId: huaweiAppId,
-                        iosLaunchIntune: iosLaunchIntune,
-                      ),
-                      isDefaultAction: true,
-                      child: const Text(updateLabel),
-                    ),
-                  ],
           ),
         ),
       _ => showDialog<void>(
@@ -1313,34 +1319,37 @@ class PopupManager implements IPopupManager {
       TargetPlatform.iOS || TargetPlatform.macOS => showCupertinoModalPopup(
           context: context,
           id: id,
-          builder: (context) => CupertinoActionSheet(
-            title: const Text('Resim Seç'),
-            message: const Text('Lütfen bir resim kaynağı seçin'),
-            cancelButton: CupertinoActionSheetAction(
-              onPressed: () => hidePopup<ImageSourceType>(id: id),
-              isDestructiveAction: true,
-              child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+          builder: (context) => CupertinoTheme(
+            data: CupertinoThemeData(brightness: context.theme.brightness),
+            child: CupertinoActionSheet(
+              title: const Text('Resim Seç'),
+              message: const Text('Lütfen bir resim kaynağı seçin'),
+              cancelButton: CupertinoActionSheetAction(
+                onPressed: () => hidePopup<ImageSourceType>(id: id),
+                isDestructiveAction: true,
+                child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+              ),
+              actions: [
+                CupertinoActionSheetAction(
+                  onPressed: () {
+                    hidePopup<ImageSourceType>(
+                      id: id,
+                      result: ImageSourceType.camera,
+                    );
+                  },
+                  child: const Text('Kameradan Çek'),
+                ),
+                CupertinoActionSheetAction(
+                  onPressed: () {
+                    hidePopup<ImageSourceType>(
+                      id: id,
+                      result: ImageSourceType.gallery,
+                    );
+                  },
+                  child: const Text('Galeriden Seç'),
+                ),
+              ],
             ),
-            actions: [
-              CupertinoActionSheetAction(
-                onPressed: () {
-                  hidePopup<ImageSourceType>(
-                    id: id,
-                    result: ImageSourceType.camera,
-                  );
-                },
-                child: const Text('Kameradan Çek'),
-              ),
-              CupertinoActionSheetAction(
-                onPressed: () {
-                  hidePopup<ImageSourceType>(
-                    id: id,
-                    result: ImageSourceType.gallery,
-                  );
-                },
-                child: const Text('Galeriden Seç'),
-              ),
-            ],
           ),
         ),
       _ => showDialog(

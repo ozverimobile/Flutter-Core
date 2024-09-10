@@ -146,16 +146,23 @@ class CoreListView extends StatefulWidget {
 class _CoreListViewState extends State<CoreListView> {
   late final ScrollController _scrollController;
   bool _showIndicator = false;
+  ScrollController? _primaryScrollController;
+  late ScrollPosition _position;
 
   @override
   void initState() {
     super.initState();
     _scrollController = widget.controller ?? ScrollController();
+
     _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _primaryScrollController = PrimaryScrollController.maybeOf(context)?..attach(_position = _scrollController.position);
+    });
   }
 
   @override
   void dispose() {
+    _primaryScrollController?.detach(_position);
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
