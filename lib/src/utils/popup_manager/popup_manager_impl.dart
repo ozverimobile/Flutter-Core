@@ -319,7 +319,7 @@ class PopupManager implements IPopupManager {
       builder: builder,
       context: context ?? _navigatorContext,
       themes: InheritedTheme.capture(from: context ?? _navigatorContext, to: _navigatorContext),
-      barrierColor: barrierColor ?? Theme.of(context ?? _navigatorContext).dialogTheme.barrierColor ?? Colors.black54,
+      //barrierColor: barrierColor ?? Theme.of(context ?? _navigatorContext).dialogTheme.barrierColor ?? Colors.black54,
       barrierDismissible: barrierDismissible,
       barrierLabel: barrierLabel ?? localizations.dialogLabel,
       useSafeArea: useSafeArea,
