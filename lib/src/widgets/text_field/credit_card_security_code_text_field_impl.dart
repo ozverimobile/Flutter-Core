@@ -18,6 +18,7 @@ class CoreCreditCardSecurityCodeTextField extends StatelessWidget {
     this.buildCounter,
     this.enabled,
     this.focusNode,
+    this.autofillHints,
     super.key,
   });
 
@@ -35,6 +36,7 @@ class CoreCreditCardSecurityCodeTextField extends StatelessWidget {
   final InputCounterWidgetBuilder? buildCounter;
   final bool? enabled;
   final FocusNode? focusNode;
+  final Iterable<String>? autofillHints;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +52,7 @@ class CoreCreditCardSecurityCodeTextField extends StatelessWidget {
       onFieldSubmitted: onFieldSubmitted,
       textInputAction: textInputAction,
       keyboardType: TextInputType.number,
+      autofillHints: autofillHints,
       inputFormatters: [
         LengthLimitingTextInputFormatter(4),
       ],

@@ -23,6 +23,7 @@ class CoreCurrencyTextField extends StatefulWidget {
     this.buildCounter,
     this.textFixed = 2,
     this.enabled,
+    this.autofillHints,
     super.key,
   });
 
@@ -44,6 +45,7 @@ class CoreCurrencyTextField extends StatefulWidget {
   final InputCounterWidgetBuilder? buildCounter;
   final int textFixed;
   final bool? enabled;
+  final Iterable<String>? autofillHints;
 
   @override
   State<CoreCurrencyTextField> createState() => _CoreCurrencyTextFieldState();
@@ -88,6 +90,7 @@ class _CoreCurrencyTextFieldState extends State<CoreCurrencyTextField> {
       onFieldSubmitted: widget.onFieldSubmitted,
       maxLength: widget.maxLength,
       buildCounter: widget.buildCounter,
+      autofillHints: widget.autofillHints,
       decoration: InputDecoration(
         prefixIcon: widget.prefixIcon,
         hintText: widget.hintText,

@@ -58,13 +58,18 @@ class PopupManagerWidget extends StatefulWidget {
 
 class _PopupManagerWidgetState extends State<PopupManagerWidget> {
   final popupManager = PopupManager(navigatorKey: navKey);
+  TestData? testSingle;
+  List<TestData> testMulti = [];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        leading: const BackButton(),
+        title: const Text('Test Appbar Size'),
+      ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: ListView(
           children: [
             CoreTextButton(
               child: const Text('Show dialog'),
@@ -156,7 +161,6 @@ class _PopupManagerWidgetState extends State<PopupManagerWidget> {
                   context: context,
                   content: const Text('Content'),
                   title: const Text('Title'),
-                  reversedActions: true,
                   onOkButtonPressed: popupManager.hidePopup<void>,
                 );
               },
@@ -181,7 +185,9 @@ class _PopupManagerWidgetState extends State<PopupManagerWidget> {
               child: const Text('Show adaptive picker'),
               onPressed: () async {
                 final index = await popupManager.showAdaptivePicker(
+                  initialItemIndex: 3,
                   context: context,
+                  androidHeight: double.infinity,
                   children: [
                     const Text('Item 1'),
                     const Text('Item 2'),
@@ -217,9 +223,119 @@ class _PopupManagerWidgetState extends State<PopupManagerWidget> {
               },
             ),
             CoreTextButton(
+              child: const Text('Show Adaptive Action Sheet'),
+              onPressed: () async {
+                if (kDebugMode) {
+                  print(
+                    await popupManager.showAdaptiveActionSheet(
+                      title: 'Test Title Uzun Başlık',
+                      content: 'Test Content',
+                      cancelButtonLabelOnIos: 'Test Cancel Label',
+                      actions: [
+                        AdaptiveAction(
+                          iconOnAndroid: Icons.car_crash,
+                          label: 'Action 1',
+                          onPressed: () {
+                            CoreLogger.log('Action 1');
+                          },
+                          isDefaultAction: true,
+                        ),
+                        AdaptiveAction(
+                          iconOnAndroid: Icons.abc,
+                          label: 'Action 2',
+                          onPressed: () {
+                            CoreLogger.log('Action 2');
+                          },
+                        ),
+                        AdaptiveAction(
+                          iconOnAndroid: Icons.local_activity,
+                          label: 'Action 3',
+                          onPressed: () {
+                            CoreLogger.log('Action 3');
+                          },
+                          isDestructiveAction: true,
+                        ),
+                      ],
+                      context: context,
+                    ),
+                  );
+                }
+              },
+            ),
+            CoreTextButton(
+              child: const Text('Show single selectable search view'),
+              onPressed: () async {
+                final items = List.generate(17, TestData.new);
+                if (kDebugMode) {
+                  testSingle = await popupManager.singleSelectableSearchSheet(
+                    title: 'Show Single Selectable Search View',
+                    showDragHandle: true,
+                    borderRadius: const BorderRadius.only(topLeft: Radius.circular(50), topRight: Radius.circular(50)),
+                    items: items,
+                    selected: testSingle,
+                    builder: (context, child) {
+                      return Theme(
+                        data: ThemeData(
+                          appBarTheme: AppBarTheme(
+                            backgroundColor: Colors.grey[50],
+                            elevation: 1,
+                            scrolledUnderElevation: 0,
+                          ),
+                          scaffoldBackgroundColor: Colors.white,
+                          radioTheme: RadioThemeData(
+                            fillColor: WidgetStateProperty.all(Colors.red),
+                          ),
+                        ),
+                        child: child,
+                      );
+                    },
+                  );
+                  print(testSingle?.title);
+                }
+              },
+            ),
+            CoreTextButton(
+              child: const Text('Show multi selectable search view'),
+              onPressed: () async {
+                final items = List.generate(17, TestData.new);
+                if (kDebugMode) {
+                  final response = await popupManager.multiSelectableSearchSheet(
+                    showDragHandle: true,
+                    title: 'Show Multi Selectable Search View',
+                    showItemCount: false,
+                    showSelectAllButton: false,
+                    builder: (context, child) {
+                      return Theme(
+                        data: ThemeData(
+                          appBarTheme: AppBarTheme(
+                            backgroundColor: Colors.grey[50],
+                            elevation: 1,
+                            scrolledUnderElevation: 0,
+                          ),
+                          scaffoldBackgroundColor: Colors.white,
+                          checkboxTheme: const CheckboxThemeData(
+                            fillColor: WidgetStatePropertyAll(Colors.black),
+                            checkColor: WidgetStatePropertyAll(Colors.red),
+                            overlayColor: WidgetStatePropertyAll(Colors.orange),
+                          ),
+                        ),
+                        child: child,
+                      );
+                    },
+                    items: items,
+                    selectedItems: testMulti,
+                    borderRadius: const BorderRadius.only(topLeft: Radius.circular(50), topRight: Radius.circular(50)),
+                  );
+                  testMulti = List.from(response ?? []);
+                }
+              },
+            ),
+            CoreTextButton(
               child: const Text('Show image picker'),
               onPressed: () async {
-                print(await popupManager.showImageSourcePicker(context: context));
+                if (kDebugMode) {
+                  print(await popupManager.showImageSourcePicker(context: context));
+                }
               },
             ),
           ],
@@ -227,4 +343,28 @@ class _PopupManagerWidgetState extends State<PopupManagerWidget> {
       ),
     );
   }
+}
+
+class TestData implements SelectableSearchMixin {
+  TestData(this.index);
+  final int index;
+  @override
+  bool get active => true;
+
+  @override
+  String? get subtitle => null;
+
+  @override
+  String? get title => '$index Test Content ${"aaa" * index}';
+
+  @override
+  bool filter(String query) => title?.toLowerCase().contains(query.toLowerCase()) ?? false;
+
+  @override
+  bool operator ==(Object other) {
+    return (other is TestData) && other.index == index;
+  }
+
+  @override
+  int get hashCode => index.hashCode;
 }

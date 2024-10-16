@@ -19,6 +19,7 @@ class CorePhoneNumberTextField extends StatelessWidget {
     this.buildCounter,
     this.enabled,
     this.focusNode,
+    this.autofillHints,
     super.key,
   });
 
@@ -30,7 +31,6 @@ class CorePhoneNumberTextField extends StatelessWidget {
   final void Function()? onEditingComplete;
   final void Function(String)? onFieldSubmitted;
   final TextInputAction? textInputAction;
-
   final Widget? prefixIcon;
   final String? hintText;
   final String? labelText;
@@ -38,6 +38,7 @@ class CorePhoneNumberTextField extends StatelessWidget {
   final InputCounterWidgetBuilder? buildCounter;
   final bool? enabled;
   final FocusNode? focusNode;
+  final Iterable<String>? autofillHints;
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +54,7 @@ class CorePhoneNumberTextField extends StatelessWidget {
       keyboardType: TextInputType.phone,
       maxLength: maxLength,
       buildCounter: buildCounter,
+      autofillHints: autofillHints,
       inputFormatters: [
         CoreInputFormatter(
           mask: '### ### ## ##',

@@ -19,6 +19,7 @@ class CoreSearchTextField extends StatefulWidget {
     this.buildCounter,
     this.enabled,
     this.focusNode,
+    this.autofillHints,
     super.key,
   });
 
@@ -37,6 +38,7 @@ class CoreSearchTextField extends StatefulWidget {
   final InputCounterWidgetBuilder? buildCounter;
   final bool? enabled;
   final FocusNode? focusNode;
+  final Iterable<String>? autofillHints;
 
   @override
   State<CoreSearchTextField> createState() => _CoreSearchTextFieldState();
@@ -77,6 +79,7 @@ class _CoreSearchTextFieldState extends State<CoreSearchTextField> {
       onFieldSubmitted: widget.onFieldSubmitted,
       maxLength: widget.maxLength,
       buildCounter: widget.buildCounter,
+      autofillHints: widget.autofillHints,
       decoration: InputDecoration(
         prefixIcon: widget.prefixIcon ?? const Icon(Icons.search),
         hintText: widget.hintText,

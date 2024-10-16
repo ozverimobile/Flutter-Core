@@ -10,7 +10,9 @@ enum CorePermission {
   notification(sharedPrefKey: '${_permissionKeyPrefix}Notification'),
   camera(sharedPrefKey: '${_permissionKeyPrefix}Camera'),
   photos(sharedPrefKey: '${_permissionKeyPrefix}Photos'),
-  ;
+  microphone(sharedPrefKey: '${_permissionKeyPrefix}Microphone'),
+  speech(sharedPrefKey: '${_permissionKeyPrefix}Speech'),
+  contact(sharedPrefKey: '${_permissionKeyPrefix}Contact');
 
   const CorePermission({required this.sharedPrefKey});
 
@@ -25,6 +27,9 @@ enum CorePermission {
               ? Permission.storage
               : Permission.photos
           : Permission.photos,
+      CorePermission.microphone => Permission.microphone,
+      CorePermission.speech => Permission.speech,
+      CorePermission.contact => Permission.contacts,
     };
   }
 
@@ -33,6 +38,9 @@ enum CorePermission {
       CorePermission.notification => 'Bildirim İzni',
       CorePermission.camera => 'Kamera İzni',
       CorePermission.photos => 'Fotoğraf İzni',
+      CorePermission.microphone => 'Mikrofon İzni',
+      CorePermission.speech => 'Konuşma İzni',
+      CorePermission.contact => 'Rehber İzni',
     };
   }
 
@@ -42,6 +50,9 @@ enum CorePermission {
       CorePermission.notification => '$appName bildirimleri alabilmeniz için izin istiyor',
       CorePermission.camera => '$appName kamerayı kullanabilmeniz için izin istiyor',
       CorePermission.photos => '$appName fotoğraflara erişebilmeniz için izin istiyor',
+      CorePermission.microphone => '$appName mikrofonu kullanabilmeniz için izin istiyor',
+      CorePermission.speech => '$appName konuşma tanıma yapabilmeniz için izin istiyor',
+      CorePermission.contact => '$appName rehberi kullanabilmeniz için izin istiyor',
     };
   }
 
@@ -59,6 +70,16 @@ enum CorePermission {
         ),
       CorePermission.photos => Icon(
           Icons.photo,
+          size: 50,
+          color: context.colorScheme.onPrimary,
+        ),
+      CorePermission.microphone || CorePermission.speech => Icon(
+          Icons.mic,
+          size: 50,
+          color: context.colorScheme.onPrimary,
+        ),
+      CorePermission.contact => Icon(
+          Icons.contact_phone,
           size: 50,
           color: context.colorScheme.onPrimary,
         ),

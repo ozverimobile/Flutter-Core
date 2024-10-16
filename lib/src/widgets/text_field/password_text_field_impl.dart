@@ -21,6 +21,7 @@ class CorePasswordTextField extends StatefulWidget {
     this.suffixIconOff,
     this.enabled,
     this.focusNode,
+    this.autofillHints,
     super.key,
   });
   final TextEditingController? controller;
@@ -41,6 +42,7 @@ class CorePasswordTextField extends StatefulWidget {
   final IconData? suffixIconOff;
   final bool? enabled;
   final FocusNode? focusNode;
+  final Iterable<String>? autofillHints;
 
   @override
   State<CorePasswordTextField> createState() => _CorePasswordTextFieldState();
@@ -66,6 +68,7 @@ class _CorePasswordTextFieldState extends State<CorePasswordTextField> {
       keyboardType: widget.keyboardType,
       maxLength: widget.maxLength,
       buildCounter: widget.buildCounter,
+      autofillHints: widget.autofillHints,
       decoration: InputDecoration(
         prefixIcon: widget.prefixIcon,
         hintText: widget.hintText,

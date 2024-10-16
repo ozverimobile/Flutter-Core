@@ -158,6 +158,53 @@ abstract interface class IPopupManager {
   void hideAllPopups();
 
   bool isPopupOpen({required String id});
+
+  Future<AdaptiveAction?> showAdaptiveActionSheet({
+    BuildContext? context,
+    String? title,
+    String? content,
+    List<AdaptiveAction> actions = const [],
+    String? cancelButtonLabelOnIos,
+  });
+
+  Future<T?> singleSelectableSearchSheet<T extends SelectableSearchMixin>({
+    BuildContext? context,
+    List<T> items = const [],
+    T? selected,
+    Widget Function(BuildContext context, Widget child)? builder,
+    ShapeBorder? shape,
+    bool showDragHandle = false,
+    BorderRadiusGeometry borderRadius = BorderRadius.zero,
+    String? title,
+    String emptyResultText = 'Sonuç bulunamadı',
+    String searchHintText = 'Bir şeyler arayın...',
+    double initialSize = 0.5,
+    int titleMaxLine = 2,
+    int subtitleMaxLine = 1,
+    TextOverflow titleOverflow = TextOverflow.ellipsis,
+    TextOverflow subtitleOverflow = TextOverflow.ellipsis,
+    ListTileControlAffinity controlAffinity = ListTileControlAffinity.platform,
+    bool showItemCount = true,
+  });
+  Future<List<T>?> multiSelectableSearchSheet<T extends SelectableSearchMixin>({
+    BuildContext? context,
+    List<T> items = const [],
+    List<T>? selectedItems,
+    Widget Function(BuildContext context, Widget child)? builder,
+    ShapeBorder? shape,
+    bool showDragHandle = false,
+    BorderRadiusGeometry borderRadius = BorderRadius.zero,
+    String? title,
+    String emptyResultText = 'Sonuç bulunamadı',
+    String searchHintText = 'Bir şeyler arayın...',
+    double initialSize = 0.5,
+    int titleMaxLine = 2,
+    int subtitleMaxLine = 1,
+    TextOverflow titleOverflow = TextOverflow.ellipsis,
+    TextOverflow subtitleOverflow = TextOverflow.ellipsis,
+    ListTileControlAffinity controlAffinity = ListTileControlAffinity.platform,
+    bool showItemCount = true,
+  });
 }
 
 /// A [PopupManager] manages all popups
@@ -170,8 +217,6 @@ class PopupManager implements IPopupManager {
     assert(state.isNotNull, 'Navigator with provided key: $_navigatorKey was not found in the widget tree');
     return state!;
   }
-
-  CorePermissionManager get _permissionManager => CorePermissionManager(navigatorKey: _navigatorKey);
 
   final _popupRoutes = <ICorePopupController>[];
 
@@ -411,18 +456,18 @@ class PopupManager implements IPopupManager {
     TextStyle? titleTextStyle,
     String? okButtonLabel,
   }) {
-    final id = UniqueKey().toString();
+    final routeId = id ?? UniqueKey().toString();
     AlertDialog alertDialogBuilder(BuildContext context) {
       final iosButtons = [
         CupertinoDialogAction(
-          onPressed: () => hidePopup<void>(id: id),
+          onPressed: () => hidePopup<void>(id: routeId),
           child: Text(okButtonLabel ?? MaterialLocalizations.of(context).okButtonLabel),
         ),
       ];
 
       final androidButtons = [
         FilledButton(
-          onPressed: () => hidePopup<void>(id: id),
+          onPressed: () => hidePopup<void>(id: routeId),
           child: Text(okButtonLabel ?? MaterialLocalizations.of(context).okButtonLabel),
         ),
       ];
@@ -472,7 +517,7 @@ class PopupManager implements IPopupManager {
             data: const CupertinoThemeData(),
             child: alertDialogBuilder(context),
           ),
-          id: id,
+          id: routeId,
           barrierLabel: barrierLabel,
           barrierDismissible: barrierDismissible ?? false,
           routeSettings: routeSettings,
@@ -481,7 +526,7 @@ class PopupManager implements IPopupManager {
       _ => showDialog<void>(
           context: context,
           builder: alertDialogBuilder,
-          id: id,
+          id: routeId,
           barrierDismissible: barrierDismissible ?? true,
           barrierColor: barrierColor,
           barrierLabel: barrierLabel,
@@ -930,11 +975,14 @@ class PopupManager implements IPopupManager {
     Widget? title,
     String? okButtonLabel,
     String? cancelButtonLabel,
+    int? initialItemIndex,
+    double androidHeight = 360,
+    double iosHeight = 300,
   }) async {
     if (children.isEmpty) throw Exception('Children list of picker cannot be empty');
     final currentContext = context ?? _navigatorContext;
     final backgroundColor = currentContext.theme.brightness == Brightness.light ? Colors.white : CupertinoColors.darkBackgroundGray;
-    int? selectedItemIndex;
+    var selectedItemIndex = initialItemIndex;
     final androidScrollController = ScrollController();
     final id = UniqueKey().toString();
     return switch (currentContext.theme.platform) {
@@ -945,7 +993,7 @@ class PopupManager implements IPopupManager {
             data: CupertinoThemeData(brightness: context.theme.brightness),
             child: Container(
               color: backgroundColor,
-              height: 300,
+              height: iosHeight,
               child: Column(
                 children: [
                   Padding(
@@ -981,6 +1029,7 @@ class PopupManager implements IPopupManager {
                   Expanded(
                     child: SafeArea(
                       child: CupertinoPicker(
+                        scrollController: FixedExtentScrollController(initialItem: selectedItemIndex ?? 0),
                         itemExtent: 40,
                         onSelectedItemChanged: (value) => selectedItemIndex = value,
                         children: children
@@ -1009,7 +1058,7 @@ class PopupManager implements IPopupManager {
                   vertical: 18,
                 ),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 360),
+                  constraints: BoxConstraints(maxHeight: androidHeight),
                   child: IntrinsicHeight(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1109,6 +1158,7 @@ class PopupManager implements IPopupManager {
     bool readOnly = false,
     bool showClearButton = false,
     bool showSelectionToolbar = false,
+    TextStyle? style,
   }) async {
     final textController = TextEditingController(text: initialValue);
     final id = UniqueKey().toString();
@@ -1139,6 +1189,7 @@ class PopupManager implements IPopupManager {
                   showCursor: showCursor,
                   autofocus: autofocus,
                   readOnly: readOnly,
+                  style: style ?? context.textTheme.bodyLarge?.copyWith(color: context.theme.colorScheme.onSurface),
                 ),
               ],
             ),
@@ -1181,6 +1232,7 @@ class PopupManager implements IPopupManager {
                   showCursor: showCursor,
                   autofocus: autofocus,
                   readOnly: readOnly,
+                  style: style ?? context.textTheme.bodyLarge?.copyWith(color: context.theme.colorScheme.onSurface),
                 ),
               ],
             ),
@@ -1429,6 +1481,213 @@ class PopupManager implements IPopupManager {
           ),
         ),
     };
+  }
+
+  /// Shows adaptive action sheet
+  @override
+  Future<AdaptiveAction?> showAdaptiveActionSheet({
+    BuildContext? context,
+    String? title,
+    String? content,
+    List<AdaptiveAction> actions = const [],
+    String? cancelButtonLabelOnIos,
+    bool showDragHandleOnAndroid = false,
+    bool isScrollControlledOnAndroid = false,
+    bool barrierDismissible = true,
+    ShapeBorder? shapeOnAndroid,
+  }) {
+    final id = UniqueKey().toString();
+    final currentContext = context ?? _navigatorContext;
+    final androidTextTheme = context?.textTheme.bodyLarge;
+    final androidIsDescructiveStyle = androidTextTheme?.copyWith(color: context?.theme.colorScheme.error);
+    final androidIsDefaultStyle = androidTextTheme?.copyWith(fontWeight: FontWeight.bold);
+    return switch (currentContext.theme.platform) {
+      TargetPlatform.iOS || TargetPlatform.macOS => showCupertinoModalPopup(
+          barrierDismissible: barrierDismissible,
+          context: context,
+          id: id,
+          builder: (context) => CupertinoTheme(
+            data: CupertinoThemeData(brightness: context.theme.brightness),
+            child: CupertinoActionSheet(
+              title: title == null ? null : Text(title),
+              message: content == null ? null : Text(content),
+              cancelButton: CupertinoActionSheetAction(
+                onPressed: () => hidePopup<ImageSourceType>(id: id),
+                isDestructiveAction: true,
+                child: Text(cancelButtonLabelOnIos ?? MaterialLocalizations.of(context).cancelButtonLabel),
+              ),
+              actions: List.generate(actions.length, (index) {
+                final action = actions[index];
+                return CupertinoActionSheetAction(
+                  onPressed: () {
+                    action.onPressed?.call();
+                    hidePopup<AdaptiveAction>(id: id, result: action);
+                  },
+                  isDefaultAction: action.isDefaultAction,
+                  isDestructiveAction: action.isDestructiveAction,
+                  child: Text(action.label ?? ''),
+                );
+              }),
+            ),
+          ),
+        ),
+      _ => showModalBottomSheet(
+          context: context,
+          id: id,
+          showDragHandle: showDragHandleOnAndroid,
+          isScrollControlled: isScrollControlledOnAndroid,
+          isDismissible: barrierDismissible,
+          shape: shapeOnAndroid,
+          builder: (context) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (title.isNotNullAndNotEmpty || content.isNotNullAndNotEmpty)
+                ListTile(
+                  title: title.isNotNullAndNotEmpty ? Text(title!) : null,
+                  subtitle: content.isNotNullAndNotEmpty ? Text(content!) : null,
+                ),
+              if (title.isNotNullAndNotEmpty || content.isNotNullAndNotEmpty) const Divider(),
+              for (final action in actions)
+                ListTile(
+                  leading: action.iconOnAndroid == null ? null : Icon(action.iconOnAndroid),
+                  title: Text(
+                    action.label ?? '',
+                    style: action.isDestructiveAction
+                        ? androidIsDescructiveStyle
+                        : action.isDefaultAction
+                            ? androidIsDefaultStyle
+                            : androidTextTheme,
+                  ),
+                  onTap: () {
+                    action.onPressed?.call();
+                    hidePopup<AdaptiveAction>(id: id, result: action);
+                  },
+                ),
+            ],
+          ),
+        ),
+    };
+  }
+
+  @override
+  Future<T?> singleSelectableSearchSheet<T extends SelectableSearchMixin>({
+    BuildContext? context,
+    List<T> items = const [],
+    T? selected,
+    Widget Function(BuildContext context, Widget child)? builder,
+    ShapeBorder? shape,
+    bool showDragHandle = false,
+    BorderRadiusGeometry borderRadius = BorderRadius.zero,
+    String? title,
+    String emptyResultText = 'Sonuç bulunamadı',
+    String searchHintText = 'Bir şeyler arayın...',
+    double initialSize = 0.5,
+    int titleMaxLine = 2,
+    int subtitleMaxLine = 1,
+    TextOverflow titleOverflow = TextOverflow.ellipsis,
+    TextOverflow subtitleOverflow = TextOverflow.ellipsis,
+    ListTileControlAffinity controlAffinity = ListTileControlAffinity.platform,
+    bool showItemCount = true,
+    int maxDisplayLimit = 500,
+    EdgeInsetsGeometry searchFieldPadding = const EdgeInsets.all(8),
+  }) {
+    final id = UniqueKey().toString();
+    return showModalBottomSheet(
+      context: context,
+      id: id,
+      isScrollControlled: true,
+      showDragHandle: false,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(0),
+      ),
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final child = SelectableSearchSheetView<T>.single(
+          showSelectAllButton: false,
+          searchFieldPadding: searchFieldPadding,
+          maxDisplayLimit: maxDisplayLimit,
+          popupManager: this,
+          popupKey: id,
+          title: title,
+          emptyResultText: emptyResultText,
+          items: items,
+          selected: selected,
+          searchHintText: searchHintText,
+          initialSize: initialSize,
+          titleMaxLine: titleMaxLine,
+          subtitleMaxLine: subtitleMaxLine,
+          titleOverflow: titleOverflow,
+          subtitleOverflow: subtitleOverflow,
+          controlAffinity: controlAffinity,
+          showItemCount: showItemCount,
+          showDragHandle: showDragHandle,
+          borderRadius: borderRadius,
+        );
+        if (builder != null) return builder(context, child);
+        return child;
+      },
+    );
+  }
+
+  @override
+  Future<List<T>?> multiSelectableSearchSheet<T extends SelectableSearchMixin>({
+    BuildContext? context,
+    List<T> items = const [],
+    List<T>? selectedItems,
+    Widget Function(BuildContext context, Widget child)? builder,
+    ShapeBorder? shape,
+    bool showDragHandle = false,
+    BorderRadiusGeometry borderRadius = BorderRadius.zero,
+    String? title,
+    String emptyResultText = 'Sonuç bulunamadı',
+    String searchHintText = 'Bir şeyler arayın...',
+    double initialSize = 0.5,
+    int titleMaxLine = 2,
+    int subtitleMaxLine = 1,
+    TextOverflow titleOverflow = TextOverflow.ellipsis,
+    TextOverflow subtitleOverflow = TextOverflow.ellipsis,
+    ListTileControlAffinity controlAffinity = ListTileControlAffinity.platform,
+    bool showItemCount = true,
+    int maxDisplayLimit = 500,
+    EdgeInsetsGeometry searchFieldPadding = const EdgeInsets.all(8),
+    bool showSelectAllButton = true,
+  }) {
+    final id = UniqueKey().toString();
+    return showModalBottomSheet(
+      context: context,
+      id: id,
+      isScrollControlled: true,
+      showDragHandle: false,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(0),
+      ),
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final child = SelectableSearchSheetView<T>.multi(
+          showSelectAllButton: showSelectAllButton,
+          searchFieldPadding: searchFieldPadding,
+          maxDisplayLimit: maxDisplayLimit,
+          popupManager: this,
+          popupKey: id,
+          title: title,
+          emptyResultText: emptyResultText,
+          items: items,
+          selectedItems: selectedItems,
+          searchHintText: searchHintText,
+          initialSize: initialSize,
+          titleMaxLine: titleMaxLine,
+          subtitleMaxLine: subtitleMaxLine,
+          titleOverflow: titleOverflow,
+          subtitleOverflow: subtitleOverflow,
+          controlAffinity: controlAffinity,
+          showItemCount: showItemCount,
+          showDragHandle: showDragHandle,
+          borderRadius: borderRadius,
+        );
+        if (builder != null) return builder(context, child);
+        return child;
+      },
+    );
   }
 
   /// Hides popup with given [id]

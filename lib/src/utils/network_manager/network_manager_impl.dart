@@ -57,6 +57,8 @@ abstract class CoreNetworkManager with RequestLoggerMixin implements ICoreNetwor
     Duration connectionTimeout = const Duration(seconds: 25),
     Duration receiveTimeout = const Duration(seconds: 25),
     Duration sendTimeout = const Duration(seconds: 25),
+    void Function(int, int)? onReceiveProgress,
+    void Function(int, int)? onSendProgress,
   }) async {
     final stopwatch = Stopwatch();
     try {
@@ -72,6 +74,8 @@ abstract class CoreNetworkManager with RequestLoggerMixin implements ICoreNetwor
         queryParameters: queryParameters?.toJson(),
         data: dioFormData ?? data?.toJson(),
         cancelToken: cancelToken,
+        onReceiveProgress: onReceiveProgress,
+        onSendProgress: onSendProgress,
         options: Options(
           method: type.asString,
           headers: mergedHeaders,
@@ -122,6 +126,8 @@ abstract class CoreNetworkManager with RequestLoggerMixin implements ICoreNetwor
     Duration connectionTimeout = const Duration(seconds: 25),
     Duration receiveTimeout = const Duration(seconds: 25),
     Duration sendTimeout = const Duration(seconds: 25),
+    void Function(int, int)? onReceiveProgress,
+    void Function(int, int)? onSendProgress,
   }) async {
     final stopwatch = Stopwatch();
     try {
@@ -138,6 +144,8 @@ abstract class CoreNetworkManager with RequestLoggerMixin implements ICoreNetwor
         queryParameters: queryParameters?.toJson(),
         data: dioFormData ?? data?.toJson(),
         cancelToken: cancelToken,
+        onReceiveProgress: onReceiveProgress,
+        onSendProgress: onSendProgress,
         options: Options(
           method: type.asString,
           headers: mergedHeaders,

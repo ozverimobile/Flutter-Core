@@ -93,6 +93,12 @@ extension ContextExtension on BuildContext {
   /// Checks if keyboard is open
   bool get isKeyboardOpen => FocusManager.instance.primaryFocus?.hasFocus ?? false || flutterView.viewInsets.bottom > 0.0;
 
+  /// Top padding of safe area
+  double get topSafeAreaPadding => MediaQueryData.fromView(flutterView).padding.top;
+
+  /// Bottom padding of safe area
+  double get bottomSafeAreaPadding => MediaQueryData.fromView(flutterView).padding.bottom;
+
   /// Rebuilds widget with given context in the next frame
   @experimental
   void rebuildWidget() => _safeMarkNeedsBuild();
