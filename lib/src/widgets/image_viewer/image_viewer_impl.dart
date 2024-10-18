@@ -20,6 +20,25 @@ enum VerticalDragCloseThreshold { low, medium, high }
 
 typedef _PageIndicatorBuilder = Positioned Function(BuildContext context, int active, int total);
 
+class CoreImageController {
+  CoreImageController({GlobalKey<NavigatorState>? navigatorKey}) : _navigatorKey = navigatorKey;
+  final GlobalKey<NavigatorState>? _navigatorKey;
+
+  VoidCallback? _openContainer;
+  void _init(VoidCallback openContainer) {
+    _openContainer ??= openContainer;
+  }
+
+  void open() {
+    _openContainer?.call();
+  }
+
+  void close() {
+    if (_navigatorKey?.currentContext == null) throw Exception('Navigator key is null');
+    Navigator.of(_navigatorKey!.currentContext!).pop();
+  }
+}
+
 class CoreImageViewer extends StatelessWidget {
   const CoreImageViewer.network({
     required this.child,
@@ -46,6 +65,7 @@ class CoreImageViewer extends StatelessWidget {
     this.indicatorTextStyle = const TextStyle(color: Colors.white),
     this.indicatorPadding = EdgeInsets.zero,
     this.headers,
+    this.controller,
     super.key,
   })  : _imageType = _ImageType.network,
         _images = images;
@@ -75,6 +95,7 @@ class CoreImageViewer extends StatelessWidget {
     this.indicatorTextStyle = const TextStyle(color: Colors.white),
     this.indicatorPadding = EdgeInsets.zero,
     this.headers,
+    this.controller,
     super.key,
   })  : _imageType = _ImageType.asset,
         _images = images;
@@ -104,6 +125,7 @@ class CoreImageViewer extends StatelessWidget {
     this.indicatorTextStyle = const TextStyle(color: Colors.white),
     this.indicatorPadding = EdgeInsets.zero,
     this.headers,
+    this.controller,
     super.key,
   })  : _imageType = _ImageType.file,
         _images = images;
@@ -133,6 +155,7 @@ class CoreImageViewer extends StatelessWidget {
     this.indicatorTextStyle = const TextStyle(color: Colors.white),
     this.indicatorPadding = EdgeInsets.zero,
     this.headers,
+    this.controller,
     super.key,
   })  : _imageType = _ImageType.memory,
         _images = images;
@@ -162,6 +185,7 @@ class CoreImageViewer extends StatelessWidget {
   final EdgeInsets indicatorPadding;
   final Map<String, String>? headers;
   final _ImageType _imageType;
+  final CoreImageController? controller;
 
   @override
   Widget build(BuildContext context) {
@@ -194,6 +218,7 @@ class CoreImageViewer extends StatelessWidget {
         );
       },
       closedBuilder: (BuildContext _, VoidCallback openContainer) {
+        controller?._init(openContainer);
         return GestureDetector(
           onTap: openContainer,
           child: child,
@@ -278,6 +303,14 @@ class _CoreImageViewerState extends State<_CoreImageViewer> {
     super.initState();
     _pageController = PageController(initialPage: widget.initialIndex);
     _activePage = widget.initialIndex;
+    _transformationController.addListener(() {
+      final isScale = _transformationController.value.getMaxScaleOnAxis() > 1;
+      if (isScale != _isScale) {
+        setState(() {
+          _isScale = isScale;
+        });
+      }
+    });
   }
 
   @override
@@ -287,6 +320,8 @@ class _CoreImageViewerState extends State<_CoreImageViewer> {
     _transformationController.dispose();
   }
 
+  bool _isScale = false;
+
   @override
   Widget build(BuildContext context) {
     final horizontalPosition = max(_positionYDelta, -_positionYDelta) / 15;
@@ -294,7 +329,7 @@ class _CoreImageViewerState extends State<_CoreImageViewer> {
       body: Stack(
         children: [
           PageView.builder(
-            physics: const ClampingScrollPhysics(),
+            physics: _isScale ? const NeverScrollableScrollPhysics() : const ClampingScrollPhysics(),
             onPageChanged: _onPageChange,
             controller: _pageController,
             itemCount: widget.images.length,
@@ -323,7 +358,7 @@ class _CoreImageViewerState extends State<_CoreImageViewer> {
                           transformationController: _transformationController,
                           minScale: _minScale,
                           maxScale: _maxScale,
-                          panEnabled: false,
+                          panEnabled: _isScale,
                           child: _KeyMotionGestureDetector(
                             onStart: _onDragStart,
                             onUpdate: _onDragUpdate,
@@ -416,6 +451,11 @@ class _CoreImageViewerState extends State<_CoreImageViewer> {
   void _onDoubleTap() {
     setState(() {
       final position = _doubleTapDetails.localPosition;
+      if (_isScale && _scaleLevel == _ScaleLevel.off) {
+        _transformationController.value = Matrix4.identity();
+        _scaleLevel = _ScaleLevel.off;
+        return;
+      }
       switch (_scaleLevel) {
         case _ScaleLevel.off:
           _transformationController.value = Matrix4.identity()
@@ -435,6 +475,7 @@ class _CoreImageViewerState extends State<_CoreImageViewer> {
   }
 
   void _onDragUpdate(DragUpdateDetails details) {
+    if (_isScale) return;
     setState(() {
       _currentPositionY = details.globalPosition.dy;
       _positionYDelta = _currentPositionY - _initialPositionY;
@@ -443,12 +484,14 @@ class _CoreImageViewerState extends State<_CoreImageViewer> {
   }
 
   void _onDragStart(DragStartDetails details) {
+    if (_isScale) return;
     setState(() {
       _initialPositionY = details.globalPosition.dy;
     });
   }
 
   void _onDragEnd(DragEndDetails details) {
+    if (_isScale) return;
     if (_positionYDelta > verticalDragCloseThreshold || _positionYDelta < -verticalDragCloseThreshold) {
       Navigator.of(context).pop();
     } else {
