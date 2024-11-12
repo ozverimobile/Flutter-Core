@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_core/src/utils/device_info/protocol/protocol.dart';
+import 'package:flutter_core/src/utils/platform_channel/platform_channel.dart';
 
 abstract interface class ICoreDeviceInfo {
   Future<CoreAndroidDeviceInfo> get androidInfo;
@@ -66,5 +67,14 @@ class CoreDeviceInfo implements ICoreDeviceInfo {
   Future<String?> get _getAndroidDeviceName async {
     // TODO(Huseyin): Hüseyinin yaptığı android id kütüphanesi eklenecek.
     return null;
+  }
+
+  Future<bool> isHuaweiApiAvailable() {
+    if (!Platform.isAndroid) return Future.value(false);
+    try {
+      return CorePlatformChannel.isHuaweiApiAvailable();
+    } catch (e) {
+      throw Exception('Error while checking if Huawei Api available: $e\nFlutter Core Lib: device_info_impl.dart');
+    }
   }
 }

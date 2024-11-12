@@ -420,6 +420,7 @@ class PopupManager implements IPopupManager {
     String? barrierLabel,
     Key? key,
     bool? barrierDismissible,
+    bool closableWithBackButtonAndroid = true,
     RouteSettings? routeSettings,
     Offset? anchorPoint,
     TraversalEdgeBehavior? traversalEdgeBehavior,
@@ -455,24 +456,24 @@ class PopupManager implements IPopupManager {
     Color? surfaceTintColor,
     TextStyle? titleTextStyle,
     String? okButtonLabel,
+    VoidCallback? onOkButtonPressed,
   }) {
     final routeId = id ?? UniqueKey().toString();
-    AlertDialog alertDialogBuilder(BuildContext context) {
+    Widget alertDialogBuilder(BuildContext context) {
       final iosButtons = [
         CupertinoDialogAction(
-          onPressed: () => hidePopup<void>(id: routeId),
+          onPressed: onOkButtonPressed?? () => hidePopup<void>(id: routeId),
           child: Text(okButtonLabel ?? MaterialLocalizations.of(context).okButtonLabel),
         ),
       ];
 
       final androidButtons = [
         FilledButton(
-          onPressed: () => hidePopup<void>(id: routeId),
+          onPressed: onOkButtonPressed??() => hidePopup<void>(id: routeId),
           child: Text(okButtonLabel ?? MaterialLocalizations.of(context).okButtonLabel),
         ),
       ];
-
-      return AlertDialog.adaptive(
+      final dialog = AlertDialog.adaptive(
         title: title,
         content: content,
         contentPadding: contentPadding,
@@ -508,6 +509,14 @@ class PopupManager implements IPopupManager {
           _ => androidButtons,
         },
       );
+      if (closableWithBackButtonAndroid) {
+        return dialog;
+      } else {
+        return PopScope(
+          canPop: false,
+          child: dialog,
+        );
+      }
     }
 
     return switch ((context ?? _navigatorContext).theme.platform) {
@@ -546,6 +555,7 @@ class PopupManager implements IPopupManager {
     String? barrierLabel,
     Key? key,
     bool? barrierDismissible,
+    bool closableWithBackButtonAndroid = true,
     RouteSettings? routeSettings,
     Offset? anchorPoint,
     TraversalEdgeBehavior? traversalEdgeBehavior,
@@ -588,7 +598,7 @@ class PopupManager implements IPopupManager {
     bool isDestructiveCancelButtonIOS = false,
     bool isDestuctiveOkButtonIOS = false,
   }) {
-    AlertDialog alertDialogBuilder(BuildContext context) {
+    Widget alertDialogBuilder(BuildContext context) {
       var iosButtons = [
         CupertinoDialogAction(
           onPressed: () {
@@ -622,7 +632,7 @@ class PopupManager implements IPopupManager {
         iosButtons = iosButtons.reversed.toList();
         androidButtons = androidButtons.reversed.toList();
       }
-      return AlertDialog.adaptive(
+      final dialog = AlertDialog.adaptive(
         title: title,
         content: content,
         contentPadding: contentPadding,
@@ -658,6 +668,14 @@ class PopupManager implements IPopupManager {
           _ => androidButtons,
         },
       );
+      if (closableWithBackButtonAndroid) {
+        return dialog;
+      } else {
+        return PopScope(
+          canPop: false,
+          child: dialog,
+        );
+      }
     }
 
     return switch ((context ?? _navigatorContext).theme.platform) {

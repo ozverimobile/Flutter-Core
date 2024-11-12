@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:huawei_hmsavailability/huawei_hmsavailability.dart';
+import 'package:flutter_core/flutter_core.dart';
 
 enum DeviceType {
   phone,
@@ -33,10 +33,11 @@ enum DeviceType {
     return data.size.shortestSide > 1300;
   }
 
-  static Future<bool> isHuawei() async {
-    if (!Platform.isAndroid) return false;
+  @Deprecated('Use CoreDeviceInfo.instance.isHuaweiApiAvailable() instead')
+  static Future<bool> isHuawei() {
+    if (!Platform.isAndroid) return Future.value(false);
     try {
-      return (await HmsApiAvailability().isHMSAvailable()) == 0;
+      return CorePlatformChannel.isHuaweiApiAvailable();
     } catch (e) {
       throw Exception('Error while checking if device is Huawei: $e\nFlutter Core Lib: device_type_impl.dart');
     }
