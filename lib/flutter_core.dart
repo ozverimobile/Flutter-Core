@@ -8,5 +8,5 @@ export 'package:sqflite/sqflite.dart' show Database;
 
 export 'src/common/common.dart';
 export 'src/core/core.dart';
-export 'src/utils/utils.dart';
+export 'src/utils/utils.dart' hide CorePlatformChannel;
 export 'src/widgets/widgets.dart';

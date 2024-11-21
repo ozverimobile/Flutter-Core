@@ -82,7 +82,7 @@ final class CoreImpl implements ICore {
     const intuneCompanyPortalIosUrlScheme = 'companyportal://';
     const intuneCompanyPortalIosAppId = '719171358';
 
-    final isHuawei = await DeviceType.isHuawei();
+    final isHuawei = await CoreDeviceInfo.instance.isHuaweiApiAvailable();
     if (isHuawei) {
       // Launch App Gallery
       await CoreUrlLauncher.instance.launchStore(huaweiAppId: huaweiAppId);

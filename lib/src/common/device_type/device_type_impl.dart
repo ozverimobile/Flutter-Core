@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_core/flutter_core.dart';
+import 'package:flutter_core/src/utils/utils.dart';
 
 enum DeviceType {
   phone,

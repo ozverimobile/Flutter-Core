@@ -18,12 +18,39 @@ extension IntExtension on int {
   /// Converts to duration object to days of value
   Duration get days => Duration(days: this);
 
-  /// Converts to kiloBytes
-  int get kiloBytes => this * 1024;
+  /// Converts bytes to kilobytes
+  double get bytesToKilobytes => this / 1024;
 
-  /// Converts to megaBytes
-  int get megaBytes => this * 1024 * 1024;
+  /// Converts bytes to megabytes
+  double get bytesToMegabytes => this / (1024 * 1024);
 
-  /// Converts to gigaBytes
-  int get gigaBytes => this * 1024 * 1024 * 1024;
+  /// Converts bytes to gigabytes
+  double get bytesToGigabytes => this / (1024 * 1024 * 1024);
+
+  /// Converts kilobytes to bytes
+  double get kiloBytesToBytes => this * 1024;
+
+  /// Converts kilobytes to megabytes
+  double get kiloBytesToMegabytes => this / 1024;
+
+  /// Converts kilobytes to gigabytes
+  double get kiloBytesToGigabytes => this / (1024 * 1024);
+
+  /// Converts megabytes to bytes
+  double get megaBytesToBytes => this * 1024 * 1024;
+
+  /// Converts megabytes to kilobytes
+  double get megaBytesToKilobytes => this * 1024;
+
+  /// Converts megabytes to gigabytes
+  double get megaBytesToGigabytes => this / 1024;
+
+  /// Converts gigabytes to bytes
+  double get gigaBytesToBytes => this * 1024 * 1024 * 1024;
+
+  /// Converts gigabytes to kilobytes
+  double get gigaBytesToKilobytes => this * 1024 * 1024;
+
+  /// Converts gigabytes to megabytes
+  double get gigaBytesToMegabytes => this * 1024;
 }

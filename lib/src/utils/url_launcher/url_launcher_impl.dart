@@ -67,7 +67,7 @@ class CoreUrlLauncher implements ICoreUrlLauncher {
   Future<bool> launchStore({String? iosAppId, String? androidPackageName, String? huaweiAppId}) async {
     String url;
     if (Platform.isAndroid) {
-      final isHuawei = await DeviceType.isHuawei();
+      final isHuawei = await CoreDeviceInfo.instance.isHuaweiApiAvailable();
       if (isHuawei) {
         url = 'https://appgallery.cloud.huawei.com/marketshare/app/$huaweiAppId';
       } else {
