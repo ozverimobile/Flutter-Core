@@ -3,14 +3,14 @@ import 'package:flutter_core/flutter_core.dart';
 /// [List<String>] EXTENSION
 extension StringToSelectableSheetExtension on List<String?>? {
   List<SelectableSearchString> toSelectableSearchList({bool Function(String query)? customFilter}) {
-    return this?.map((e) => SelectableSearchString(e, customFilter: customFilter)).toList() ?? [];
+    return this?.where((x) => x.toNullIfEmpty() != null).map((e) => SelectableSearchString(e, customFilter: customFilter)).toList() ?? [];
   }
 }
 
 /// [List<num>] EXTENSION
 extension NumToSelectableSheetExtension on List<num?>? {
   List<SelectableSearchNum> toSelectableSearchList({bool Function(String query)? customFilter}) {
-    return this?.map((e) => SelectableSearchNum(e, customFilter: customFilter)).toList() ?? [];
+    return this?.where((x) => x != null).map((e) => SelectableSearchNum(e, customFilter: customFilter)).toList() ?? [];
   }
 }
 
