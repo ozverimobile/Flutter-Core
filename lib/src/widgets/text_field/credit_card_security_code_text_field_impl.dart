@@ -62,7 +62,7 @@ class CoreCreditCardSecurityCodeTextField extends StatelessWidget {
         FilteringTextInputFormatter.digitsOnly,
       ],
       decoration: InputDecoration(
-        counter: const CoreSizedBox.shrink(),
+        counter: emptyBox,
         prefixIcon: prefixIcon,
         hintText: hintText,
         labelText: labelText,
