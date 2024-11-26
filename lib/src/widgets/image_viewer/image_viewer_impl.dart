@@ -336,6 +336,7 @@ class _CoreImageViewerState extends State<_CoreImageViewer> {
             itemBuilder: (context, index) {
               final item = widget.images[index];
               return Container(
+                key: Key('image_$index'),
                 color: widget.backgroundColor.withOpacity(_opacity),
                 constraints: BoxConstraints.expand(
                   height: context.height,
@@ -344,6 +345,7 @@ class _CoreImageViewerState extends State<_CoreImageViewer> {
                 child: Stack(
                   children: <Widget>[
                     AnimatedPositioned(
+                      key: Key('animated_positioned_$index'),
                       duration: _animationDuration,
                       curve: Curves.bounceInOut,
                       top: 0 + _positionYDelta,
