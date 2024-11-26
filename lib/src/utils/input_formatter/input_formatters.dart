@@ -1,7 +1,6 @@
 import 'package:flutter_core/flutter_core.dart';
 
 abstract class CoreInputformatter {
-  CoreInputformatter._();
 
   static CoreInputFormatter creditCardExpiration() {
     return CoreInputFormatter(
