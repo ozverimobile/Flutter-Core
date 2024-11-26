@@ -20,7 +20,7 @@ final class TextFieldsExample extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                CorePasswordTextField(hintText: 'Password', suffixIcon: Icons.visibility, suffixIconOff: Icons.visibility_off),
+                CorePasswordTextField(hintText: 'Password'),
                 verticalBox8,
                 CorePasswordTextField(hintText: 'RePassword'),
                 verticalBox8,

@@ -12,4 +12,10 @@ extension StringExtensionNullable on String? {
 
   /// Returns true if string is not null or not empty
   bool get isNotNullAndNotEmpty => this != null && this!.isNotEmpty;
+
+  /// returns null if string is empty
+  String? get toNullIfEmpty => (this ?? '') == '' ? null : this;
+
+  /// Truncates the string to the given length
+  String? truncateToLength({int length = 25, String suffix = '...'}) => this != null && this!.length > length ? '${this!.substring(0, length)}$suffix' : this;
 }

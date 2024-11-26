@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_core/src/widgets/sized_box/sized_box_impl.dart';
 
 @immutable
 class CoreCreditCardSecurityCodeTextField extends StatelessWidget {
@@ -19,6 +20,7 @@ class CoreCreditCardSecurityCodeTextField extends StatelessWidget {
     this.enabled,
     this.focusNode,
     this.autofillHints,
+    this.maxLength = 4,
     super.key,
   });
 
@@ -37,10 +39,12 @@ class CoreCreditCardSecurityCodeTextField extends StatelessWidget {
   final bool? enabled;
   final FocusNode? focusNode;
   final Iterable<String>? autofillHints;
+  final int maxLength;
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      maxLength: maxLength,
       enabled: enabled,
       focusNode: focusNode,
       controller: controller,
@@ -53,11 +57,12 @@ class CoreCreditCardSecurityCodeTextField extends StatelessWidget {
       textInputAction: textInputAction,
       keyboardType: TextInputType.number,
       autofillHints: autofillHints,
-      inputFormatters: [
-        LengthLimitingTextInputFormatter(4),
-      ],
       buildCounter: buildCounter,
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+      ],
       decoration: InputDecoration(
+        counter: emptyBox,
         prefixIcon: prefixIcon,
         hintText: hintText,
         labelText: labelText,

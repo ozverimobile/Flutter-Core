@@ -18,6 +18,10 @@ class CoreJwtDecoder {
       throw ArgumentError('Invalid payload');
     }
 
+    if (payloadMap.isEmpty) {
+      throw ArgumentError('Non map payload');
+    }
+
     return payloadMap;
   }
 

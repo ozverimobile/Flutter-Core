@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_core/flutter_core.dart';
+import 'package:flutter_core/src/utils/input_formatter/input_formatters.dart';
 
 @immutable
 class CorePhoneNumberTextField extends StatelessWidget {
@@ -56,11 +56,7 @@ class CorePhoneNumberTextField extends StatelessWidget {
       buildCounter: buildCounter,
       autofillHints: autofillHints,
       inputFormatters: [
-        CoreInputFormatter(
-          mask: '### ### ## ##',
-          filter: {'#': RegExp('[0-9]')},
-          type: MaskAutoCompletionType.eager,
-        ),
+        CoreInputformatter.phoneNumber(),
       ],
       decoration: InputDecoration(
         prefixIcon: prefixIcon,
