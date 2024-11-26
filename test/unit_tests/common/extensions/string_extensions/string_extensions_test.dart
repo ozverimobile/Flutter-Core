@@ -48,11 +48,11 @@ void main() {
 
   group('To Null If Empty', () {
     test('Handles empty input', () {
-      expect(''.toNullIfEmpty(), null);
+      expect(''.toNullIfEmpty, null);
     });
 
     test('Handles non-empty input', () {
-      expect('test'.toNullIfEmpty(), 'test');
+      expect('test'.toNullIfEmpty, 'test');
     });
   });
 
