@@ -14,7 +14,7 @@ extension StringExtensionNullable on String? {
   bool get isNotNullAndNotEmpty => this != null && this!.isNotEmpty;
 
   /// returns null if string is empty
-  String? toNullIfEmpty() => (this ?? '') == '' ? null : this;
+  String? get toNullIfEmpty => (this ?? '') == '' ? null : this;
 
   /// Truncates the string to the given length
   String? truncateToLength({int length = 25, String suffix = '...'}) => this != null && this!.length > length ? '${this!.substring(0, length)}$suffix' : this;
