@@ -43,7 +43,7 @@ void main() {
     });
 
     test('Test Credit Card Mask', () {
-      final formatter = CoreInputformatter.creditCard();
+      final formatter = CoreDefaultInputFormatter.creditCard();
 
       const creditCardNo = TextEditingValue(text: '1234567890123456');
       final formatted = formatter.formatEditUpdate(TextEditingValue.empty, creditCardNo);
@@ -57,7 +57,7 @@ void main() {
     });
 
     test('Test Credit Card Expiration Mask', () {
-      final formatter = CoreInputformatter.creditCardExpiration();
+      final formatter = CoreDefaultInputFormatter.creditCardExpiration();
 
       const expiration = TextEditingValue(text: '1223');
       final formatted = formatter.formatEditUpdate(TextEditingValue.empty, expiration);
@@ -71,7 +71,7 @@ void main() {
     });
 
     test('Test Phone Number Mask', () {
-      final formatter = CoreInputformatter.phoneNumber();
+      final formatter = CoreDefaultInputFormatter.phoneNumber();
 
       const phoneNumber = TextEditingValue(text: '1234567890');
       final formatted = formatter.formatEditUpdate(TextEditingValue.empty, phoneNumber);

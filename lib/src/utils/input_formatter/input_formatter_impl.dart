@@ -362,3 +362,57 @@ class _TextMatcher {
     }
   }
 }
+
+class OnlyNumberFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    final regexp = RegExp('[^0-9,]');
+    if (regexp.hasMatch(newValue.text)) {
+      return TextEditingValue(
+        text: oldValue.text.replaceAll(regexp, ''),
+        selection: oldValue.selection,
+      );
+    }
+    return newValue;
+  }
+}
+
+/// Convert all characters to lowercase
+class LowerCaseFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    return TextEditingValue(
+      text: newValue.text.toLowerCase(),
+      selection: newValue.selection,
+    );
+  }
+}
+
+/// Convert all characters to uppercase
+class UpperCaseFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    return TextEditingValue(
+      text: newValue.text.toUpperCase(),
+      selection: newValue.selection,
+    );
+  }
+}
+
+/// Email formatter
+class EmailFormatter extends TextInputFormatter {
+  final RegExp _emailRegex = RegExp(
+    r'^[a-zA-Z0-9._%+-]*@?[a-zA-Z0-9.-]*\.?[a-zA-Z]{0,4}$',
+  );
+
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    if (_emailRegex.hasMatch(newValue.text)) {
+      return TextEditingValue(
+        text: newValue.text.toLowerCase(),
+        selection: newValue.selection,
+      );
+    }
+    return oldValue;
+  }
+}
