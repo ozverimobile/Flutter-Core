@@ -18,6 +18,10 @@ class ImageViewer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const image1 = '../assets/test_image_1.jpeg';
+    const image2 = '../assets/test_image_2.jpeg';
+    const image3 = '../assets/test_image_3.jpeg';
+    final images = <String>[image1, image2, image3];
     return Scaffold(
       appBar: AppBar(
         title: const Text('Image Viewer'),
@@ -26,12 +30,9 @@ class ImageViewer extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Center(
-            child: CoreImageViewer.network(
+            child: CoreImageViewer.asset(
               controller: _imageController,
-              images: const [
-                'https://img.freepik.com/free-vector/gradient-pink-green-background_52683-110638.jpg?t=st=1729075631~exp=1729079231~hmac=9c0c410c41d56d2da4135d8c568cdb8f055ae57f48d0f213c2ab7bec4c05c1d0&w=1800',
-                'https://img.freepik.com/premium-vector/3d-summer-yellow-scene-background_317810-4653.jpg?w=2000',
-              ],
+              images: images,
               errorBuilder: (context, error, stackTrace) {
                 return const Center(
                   child: Text(

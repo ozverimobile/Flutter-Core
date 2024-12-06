@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_core/src/widgets/sized_box/sized_box_impl.dart';
+import 'package:flutter_core/flutter_core.dart';
 
 @immutable
 class CoreCreditCardSecurityCodeTextField extends StatelessWidget {
@@ -62,7 +62,7 @@ class CoreCreditCardSecurityCodeTextField extends StatelessWidget {
         FilteringTextInputFormatter.digitsOnly,
       ],
       decoration: InputDecoration(
-        counter: const CoreSizedBox.shrink(),
+        counter: emptyBox,
         prefixIcon: prefixIcon,
         hintText: hintText,
         labelText: labelText,

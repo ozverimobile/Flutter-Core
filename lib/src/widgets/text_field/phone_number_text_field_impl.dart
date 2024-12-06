@@ -56,7 +56,7 @@ class CorePhoneNumberTextField extends StatelessWidget {
       buildCounter: buildCounter,
       autofillHints: autofillHints,
       inputFormatters: [
-        CoreInputformatter.phoneNumber(),
+        CoreDefaultInputFormatter.phoneNumber(),
       ],
       decoration: InputDecoration(
         prefixIcon: prefixIcon,
