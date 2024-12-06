@@ -57,7 +57,7 @@ class CoreCreditCardTextField extends StatelessWidget {
       buildCounter: buildCounter,
       autofillHints: autofillHints,
       inputFormatters: [
-        CoreInputformatter.creditCard(),
+        CoreDefaultInputFormatter.creditCard(),
       ],
       decoration: InputDecoration(
         prefixIcon: prefixIcon,
