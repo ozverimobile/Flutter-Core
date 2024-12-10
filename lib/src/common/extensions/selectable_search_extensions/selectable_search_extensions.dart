@@ -8,16 +8,16 @@ extension ListStringToSelectableSheetExtension on List<String?>? {
 }
 
 /// [String] EXTENSION
-extension StringToSelectableSheetExtension on List<String?>? {
+extension StringToSelectableSheetExtension on String? {
   SelectableSearchString toSelectableSearch({bool Function(String query)? customFilter}) {
-    return SelectableSearchString(this?.first, customFilter: customFilter);
+    return SelectableSearchString(this, customFilter: customFilter);
   }
 }
 
 /// [List<num>] EXTENSION
-extension ListNumToSelectableSheetExtension on List<num?>? {
-  List<SelectableSearchNum> toSelectableSearch({bool Function(String query)? customFilter}) {
-    return this?.where((x) => x != null).map((e) => SelectableSearchNum(e, customFilter: customFilter)).toList() ?? [];
+extension ListNumToSelectableSheetExtension on num? {
+  SelectableSearchNum toSelectableSearch({bool Function(String query)? customFilter}) {
+    return SelectableSearchNum(this, customFilter: customFilter);
   }
 }
 

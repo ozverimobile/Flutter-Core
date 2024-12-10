@@ -546,7 +546,7 @@ class _ImageViewerIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (showIndicator.isNull) return emptyBox;
+    if (!showIndicator) return emptyBox;
     if (pageIndicator.isNotNull) return pageIndicator!(context, activePage, totalPages);
 
     return Align(
