@@ -462,14 +462,14 @@ class PopupManager implements IPopupManager {
     Widget alertDialogBuilder(BuildContext context) {
       final iosButtons = [
         CupertinoDialogAction(
-          onPressed: onOkButtonPressed?? () => hidePopup<void>(id: routeId),
+          onPressed: onOkButtonPressed ?? () => hidePopup<void>(id: routeId),
           child: Text(okButtonLabel ?? MaterialLocalizations.of(context).okButtonLabel),
         ),
       ];
 
       final androidButtons = [
         FilledButton(
-          onPressed: onOkButtonPressed??() => hidePopup<void>(id: routeId),
+          onPressed: onOkButtonPressed ?? () => hidePopup<void>(id: routeId),
           child: Text(okButtonLabel ?? MaterialLocalizations.of(context).okButtonLabel),
         ),
       ];
@@ -1581,6 +1581,7 @@ class PopupManager implements IPopupManager {
                     hidePopup<AdaptiveAction>(id: id, result: action);
                   },
                 ),
+              const SizedBox(height: 15),
             ],
           ),
         ),
