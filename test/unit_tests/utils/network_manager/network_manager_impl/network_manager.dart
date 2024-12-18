@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_core/flutter_core.dart';
 
 import '../network_manager_intercaptors.dart';
@@ -108,10 +109,14 @@ final class NetworkManager extends CoreNetworkManager {
   }
 
   @override
-  void onUnauthorized(DioException error) {}
+  void onUnauthorized(DioException error) {
+    if (kDebugMode) print('onUnauthorized');
+  }
 
   @override
-  void onServiceUnavailable(DioException error) {}
+  void onServiceUnavailable(DioException error) {
+    if (kDebugMode) print('onServiceUnavailable');
+  }
 
   @override
   BaseResponse<T> getSuccessPrimitiveResponse<T>({required Response<T> response}) => BaseResponse(data: response.data, succeeded: true, statusCode: response.statusCode);
