@@ -230,3 +230,69 @@ class CoreIconButton extends StatelessWidget {
     };
   }
 }
+
+@immutable
+class CoreFilledLoadingButton extends StatelessWidget {
+  const CoreFilledLoadingButton({
+    required this.child,
+    required this.onPressed,
+    this.borderRadius = const BorderRadius.all(Radius.circular(8)),
+    this.minSize = kMinInteractiveDimensionCupertino,
+    this.backgroundColor,
+    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    this.loadingIndicator,
+    super.key,
+  });
+
+  final Widget child;
+  final Future<void> Function()? onPressed;
+  final BorderRadius borderRadius;
+  final double minSize;
+  final Color? backgroundColor;
+  final EdgeInsetsGeometry padding;
+  final Widget? loadingIndicator;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder(
+      valueListenable: CoreBuilderController.isShowLoadingInButtonNotifier,
+      builder: (context, buttonHashCode, _) {
+        final showLoading = buttonHashCode.contains(child.hashCode);
+        Widget content;
+        if (showLoading) {
+          content = loadingIndicator ?? const CircularProgressIndicator.adaptive();
+        } else {
+          content = child;
+        }
+        return switch (context.theme.platform) {
+          TargetPlatform.iOS || TargetPlatform.macOS => CupertinoButton(
+              onPressed: () async {
+                if (showLoading) return;
+                await onPressed?.call().loadingInButton(child.hashCode);
+              },
+              padding: padding,
+              color: backgroundColor ?? context.theme.colorScheme.primary,
+              minSize: minSize,
+              borderRadius: borderRadius,
+              child: content,
+            ),
+          _ => FilledButton(
+              onPressed: () async {
+                if (showLoading) return;
+                await onPressed?.call().loadingInButton(child.hashCode);
+              },
+              style: FilledButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: borderRadius,
+                ),
+                minimumSize: Size(minSize, minSize),
+                backgroundColor: backgroundColor,
+                padding: padding,
+              ),
+              child: content,
+            ),
+        };
+      },
+    );
+  }
+}
