@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:meta/meta.dart';
 
 mixin IRetriable {
@@ -19,8 +21,9 @@ abstract class Retriable<T> implements IRetriable {
 
   bool get isSuccess => _isSuccess;
 
-  Future<T> retryCallback();
-
+  @protected
+  FutureOr<T> retryCallback();
+  @protected
   void onRetry(Object error, int currentRetry) {}
 
   @override
