@@ -16,4 +16,16 @@ extension FutureExtensions<T> on Future<T> {
       CoreBuilderController.hideLoader();
     }
   }
+
+  Future<T> loadingInButton(int hashCode) async {
+    try {
+      CoreBuilderController.showLoaderInButton(hashCode);
+      Core.closeKeyboard();
+      return await this;
+    } catch (e) {
+      rethrow;
+    } finally {
+      CoreBuilderController.hideLoaderInButton(hashCode);
+    }
+  }
 }

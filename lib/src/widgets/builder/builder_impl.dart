@@ -34,6 +34,7 @@ class _CoreBuilderState extends State<CoreBuilder> {
       children: [
         _CoreKeyboardHandler(child: widget.child),
         _CoreProgressIndicator(indicator: widget.indicator),
+        const _CoreInButtonProgressIndicator(),
       ],
     );
   }
@@ -63,30 +64,58 @@ class _CoreProgressIndicator extends StatelessWidget {
     return ValueListenableBuilder<bool>(
       valueListenable: CoreBuilderController.isShowLoadingNotifier,
       builder: (context, isShowLoading, child) {
-        if (isShowLoading) return indicator ?? const _Indicator();
+        if (isShowLoading) return indicator ?? const _DefaultIndicator();
         return emptyBox;
       },
     );
   }
 }
 
-class _Indicator extends StatelessWidget {
-  const _Indicator();
+class _CoreInButtonProgressIndicator extends StatelessWidget {
+  const _CoreInButtonProgressIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<List<int>>(
+      valueListenable: CoreBuilderController.isShowLoadingInButtonNotifier,
+      builder: (context, buttons, child) {
+        final isShowLoading = buttons.isNotEmpty;
+        if (isShowLoading) return const _DefaultIndicator.transparent();
+        return emptyBox;
+      },
+    );
+  }
+}
+
+class _DefaultIndicator extends StatelessWidget {
+  const _DefaultIndicator() : _isTransparent = false;
+  const _DefaultIndicator.transparent() : _isTransparent = true;
+
+  final bool _isTransparent;
 
   @override
   Widget build(BuildContext context) {
     return Positioned.fill(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(
-          sigmaX: 10,
-          sigmaY: 10,
-        ),
-        child: const ColoredBox(
-          color: Colors.transparent,
-          child: Center(
-            child: CircularProgressIndicator.adaptive(),
-          ),
-        ),
+      child: Builder(
+        builder: (context) {
+          if (_isTransparent) {
+            return Container(
+              color: Colors.transparent,
+            );
+          }
+          return BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: 10,
+              sigmaY: 10,
+            ),
+            child: const ColoredBox(
+              color: Colors.transparent,
+              child: Center(
+                child: CircularProgressIndicator.adaptive(),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
