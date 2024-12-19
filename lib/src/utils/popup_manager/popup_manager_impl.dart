@@ -803,6 +803,7 @@ class PopupManager implements IPopupManager {
       _ => _showMaterialDateAndTimePickerConsecutively(
           context: context,
           mode: mode,
+          id: id,
           initialDateTime: initialDateTime,
           minimumDate: minimumDate,
           maximumDate: maximumDate,
@@ -877,6 +878,7 @@ class PopupManager implements IPopupManager {
     required DatePickerEntryMode datePickerInitialEntryModeAndroid,
     required TimePickerEntryMode timePickerInitialEntryModeAndroid,
     required AdaptiveDatePickerMode mode,
+    String? id,
     BuildContext? context,
     TextInputType? keyboardTypeAndroid,
     String? cancelTextAndroid,
@@ -899,6 +901,7 @@ class PopupManager implements IPopupManager {
       case AdaptiveDatePickerMode.date:
         return showDialog<DateTime>(
           context: context,
+          id: id,
           builder: (context) => DatePickerDialog(
             firstDate: minimumDate,
             lastDate: maximumDate,
