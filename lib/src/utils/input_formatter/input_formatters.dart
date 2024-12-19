@@ -24,7 +24,7 @@ abstract class CoreDefaultInputFormatter {
   /// Currency formatter
   static TextInputFormatter phoneNumber() {
     return CoreInputFormatter(
-      mask: '### ### ## ##',
+      mask: '(###) ### ## ##',
       filter: {'#': RegExp('[0-9]')},
       type: MaskAutoCompletionType.eager,
     );
