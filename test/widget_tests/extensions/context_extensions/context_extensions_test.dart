@@ -9,7 +9,7 @@ void main() {
         MaterialApp(
           home: Builder(
             builder: (context) {
-              expect(context.mediaQuerySize, MediaQuery.sizeOf(context));
+              expect(context.mediaQuerySize, equals(const Size(800, 600)));
               return const SizedBox.shrink();
             },
           ),
@@ -22,8 +22,8 @@ void main() {
         MaterialApp(
           home: Builder(
             builder: (context) {
-              expect(context.height, MediaQuery.sizeOf(context).height);
-              expect(context.width, MediaQuery.sizeOf(context).width);
+              expect(context.height, equals(600));
+              expect(context.width, equals(800));
               return const SizedBox.shrink();
             },
           ),
@@ -36,8 +36,7 @@ void main() {
         MaterialApp(
           home: Builder(
             builder: (context) {
-              final padding = context.mediaQueryPadding;
-              expect(context.safeAreaHeight, MediaQuery.sizeOf(context).height - (padding.top + padding.bottom));
+              expect(context.safeAreaHeight, equals(600));
               return const SizedBox.shrink();
             },
           ),
@@ -84,7 +83,7 @@ void main() {
               expect(context.mediaQuery, MediaQuery.of(context));
               expect(context.viewPadding, MediaQuery.viewPaddingOf(context));
               expect(context.viewInsets, MediaQuery.viewInsetsOf(context));
-              expect(context.orientation, MediaQuery.of(context).orientation);
+              expect(context.orientation, equals(Orientation.landscape));
               return const SizedBox.shrink();
             },
           ),
@@ -137,7 +136,7 @@ void main() {
     });
 
     testWidgets('isPhone, isTablet, and isDesktop classifications are correct', (WidgetTester tester) async {
-      tester.view.physicalSize = const Size(400, 500); // Phone size
+      tester.view.physicalSize = const Size(400, 500);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(
         MaterialApp(
@@ -152,7 +151,7 @@ void main() {
         ),
       );
 
-      tester.view.physicalSize = const Size(800, 1200); // Tablet size
+      tester.view.physicalSize = const Size(800, 1200);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(
         MaterialApp(
@@ -167,7 +166,7 @@ void main() {
         ),
       );
 
-      tester.view.physicalSize = const Size(1400, 1300); // Desktop size
+      tester.view.physicalSize = const Size(1400, 1300);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(
         MaterialApp(
@@ -184,7 +183,6 @@ void main() {
     });
 
     testWidgets('isKeyboardOpen is open', (WidgetTester tester) async {
-      // Simulating a keyboard open scenario
       tester.view.viewInsets = const FakeViewPadding(bottom: 100);
       await tester.pumpWidget(
         MaterialApp(
@@ -199,7 +197,6 @@ void main() {
     });
 
     testWidgets('isKeyboardOpen is close', (WidgetTester tester) async {
-      // Simulating a keyboard open scenario
       tester.view.viewInsets = FakeViewPadding.zero;
       await tester.pumpWidget(
         MaterialApp(
@@ -219,7 +216,7 @@ void main() {
       MaterialApp(
         home: Builder(
           builder: (context) {
-            expect(context.flutterView, View.of(context));
+            expect(context.flutterView, tester.view);
             return const SizedBox.shrink();
           },
         ),
@@ -243,12 +240,15 @@ void main() {
 
   testWidgets('textScaler returns correct value', (WidgetTester tester) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: Builder(
-          builder: (context) {
-            expect(context.textScaler, MediaQuery.textScalerOf(context));
-            return const SizedBox.shrink();
-          },
+      MediaQuery(
+        data: const MediaQueryData(textScaler: TextScaler.linear(5)),
+        child: MaterialApp(
+          home: Builder(
+            builder: (context) {
+              expect(context.textScaler, const TextScaler.linear(5));
+              return const SizedBox.shrink();
+            },
+          ),
         ),
       ),
     );
@@ -257,10 +257,29 @@ void main() {
   testWidgets('directionality returns correct value', (WidgetTester tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        builder: (context, child) {
-          expect(context.directionality, TextDirection.ltr);
-          return const SizedBox.shrink();
-        },
+        home: Directionality(
+          textDirection: TextDirection.ltr,
+          child: Builder(
+            builder: (context) {
+              expect(context.directionality, TextDirection.ltr);
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Builder(
+            builder: (context) {
+              expect(context.directionality, TextDirection.rtl);
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
       ),
     );
   });
@@ -283,7 +302,7 @@ void main() {
       MaterialApp(
         home: Builder(
           builder: (context) {
-            expect(context.usingBoldText, MediaQuery.boldTextOf(context));
+            expect(context.usingBoldText, MediaQueryData.fromView(tester.view).boldText);
             return const SizedBox.shrink();
           },
         ),
@@ -292,6 +311,8 @@ void main() {
   });
 
   testWidgets('topSafeAreaPadding returns correct value', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(800, 600);
+    tester.view.devicePixelRatio = 1.0;
     tester.view.padding = const FakeViewPadding(top: 24);
     await tester.pumpWidget(
       MaterialApp(
@@ -306,6 +327,8 @@ void main() {
   });
 
   testWidgets('bottomSafeAreaPadding returns correct value', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(800, 600);
+    tester.view.devicePixelRatio = 1.0;
     tester.view.padding = const FakeViewPadding(bottom: 16);
     await tester.pumpWidget(
       MaterialApp(
@@ -321,7 +344,6 @@ void main() {
 
   testWidgets('rebuildWidget triggers rebuild', (WidgetTester tester) async {
     var rebuildCount = 0;
-
     await tester.pumpWidget(
       MaterialApp(
         home: Builder(
