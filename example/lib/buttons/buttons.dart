@@ -84,6 +84,56 @@ class ButtonsExample extends StatelessWidget {
                   Icons.delete_forever,
                 ),
               ),
+              verticalBox8,
+              CoreFilledButton.autoIndicator(
+                indicatorStyle: const IndicatorStyle(
+                  strokeWidth: 3,
+                ),
+                onPressed: 2.seconds.delay<void>,
+                child: CoreText.labelLarge(
+                  'Core Adaptive Filled Button with Auto Indicator',
+                  textColor: context.colorScheme.onPrimary,
+                ),
+              ),
+              verticalBox8,
+              CoreTextButton.autoIndicator(
+                indicatorStyle: const IndicatorStyle(
+                  strokeWidth: 3,
+                ),
+                onPressed: 2.seconds.delay<void>,
+                child: const CoreText.labelLarge(
+                  'Core Text Button with Auto Indicator',
+                ),
+              ),
+              CoreOutlinedButton.autoIndicator(
+                indicatorStyle: const IndicatorStyle(
+                  strokeWidth: 3,
+                ),
+                onPressed: 2.seconds.delay<void>,
+                child: const CoreText.labelLarge(
+                  'Core Outlined Button with Auto Indicator',
+                ),
+              ),
+              verticalBox8,
+              CoreIconButton.autoIndicator(
+                indicatorStyle: const IndicatorStyle(
+                  strokeWidth: 3,
+                ),
+                onPressed: 2.seconds.delay<void>,
+                icon: const Icon(
+                  Icons.delete_forever,
+                ),
+              ),
+              verticalBox8,
+              CoreIconButton.filledAutoIndicator(
+                indicatorStyle: const IndicatorStyle(
+                  strokeWidth: 3,
+                ),
+                onPressed: 2.seconds.delay<void>,
+                icon: const Icon(
+                  Icons.delete_forever,
+                ),
+              ),
             ],
           ),
         ),
