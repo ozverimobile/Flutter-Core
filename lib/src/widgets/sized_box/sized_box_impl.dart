@@ -21,4 +21,6 @@ class CoreSizedBox extends SizedBox {
       height: (height ?? 0.0) - (other.height ?? 0.0),
     );
   }
+
+  
 }
