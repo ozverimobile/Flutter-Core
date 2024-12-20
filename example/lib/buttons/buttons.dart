@@ -84,6 +84,17 @@ class ButtonsExample extends StatelessWidget {
                   Icons.delete_forever,
                 ),
               ),
+              verticalBox8,
+              CoreFilledButton.autoIndicator(
+                indicatorStyle: const IndicatorStyle(
+                  strokeWidth: 3,
+                ),
+                onPressed: 2.seconds.delay<void>,
+                child: CoreText.labelLarge(
+                  'Core Adaptive Filled Button with Auto Indicator',
+                  textColor: context.colorScheme.onPrimary,
+                ),
+              ),
             ],
           ),
         ),

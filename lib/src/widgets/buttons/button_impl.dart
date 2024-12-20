@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -125,7 +126,7 @@ class CoreOutlinedButton extends StatelessWidget {
 }
 
 @immutable
-class CoreFilledButton extends StatelessWidget {
+class CoreFilledButton extends StatefulWidget {
   const CoreFilledButton({
     required this.child,
     required this.onPressed,
@@ -134,37 +135,115 @@ class CoreFilledButton extends StatelessWidget {
     this.backgroundColor,
     this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     super.key,
-  });
+  })  : _autoIndicator = false,
+        _indicatorStyle = null;
+
+  const CoreFilledButton.autoIndicator({
+    required this.child,
+    required this.onPressed,
+    this.borderRadius = const BorderRadius.all(Radius.circular(8)),
+    this.minSize = kMinInteractiveDimensionCupertino,
+    this.backgroundColor,
+    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    super.key,
+    IndicatorStyle? indicatorStyle,
+  })  : _autoIndicator = true,
+        _indicatorStyle = indicatorStyle;
 
   final Widget child;
-  final VoidCallback? onPressed;
+  final FutureOr<dynamic> Function()? onPressed;
   final BorderRadius borderRadius;
   final double minSize;
   final Color? backgroundColor;
   final EdgeInsetsGeometry padding;
+  final bool _autoIndicator;
+  final IndicatorStyle? _indicatorStyle;
+
+  @override
+  State<CoreFilledButton> createState() => _CoreFilledButtonState();
+}
+
+class _CoreFilledButtonState extends State<CoreFilledButton> {
+  var _isProcessing = false;
 
   @override
   Widget build(BuildContext context) {
     return switch (context.theme.platform) {
       TargetPlatform.iOS || TargetPlatform.macOS => CupertinoButton(
-          onPressed: onPressed,
-          padding: padding,
-          color: backgroundColor ?? context.theme.colorScheme.primary,
-          minSize: minSize,
-          borderRadius: borderRadius,
-          child: child,
+          onPressed: () async {
+            if (widget.onPressed == null) return;
+            if (!widget._autoIndicator) return await widget.onPressed!.call();
+            setState(() => _isProcessing = true);
+            final overlayEntry = OverlayEntry(builder: (context) => const Positioned.fill(child: AbsorbPointer()));
+            Overlay.of(context).insert(overlayEntry);
+            try {
+              await widget.onPressed!.call();
+              if (mounted) setState(() => _isProcessing = false);
+              overlayEntry.remove();
+            } catch (e) {
+              if (mounted) setState(() => _isProcessing = false);
+              overlayEntry.remove();
+              rethrow;
+            }
+          },
+          padding: widget.padding,
+          color: widget.backgroundColor ?? context.theme.colorScheme.primary,
+          minSize: widget.minSize,
+          borderRadius: widget.borderRadius,
+          child: !_isProcessing
+              ? widget.child
+              : Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CupertinoActivityIndicator(
+                      color: widget._indicatorStyle?.color ?? context.theme.colorScheme.onPrimary,
+                      radius: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius,
+                    ),
+                    Opacity(opacity: 0.001, child: widget.child),
+                  ],
+                ),
         ),
       _ => FilledButton(
-          onPressed: onPressed,
+          onPressed: () async {
+            if (widget.onPressed == null) return;
+            if (!widget._autoIndicator) return await widget.onPressed!.call();
+            setState(() => _isProcessing = true);
+            final overlayEntry = OverlayEntry(builder: (context) =>  const Positioned.fill(child: AbsorbPointer()));
+            Overlay.of(context).insert(overlayEntry);
+            try {
+              await widget.onPressed!.call();
+              if (mounted) setState(() => _isProcessing = false);
+              overlayEntry.remove();
+            } catch (e) {
+              if (mounted) setState(() => _isProcessing = false);
+              overlayEntry.remove();
+              rethrow;
+            }
+          },
           style: FilledButton.styleFrom(
             shape: RoundedRectangleBorder(
-              borderRadius: borderRadius,
+              borderRadius: widget.borderRadius,
             ),
-            minimumSize: Size(minSize, minSize),
-            backgroundColor: backgroundColor,
-            padding: padding,
+            minimumSize: Size(widget.minSize, widget.minSize),
+            backgroundColor: widget.backgroundColor,
+            padding: widget.padding,
           ),
-          child: child,
+          child: !_isProcessing
+              ? widget.child
+              : Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                      height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                      child: CircularProgressIndicator(
+                        color: widget._indicatorStyle?.color ?? context.theme.colorScheme.onPrimary,
+                        strokeWidth: widget._indicatorStyle?.strokeWidth ?? IndicatorStyle.defaultStrokeWidth,
+                      ),
+                    ),
+                    Opacity(opacity: 0.001, child: widget.child),
+                  ],
+                ),
         ),
     };
   }
