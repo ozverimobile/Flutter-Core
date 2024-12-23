@@ -14,17 +14,13 @@ void main() {
       });
 
       test('isNullOrEmpty returns true for empty set', () {
-        nullSet = <int>{};
-        expect(nullSet.isNullOrEmpty, isTrue);
-        nullSet = <String>{};
-        expect(nullSet.isNullOrEmpty, isTrue);
+        expect(<int>{}.isNullOrEmpty, isTrue);
+        expect(<String>{}.isNullOrEmpty, isTrue);
       });
 
       test('isNullOrEmpty returns false for non-empty set', () {
-        nullSet= <int>{1, 2, 3};
-        expect(nullSet.isNullOrEmpty, isFalse);
-        nullSet = <String>{'test', 'test2', 'test3'};
-        expect(nullSet.isNullOrEmpty, isFalse);
+        expect(<int>{1, 2, 3}.isNullOrEmpty, isFalse);
+        expect(<String>{'test', 'test2', 'test3'}.isNullOrEmpty, isFalse);
       });
     });
 
@@ -34,17 +30,13 @@ void main() {
       });
 
       test('isNotNullAndNotEmpty returns false for empty set', () {
-        nullSet = <int>{};
-        expect(nullSet.isNotNullAndNotEmpty, isFalse);
-        nullSet = <String>{};
-        expect(nullSet.isNotNullAndNotEmpty, isFalse);
+        expect(<int>{}.isNotNullAndNotEmpty, isFalse);
+        expect(<String>{}.isNotNullAndNotEmpty, isFalse);
       });
 
       test('isNotNullAndNotEmpty returns true for non-empty set', () {
-        nullSet = <int>{1, 2, 3};
-        expect(nullSet.isNotNullAndNotEmpty, isTrue);
-        nullSet = <String>{'test', 'test2', 'test3'};
-        expect(nullSet.isNotNullAndNotEmpty, isTrue);
+        expect(<int>{1, 2, 3}.isNotNullAndNotEmpty, isTrue);
+        expect(<String>{'test', 'test2', 'test3'}.isNotNullAndNotEmpty, isTrue);
       });
     });
   });

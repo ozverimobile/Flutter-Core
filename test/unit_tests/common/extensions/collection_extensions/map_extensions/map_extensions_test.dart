@@ -19,19 +19,18 @@ void main() {
       });
 
       test('isNullOrEmpty should return false for non-empty map', () {
-        nullableMap = {'key': 1};
-        expect(nullableMap.isNullOrEmpty, isFalse);
+        expect({'key': 1}.isNullOrEmpty, isFalse);
 
-        nullableMap = {'key': 'test'};
-        expect(nullableMap.isNullOrEmpty, isFalse);
+        expect({'key': 'test'}.isNullOrEmpty, isFalse);
 
-        nullableMap = {
-          'key': ['test', 'test'],
-        };
-        expect(nullableMap.isNullOrEmpty, isFalse);
+        expect(
+          {
+            'key': ['test', 'test'],
+          }.isNullOrEmpty,
+          isFalse,
+        );
 
-        nullableMap = {'key': null};
-        expect(nullableMap.isNullOrEmpty, isFalse);
+        expect({'key': null}.isNullOrEmpty, isFalse);
       });
     });
     group('isNotNullAndNotEmpty Group', () {
@@ -45,19 +44,18 @@ void main() {
       });
 
       test('isNotNullAndNotEmpty should return true for non-empty map', () {
-        nullableMap = {'key': 1};
-        expect(nullableMap.isNotNullAndNotEmpty, isTrue);
+        expect({'key': 1}.isNotNullAndNotEmpty, isTrue);
 
-        nullableMap = {'key': 'test'};
-        expect(nullableMap.isNotNullAndNotEmpty, isTrue);
+        expect({'key': 'test'}.isNotNullAndNotEmpty, isTrue);
 
-        nullableMap = {
-          'key': ['test', 'test'],
-        };
-        expect(nullableMap.isNotNullAndNotEmpty, isTrue);
+        expect(
+          {
+            'key': ['test', 'test'],
+          }.isNotNullAndNotEmpty,
+          isTrue,
+        );
 
-        nullableMap = {'key': null};
-        expect(nullableMap.isNotNullAndNotEmpty, isTrue);
+        expect({'key': null}.isNotNullAndNotEmpty, isTrue);
       });
     });
     group('notContainsKey Group', () {
@@ -66,22 +64,18 @@ void main() {
       });
 
       test('notContainsKey should return true for key not in map', () {
-        nullableMap = {'key': 1};
-        expect(nullableMap.notContainsKey('anotherKey'), isTrue);
+        expect({'key': 1}.notContainsKey('anotherKey'), isTrue);
       });
 
       test('notContainsKey should return false for key in map', () {
-        nullableMap = {'key': 1};
-        expect(nullableMap.notContainsKey('key'), isFalse);
+        expect({'key': 1}.notContainsKey('key'), isFalse);
       });
 
       test('notContainsKey should return true for null key', () {
-        nullableMap = {'key': 1};
-        expect(nullableMap.notContainsKey(null), isTrue);
+        expect({'key': 1}.notContainsKey(null), isTrue);
       });
       test('notContainsKey should return true for map with null values for a missing key', () {
-        nullableMap = {'key': null};
-        expect(nullableMap.notContainsKey('missingKey'), isTrue);
+        expect({'key': null}.notContainsKey('missingKey'), isTrue);
       });
     });
     group('notContainsValue Group', () {
@@ -90,24 +84,22 @@ void main() {
       });
 
       test('notContainsValue should return true for value not in map', () {
-        nullableMap = {'key': 1};
-        expect(nullableMap.notContainsValue(2), isTrue);
+        expect({'key': 1}.notContainsValue(2), isTrue);
 
-        nullableMap = {'key': 'test'};
-        expect(nullableMap.notContainsValue('test2'), isTrue);
+        expect({'key': 'test'}.notContainsValue('test2'), isTrue);
 
-        nullableMap = {
-          'key': ['test', 'test'],
-        };
-        expect(nullableMap.notContainsValue(['test']), isTrue);
+        expect(
+          {
+            'key': ['test', 'test'],
+          }.notContainsValue(['test']),
+          isTrue,
+        );
       });
 
       test('notContainsValue should return false for value in map', () {
-        nullableMap = {'key': 1};
-        expect(nullableMap.notContainsValue(1), isFalse);
+        expect({'key': 1}.notContainsValue(1), isFalse);
 
-        nullableMap = {'key': 'test'};
-        expect(nullableMap.notContainsValue('test'), isFalse);
+        expect({'key': 'test'}.notContainsValue('test'), isFalse);
       });
     });
   });
