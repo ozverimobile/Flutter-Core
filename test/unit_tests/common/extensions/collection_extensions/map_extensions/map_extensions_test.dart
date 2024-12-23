@@ -25,7 +25,9 @@ void main() {
         nullableMap = {'key': 'test'};
         expect(nullableMap.isNullOrEmpty, isFalse);
 
-        nullableMap = {'key': ['test','test']};
+        nullableMap = {
+          'key': ['test', 'test'],
+        };
         expect(nullableMap.isNullOrEmpty, isFalse);
 
         nullableMap = {'key': null};
@@ -49,7 +51,9 @@ void main() {
         nullableMap = {'key': 'test'};
         expect(nullableMap.isNotNullAndNotEmpty, isTrue);
 
-        nullableMap = {'key': ['test','test']};
+        nullableMap = {
+          'key': ['test', 'test'],
+        };
         expect(nullableMap.isNotNullAndNotEmpty, isTrue);
 
         nullableMap = {'key': null};
@@ -75,6 +79,10 @@ void main() {
         nullableMap = {'key': 1};
         expect(nullableMap.notContainsKey(null), isTrue);
       });
+      test('notContainsKey should return true for map with null values for a missing key', () {
+        nullableMap = {'key': null};
+        expect(nullableMap.notContainsKey('missingKey'), isTrue);
+      });
     });
     group('notContainsValue Group', () {
       test('notContainsValue should return true for null map', () {
@@ -88,7 +96,9 @@ void main() {
         nullableMap = {'key': 'test'};
         expect(nullableMap.notContainsValue('test2'), isTrue);
 
-        nullableMap = {'key': ['test','test']};
+        nullableMap = {
+          'key': ['test', 'test'],
+        };
         expect(nullableMap.notContainsValue(['test']), isTrue);
       });
 
@@ -98,22 +108,6 @@ void main() {
 
         nullableMap = {'key': 'test'};
         expect(nullableMap.notContainsValue('test'), isFalse);
-      });
-    });
-    group('notContainsKey Group', () {
-      test('isNullOrEmpty should return true for map with null values only', () {
-        nullableMap = {'key': null};
-        expect(nullableMap.isNullOrEmpty, isFalse);
-      });
-
-      test('isNotNullAndNotEmpty should return false for map with null values only', () {
-        nullableMap = {'key': null};
-        expect(nullableMap.isNotNullAndNotEmpty, isTrue);
-      });
-
-      test('notContainsKey should return true for map with null values for a missing key', () {
-        nullableMap = {'key': null};
-        expect(nullableMap.notContainsKey('missingKey'), isTrue);
       });
     });
   });

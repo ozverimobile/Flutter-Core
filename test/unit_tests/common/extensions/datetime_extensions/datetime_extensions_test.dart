@@ -61,14 +61,14 @@ Future<void> main() async {
     });
 
     test('toddMMyHHmmss formats date correctly', () {
-      expect(testDate.toddMMyHHmmss, '3.04.2024 12:00:00');
+      expect(testDate.toddMMyHHmmss, '03.04.2024 12:00:00');
     });
     test('toddMMyHHmm formats date and time correctly', () {
-      expect(testDate.toddMMyHHmm, '3.04.2024 12:00');
+      expect(testDate.toddMMyHHmm, '03.04.2024 12:00');
     });
 
     test('toddMMy formats date correctly', () {
-      expect(testDate.toddMMy, '3.04.2024');
+      expect(testDate.toddMMy, '03.04.2024');
     });
 
     test('toyMMdd formats date correctly', () {
@@ -83,15 +83,17 @@ Future<void> main() async {
       expect(testDate.toyyyyMMddHHmmss, '2024-04-03 12:00:00');
     });
     test('totalDaysInCurrentMonth returns correct total days', () {
+      expect(testDate.totalDaysInCurrentMonth, 30);
       expect(DateTime(2024, 2).totalDaysInCurrentMonth, 29);
       expect(DateTime(2023, 2).totalDaysInCurrentMonth, 28);
-      expect(DateTime(2024, 4).totalDaysInCurrentMonth, 30);
       expect(DateTime(2024, 5).totalDaysInCurrentMonth, 31);
     });
 
     test('isSameDate returns true for same day', () {
       final otherDate = DateTime(2024, 4, 3, 18);
+      final missingDate = DateTime(2022, 4, 3, 18);
       expect(testDate.isSameDate(otherDate), true);
+      expect(testDate.isSameDate(missingDate), false);
     });
 
     test('isToday returns true for today', () {

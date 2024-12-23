@@ -42,17 +42,13 @@ void main() {
 
       testWidgets('should execute future and return result', (tester) async {
         var result = '';
-        final future = Future<String>.delayed(
-          const Duration(milliseconds: 300),
-          () => testResult,
-        );
 
         final testWidget = MaterialApp(
           home: CoreBuilder(
             child: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () async {
-                  result = await future.loading();
+                  result = await Future<String>.delayed(const Duration(milliseconds: 300), () => testResult).loading();
                 },
                 child: const Text(runFuture),
               ),
@@ -75,18 +71,13 @@ void main() {
           isLoaderShown = CoreBuilderController.isShowLoadingNotifier.value;
         });
 
-        final future = Future<void>.delayed(
-          const Duration(milliseconds: 300),
-          () => throw Exception(testException),
-        );
-
         final testWidget = MaterialApp(
           home: CoreBuilder(
             child: Builder(
               builder: (context) => ElevatedButton(
                 onPressed: () async {
                   try {
-                    await future.loading();
+                    await Future<void>.delayed(const Duration(milliseconds: 300), () => throw Exception(testException)).loading();
                   } catch (_) {}
                 },
                 child: const Text(runFailingException),
@@ -106,11 +97,6 @@ void main() {
       });
 
       testWidgets('should rethrow the error from the future', (tester) async {
-        final future = Future<void>.delayed(
-          const Duration(milliseconds: 300),
-          () => throw Exception(testException),
-        );
-
         String? errorMessage;
 
         final testWidget = MaterialApp(
@@ -119,7 +105,7 @@ void main() {
               builder: (context) => ElevatedButton(
                 onPressed: () async {
                   try {
-                    await future.loading();
+                    await Future<void>.delayed(const Duration(milliseconds: 300), () => throw Exception(testException)).loading();
                   } catch (e) {
                     errorMessage = e.toString();
                   }

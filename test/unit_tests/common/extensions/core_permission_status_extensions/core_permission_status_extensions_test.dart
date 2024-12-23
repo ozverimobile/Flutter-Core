@@ -2,7 +2,7 @@ import 'package:flutter_core/flutter_core.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('CorePermissionStatus Extensions Tests', () {
+  group('CorePermissionStatusExtensions Tests', () {
     group('isGranted', () {
       test('returns true for granted status', () {
         const status = CorePermissionStatus.granted;
@@ -80,7 +80,7 @@ void main() {
     });
   });
 
-  group('Future<CorePermissionStatus> Extensions', () {
+  group('Future<CorePermissionStatusExtensions> Test ', () {
     group('isGranted', () {
       test('returns true for granted status', () async {
         final status = Future.value(CorePermissionStatus.granted);

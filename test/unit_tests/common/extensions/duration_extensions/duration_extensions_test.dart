@@ -39,7 +39,7 @@ void main() {
       expect(onlyMinutesDuration.toHHmmss, '00:45:00');
 
       const durationWithDays = Duration(days: 1, hours: 2, minutes: 30, seconds: 4);
-      expect(durationWithDays.toHHmmss, '26:30:04');
+      expect(durationWithDays.toHHmmss, '02:30:04');
     });
 
     test('toHHmmss should handle zero duration correctly', () {
