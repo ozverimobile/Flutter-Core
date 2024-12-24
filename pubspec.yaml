@@ -2,7 +2,6 @@ name: flutter_core
 description: "Flutter Core Project"
 version: 2.0.3
 
-
 environment:
   sdk: ">=3.3.4 <4.0.0"
   flutter: ">=3.3.0"
@@ -41,6 +40,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   very_good_analysis: ^6.0.0
+  sqflite_common_ffi: ^2.0.1
 
 flutter:
   plugin:
@@ -60,6 +60,5 @@ flutter:
         pluginClass: FlutterCoreWeb
         fileName: flutter_core_web.dart
 
-        
   assets:
     - assets/
