@@ -5,9 +5,6 @@ void main() {
   group('MapExtensionNullable Tests', () {
     Map<String, dynamic>? nullableMap;
 
-    setUp(() {
-      nullableMap = null;
-    });
     group('isNullOrEmpty Group', () {
       test('isNullOrEmpty should return true for null map', () {
         expect(nullableMap.isNullOrEmpty, isTrue);

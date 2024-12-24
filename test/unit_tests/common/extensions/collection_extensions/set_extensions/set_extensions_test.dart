@@ -5,9 +5,6 @@ void main() {
   group('SetExtensionNullable Tests', () {
     Set<dynamic>? nullSet;
 
-    setUp(() {
-      nullSet = null;
-    });
     group('isNullOrEmpty Group', () {
       test('isNullOrEmpty returns true for null set', () {
         expect(nullSet.isNullOrEmpty, isTrue);
