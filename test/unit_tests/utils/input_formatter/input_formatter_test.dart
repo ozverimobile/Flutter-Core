@@ -1,5 +1,4 @@
 import 'package:flutter_core/flutter_core.dart';
-import 'package:flutter_core/src/utils/input_formatter/input_formatters.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

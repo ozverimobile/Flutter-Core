@@ -69,19 +69,19 @@ extension DateTimeExtension on DateTime {
     return DateFormat('HH:mm').format(this);
   }
 
-  /// Formats the date as 'd.MM.y HH:mm:ss' eg. 03.04.2022 12:00:00
+  /// Formats the date as 'dd.MM.y HH:mm:ss' eg. 03.04.2022 12:00:00
   String get toddMMyHHmmss {
-    return DateFormat('d.MM.y HH:mm:ss').format(this);
+    return DateFormat('dd.MM.y HH:mm:ss').format(this);
   }
 
-  /// Formats the date as 'd.MM.y HH:mm' eg. 03.04.2022 12:00
+  /// Formats the date as 'dd.MM.y HH:mm' eg. 03.04.2022 12:00
   String get toddMMyHHmm {
-    return DateFormat('d.MM.y HH:mm').format(this);
+    return DateFormat('dd.MM.y HH:mm').format(this);
   }
 
-  /// Formats the date as 'd.MM.y' eg. 03.04.2022
+  /// Formats the date as 'dd.MM.y' eg. 03.04.2022
   String get toddMMy {
-    return DateFormat('d.MM.y').format(this);
+    return DateFormat('dd.MM.y').format(this);
   }
 
   /// Formats the date as 'y.MM.dd' eg. 2022.04.03
