@@ -8,6 +8,13 @@ final class Product extends BaseModel<Product> {
     this.name,
   });
 
+  factory Product.fromJson(Map<String, dynamic> json) {
+    return Product(
+      id: json['id'] as int?,
+      name: json['name'] as String?,
+    );
+  }
+
   final int? id;
   final String? name;
 
