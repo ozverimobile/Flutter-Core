@@ -1,5 +1,7 @@
 import 'package:flutter_core/flutter_core.dart';
 
+import 'sql_migrations.dart';
+
 class Migration {
   Migration({required this.version, required this.execute});
   int version;
@@ -8,12 +10,12 @@ class Migration {
 
   static void setMigrations(Database database) {
     migrations = [
-      /* Migration(
+      Migration(
         version: 2,
         execute: () async {
-          await database.execute(SqlQueries.migration2SelectAllTableName);
+          await database.execute(SqlMigrations.addIsDoneColumnToTodoTable);
         },
-      ), */
+      ),
     ];
   }
 }

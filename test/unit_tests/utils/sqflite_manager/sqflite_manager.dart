@@ -1,14 +1,21 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_core/flutter_core.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'sqflite_db_migration.dart';
 import 'sql_queries.dart';
 
 final class SqfliteManager extends CoreSqfliteManager {
-  SqfliteManager() : super(version: 1);
+  SqfliteManager() : super(version: 2, path: inMemoryDatabasePath);
+
+  @override
+  Future<void> onConfigure(Database db) async {
+    if (kDebugMode) print('onConfigure');
+  }
 
   @override
   Future<void> onCreate(Database db, int version) async {
-    await db.execute(SqlQueries.createServiceCaches);
+    await db.execute(SqlQueries.createTodos);
   }
 
   @override
@@ -32,5 +39,15 @@ final class SqfliteManager extends CoreSqfliteManager {
       final migration = Migration.migrations.firstWhere((element) => element.version == i);
       await migration.execute();
     }
+  }
+
+  @override
+  Future<void> onDowngrade(Database db, int oldVersion, int newVersion) async {
+    if (kDebugMode) print('onDowngrade: oldVersion: $oldVersion, newVersion: $newVersion');
+  }
+
+  @override
+  Future<void> onOpen(Database db) async {
+    if (kDebugMode) print('onOpen');
   }
 }

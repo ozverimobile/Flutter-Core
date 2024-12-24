@@ -1,19 +1,13 @@
-
-
 import 'tables.dart';
 
 class SqlQueries {
-  static String createServiceCaches = '''
-      CREATE TABLE ${ServiceCacheTable.tableName} (
-      ${ServiceCacheTable.id} INTEGER, 
-      ${ServiceCacheTable.userId} TEXT,
-      ${ServiceCacheTable.path} TEXT,
-      ${ServiceCacheTable.httpType} TEXT,
-      ${ServiceCacheTable.queryParameters} TEXT,
-      ${ServiceCacheTable.pathSuffix} TEXT,
-      ${ServiceCacheTable.requestData} TEXT,
-      ${ServiceCacheTable.baseResponse} TEXT,
-      PRIMARY KEY("${ServiceCacheTable.id}" AUTOINCREMENT)
+  static String createTodos = '''
+      CREATE TABLE ${TodoTable.tableName} (
+      ${TodoTable.id} INTEGER, 
+      ${TodoTable.title} TEXT,
+      ${TodoTable.description} TEXT,
+      ${TodoTable.isDone} INTEGER,
+      PRIMARY KEY("${TodoTable.id}" AUTOINCREMENT)
     );
   ''';
 }

@@ -1,12 +1,8 @@
-abstract class ServiceCacheTable {
-  static const String tableName = 'serviceCaches';
+abstract class TodoTable {
+  static const String tableName = 'Todos';
 
   static const String id = 'id';
-  static const String userId = 'userId';
-  static const String path = 'path';
-  static const String httpType = 'httpType';
-  static const String queryParameters = 'queryParameters';
-  static const String pathSuffix = 'pathSuffix';
-  static const String requestData = 'requestData';
-  static const String baseResponse = 'baseResponse';
+  static const String title = 'title';
+  static const String description = 'description';
+  static const String isDone = 'isDone';
 }
