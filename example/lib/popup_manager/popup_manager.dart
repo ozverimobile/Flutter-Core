@@ -338,6 +338,15 @@ class _PopupManagerWidgetState extends State<PopupManagerWidget> {
                 }
               },
             ),
+            CoreTextButton(
+              child: const Text('Show Patch Installed BottomSheet'),
+              onPressed: () async {
+                await popupManager.showPatchInstalledBottomSheet(
+                  context: context,
+                  isForce: false,
+                );
+              },
+            ),
           ],
         ),
       ),
