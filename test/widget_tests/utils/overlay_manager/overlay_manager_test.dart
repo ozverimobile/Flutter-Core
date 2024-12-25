@@ -37,8 +37,8 @@ void main() {
     expect(find.text('Show Toast'), findsOneWidget);
 
     // showToast butonunu bul ve tıkla
-    final showToast = find.byKey(const Key('showToast'));
-    await tester.tap(showToast);
+    final finder = find.byKey(const Key('showToast'));
+    await tester.tap(finder);
 
     // Değişiklikleri yeniden çizin
     await tester.pump();
@@ -85,8 +85,8 @@ void main() {
     expect(find.text('Show Overlay'), findsOneWidget);
 
     // showOverlay butonunu bul ve tıkla
-    final showOverlay = find.byKey(const Key('showOverlay'));
-    await tester.tap(showOverlay);
+    final finder = find.byKey(const Key('showOverlay'));
+    await tester.tap(finder);
 
     // Değişiklikleri yeniden çizin
     await tester.pump();
@@ -145,10 +145,10 @@ void main() {
     expect(find.text('Show Toast 2'), findsOneWidget);
 
     // showToast butonunu bul ve tıkla
-    final showToast1 = find.byKey(const Key('showToast1'));
-    final showToast2 = find.byKey(const Key('showToast2'));
-    await tester.tap(showToast1);
-    await tester.tap(showToast2);
+    final finder1 = find.byKey(const Key('showToast1'));
+    final finder2 = find.byKey(const Key('showToast2'));
+    await tester.tap(finder1);
+    await tester.tap(finder2);
 
     // Değişiklikleri yeniden çizin
     await tester.pump();
