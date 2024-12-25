@@ -1511,17 +1511,16 @@ class PopupManager implements IPopupManager {
   Future<void> showPatchInstalledBottomSheet({
     required bool isForce,
     BuildContext? context,
-    String? shortTitle,
-    String? longTitle,
+    String? title,
     String? message,
     String? closeButtonLabel,
     String? laterButtonLabel,
+    VoidCallback? onPrimaryButtonPressed,
   }) async {
     final id = UniqueKey().toString();
     final currentContext = context ?? _navigatorContext;
 
-    final shortTitle0 = shortTitle ?? (currentContext.locale.languageCode.toLowerCase() == 'tr' ? 'YAMA BAŞARIYLA YÜKLENDİ' : 'PATCH INSTALLED SUCCESSFULLY');
-    final longTitle0 = longTitle ?? (currentContext.locale.languageCode.toLowerCase() == 'tr' ? 'En güncel sürümü kullanmaya başlayabilirsiniz.' : 'You can start using the latest version.');
+    final title0 = title ?? (currentContext.locale.languageCode.toLowerCase() == 'tr' ? 'En güncel sürümü kullanmaya başlayabilirsiniz.' : 'You can start using the latest version.');
     final message0 = message ?? (currentContext.locale.languageCode.toLowerCase() == 'tr' ? 'Yeni özellikler ve hata düzeltmeleri ile uygulamanızı daha güvenli ve verimli kullanabilirsiniz. En son sürümü kullanmak için uygulamanızı yeniden başlatın.' : 'You can use your application more securely and efficiently with new features and bug fixes. Restart your application to use the latest version.');
     final closeButtonLabel0 = closeButtonLabel ?? (currentContext.locale.languageCode.toLowerCase() == 'tr' ? 'Uygulamayı Kapat' : 'Close Application');
     final laterButtonLabel0 = laterButtonLabel ?? (currentContext.locale.languageCode.toLowerCase() == 'tr' ? 'Daha Sonra' : 'Later');
@@ -1570,13 +1569,8 @@ class PopupManager implements IPopupManager {
                         ),
                       ),
                       verticalBox12,
-                      CoreText.titleSmall(
-                        shortTitle0,
-                        textAlign: TextAlign.center,
-                      ),
-                      verticalBox8,
                       CoreText.titleLarge(
-                        longTitle0,
+                        title0,
                         fontWeight: FontWeight.bold,
                         textAlign: TextAlign.center,
                       ),
@@ -1593,7 +1587,7 @@ class PopupManager implements IPopupManager {
                         width: context.width,
                         height: 50,
                         child: CoreFilledButton(
-                          onPressed: () => exit(0),
+                          onPressed: onPrimaryButtonPressed ?? () => exit(0),
                           borderRadius: BorderRadius.circular(10),
                           child: CoreText.bodyLarge(
                             closeButtonLabel0,
