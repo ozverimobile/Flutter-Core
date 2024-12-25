@@ -1562,7 +1562,7 @@ class PopupManager implements IPopupManager {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                           color: context.theme.colorScheme.primary,
                           child: Icon(
-                            Icons.chat,
+                            Icons.downloading_rounded,
                             size: 36,
                             color: context.colorScheme.onPrimary,
                           ),
