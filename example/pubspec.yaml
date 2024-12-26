@@ -3,7 +3,7 @@ description: "Demonstrates how to use the flutter_core plugin."
 publish_to: "none"
 
 environment:
-  sdk: ">=3.4.0 <4.0.0"
+  sdk: ^3.5.4
 
 dependencies:
   flutter:
@@ -23,9 +23,22 @@ dev_dependencies:
 
   flutter_lints: ^3.0.0
   very_good_analysis: ^6.0.0
+  patrol: ^3.13.2
+
+dependency_overrides:
+  meta: ^1.15.0
 
 flutter:
   uses-material-design: true
 
   assets:
     - ../assets/
+
+
+patrol:
+  app_name: Example App
+  android:
+    package_name: com.flutter.flutter_core_example
+  ios:
+    bundle_id: com.flutter.flutter_core_example
+

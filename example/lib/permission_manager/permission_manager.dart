@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
+import 'package:flutter_core_example/permission_manager/permission_manager_keys.dart';
 
 void main() {
   runApp(const PermissionManagerApp());
@@ -45,68 +45,101 @@ class _PermissionManagerAppState extends State<PermissionManagerApp> {
   }
 }
 
-class _NotificationPermissionButton extends StatelessWidget {
+class _NotificationPermissionButton extends StatefulWidget {
   const _NotificationPermissionButton();
 
   @override
+  State<_NotificationPermissionButton> createState() => _NotificationPermissionButtonState();
+}
+
+class _NotificationPermissionButtonState extends State<_NotificationPermissionButton> {
+  CorePermissionStatus? notificationPermissionStatus;
+
+  @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () async {
-        if (kDebugMode) {
-          print(
-            await _permissionManager.requestPermission(
+    return Column(
+      children: [
+        Text(notificationPermissionStatus.toString(), key: Key(PermissionManagerKeys.notificationPermissionStatusKey.rawValue)),
+        ElevatedButton(
+          key: Key(PermissionManagerKeys.notificationPermissionButtonKey.toString()),
+          onPressed: () async {
+            notificationPermissionStatus = await _permissionManager.requestPermission(
               context: context,
               showAskLaterOption: true,
               permission: CorePermission.notification,
-            ),
-          );
-        }
-      },
-      child: const Text('Request Notification Permission'),
+            );
+
+            setState(() {});
+          },
+          child: const Text('Request Notification Permission'),
+        ),
+      ],
     );
   }
 }
 
-class _CameraPermissionButton extends StatelessWidget {
+class _CameraPermissionButton extends StatefulWidget {
   const _CameraPermissionButton();
 
   @override
+  State<_CameraPermissionButton> createState() => _CameraPermissionButtonState();
+}
+
+class _CameraPermissionButtonState extends State<_CameraPermissionButton> {
+  CorePermissionStatus? cameraPermissionStatus;
+
+  @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () async {
-        if (kDebugMode) {
-          print(
-            await _permissionManager.requestPermission(
+    return Column(
+      children: [
+        Text(cameraPermissionStatus.toString(), key: Key(PermissionManagerKeys.cameraPermissionStatusKey.rawValue)),
+        ElevatedButton(
+          key: Key(PermissionManagerKeys.cameraPermissionButtonKey.rawValue),
+          onPressed: () async {
+            cameraPermissionStatus = await _permissionManager.requestPermission(
               context: context,
               showAskLaterOption: true,
               permission: CorePermission.camera,
-            ),
-          );
-        }
-      },
-      child: const Text('Request Camera Permission'),
+            );
+
+            setState(() {});
+          },
+          child: const Text('Request Camera Permission'),
+        ),
+      ],
     );
   }
 }
 
-class _PhotosPermissionButton extends StatelessWidget {
+class _PhotosPermissionButton extends StatefulWidget {
   const _PhotosPermissionButton();
 
   @override
+  State<_PhotosPermissionButton> createState() => _PhotosPermissionButtonState();
+}
+
+class _PhotosPermissionButtonState extends State<_PhotosPermissionButton> {
+  CorePermissionStatus? photosPermissionStatus;
+
+  @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () async {
-        if (kDebugMode) {
-          print(
-            await _permissionManager.requestPermission(
+    return Column(
+      children: [
+        Text(photosPermissionStatus.toString(), key: Key(PermissionManagerKeys.photosPermissionStatusKey.rawValue)),
+        ElevatedButton(
+          key: Key(PermissionManagerKeys.photosPermissionButtonKey.rawValue),
+          onPressed: () async {
+            photosPermissionStatus = await _permissionManager.requestPermission(
               context: context,
               showAskLaterOption: true,
               permission: CorePermission.photos,
-            ),
-          );
-        }
-      },
-      child: const Text('Request Photos Permission'),
+            );
+
+            setState(() {});
+          },
+          child: const Text('Request Photos Permission'),
+        ),
+      ],
     );
   }
 }
