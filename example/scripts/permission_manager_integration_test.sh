@@ -1,0 +1,1 @@
+patrol test -t integration_test/permission_manager/permission_manager_test.dart    
