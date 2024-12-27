@@ -35,6 +35,7 @@ class _PermissionManagerAppState extends State<PermissionManagerApp> {
                   _NotificationPermissionButton(),
                   _CameraPermissionButton(),
                   _PhotosPermissionButton(),
+                  _LocationPermissionButton(),
                 ],
               ),
             ),
@@ -107,6 +108,27 @@ class _PhotosPermissionButton extends StatelessWidget {
         }
       },
       child: const Text('Request Photos Permission'),
+    );
+  }
+}
+
+class _LocationPermissionButton extends StatelessWidget {
+  const _LocationPermissionButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () async {
+        if (kDebugMode) {
+          print(
+            await _permissionManager.requestPermission(
+              context: context,
+              permission: CorePermission.location,
+            ),
+          );
+        }
+      },
+      child: const Text('Request Location Permission'),
     );
   }
 }

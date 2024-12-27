@@ -49,5 +49,10 @@
 	<string>$(PRODUCT_NAME) requires access to the photo library to save images.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>$(PRODUCT_NAME) requires access to the camera to take photos.</string>
+	<key>NSLocationUsageDescription</key>
+	<string>$(PRODUCT_NAME) requests permission for us to use your location information.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>$(PRODUCT_NAME) requests permission for us to use your location information.</string>
+
 </dict>
 </plist>
