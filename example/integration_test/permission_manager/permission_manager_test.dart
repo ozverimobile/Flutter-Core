@@ -13,7 +13,7 @@ void main() {
       await $.pumpWidgetAndSettle(const PermissionManagerApp());
 
       // Notification izin butonu bul
-      final notificationPermissionButtonFinder = find.byKey(Key(PermissionManagerKeys.notificationPermissionButtonKey.rawValue));
+      final notificationPermissionButtonFinder = $(Key(PermissionManagerKeys.notificationPermissionButtonKey.rawValue));
 
       // Butonun varlığını kontrol et
       expect($(notificationPermissionButtonFinder), findsOneWidget);
@@ -22,7 +22,7 @@ void main() {
       await $.tap(notificationPermissionButtonFinder);
 
       // Devam et butonunu bul
-      final continueButtonFinder = find.byWidgetPredicate((widget) => widget is CoreFilledButton);
+      final continueButtonFinder = $(CoreFilledButton);
 
       // Butonun varlığını kontrol et
       expect($(continueButtonFinder), findsOneWidget);
@@ -33,14 +33,17 @@ void main() {
       // İzin verilmiyor
       await $.native.denyPermission();
 
+      // Notification izin butonu bul
+      final notificationPermissionButtonFinder2 = $(Key(PermissionManagerKeys.notificationPermissionButtonKey.rawValue));
+
       // Butonun varlığını kontrol et
-      expect($(notificationPermissionButtonFinder), findsOneWidget);
+      expect($(notificationPermissionButtonFinder2), findsOneWidget);
 
       // Butona tıkla
-      await $.tap(notificationPermissionButtonFinder);
+      await $.tap(notificationPermissionButtonFinder2);
 
       // Dialogu kapat butonunu bul
-      final closeButtonFinder = find.byType(CoreIconButton);
+      final closeButtonFinder = $(CoreIconButton);
 
       // Butonun varlığını kontrol et
       expect($(closeButtonFinder), findsOneWidget);
@@ -48,14 +51,17 @@ void main() {
       // butona tıkla
       await $.tap(closeButtonFinder);
 
+      // Notification izin butonu bul
+      final notificationPermissionButtonFinder3 = $(Key(PermissionManagerKeys.notificationPermissionButtonKey.rawValue));
+
       // Butonun varlığını kontrol et
-      expect($(notificationPermissionButtonFinder), findsOneWidget);
+      expect($(notificationPermissionButtonFinder3), findsOneWidget);
 
       // Butona tıkla
-      await $.tap(notificationPermissionButtonFinder);
+      await $.tap(notificationPermissionButtonFinder3);
 
       // Devam et butonunu bul
-      final continueButtonFinder2 = find.byWidgetPredicate((widget) => widget is CoreFilledButton);
+      final continueButtonFinder2 = $(CoreFilledButton);
 
       // Butonun varlığını kontrol et
       expect($(continueButtonFinder2), findsOneWidget);
@@ -67,10 +73,10 @@ void main() {
       await $('İptal').tap();
 
       // Butonun varlığını kontrol et
-      expect($(notificationPermissionButtonFinder), findsOneWidget);
+      expect($(Key(PermissionManagerKeys.notificationPermissionButtonKey.rawValue)), findsOneWidget);
 
       // Camera izin butonu bulunuyor.
-      final cameraPermissionButtonFinder = find.byKey(Key(PermissionManagerKeys.cameraPermissionButtonKey.rawValue));
+      final cameraPermissionButtonFinder = $(Key(PermissionManagerKeys.cameraPermissionButtonKey.rawValue));
 
       // Butonun varlığını kontrol et
       expect($(cameraPermissionButtonFinder), findsOneWidget);
@@ -79,7 +85,7 @@ void main() {
       await $.tap(cameraPermissionButtonFinder);
 
       // Devam et butonunu bul
-      final continueButtonFinder3 = find.byWidgetPredicate((widget) => widget is CoreFilledButton);
+      final continueButtonFinder3 = $(CoreFilledButton);
 
       // Butonun varlığını kontrol et
       expect($(continueButtonFinder3), findsOneWidget);
@@ -94,7 +100,7 @@ void main() {
       expect($(cameraPermissionButtonFinder), findsOneWidget);
 
       // Fotoğraf izin butonu bulunuyor.
-      final photosPermissionButtonFinder = find.byKey(Key(PermissionManagerKeys.photosPermissionButtonKey.rawValue));
+      final photosPermissionButtonFinder = $(Key(PermissionManagerKeys.photosPermissionButtonKey.rawValue));
 
       // Butonun varlığını kontrol et
       expect($(photosPermissionButtonFinder), findsOneWidget);
@@ -106,9 +112,9 @@ void main() {
       await $('Sonra Hatırlat').tap();
 
       // Status kontrolleri yapılıyor
-      expect($(find.byKey(Key(PermissionManagerKeys.notificationPermissionStatusKey.rawValue))).text, CorePermissionStatus.permanentlyDenied.toString());
-      expect($(find.byKey(Key(PermissionManagerKeys.cameraPermissionStatusKey.rawValue))).text, CorePermissionStatus.granted.toString());
-      expect($(find.byKey(Key(PermissionManagerKeys.photosPermissionStatusKey.rawValue))).text, CorePermissionStatus.postponed.toString());
+      expect($(Key(PermissionManagerKeys.notificationPermissionStatusKey.rawValue)).text, CorePermissionStatus.permanentlyDenied.toString());
+      expect($(Key(PermissionManagerKeys.cameraPermissionStatusKey.rawValue)).text, CorePermissionStatus.granted.toString());
+      expect($(Key(PermissionManagerKeys.photosPermissionStatusKey.rawValue)).text, CorePermissionStatus.postponed.toString());
     },
   );
 }
