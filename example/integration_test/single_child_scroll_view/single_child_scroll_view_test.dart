@@ -1,120 +1,58 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
-import 'package:flutter_core_example/permission_manager/permission_manager_keys.dart';
 import 'package:flutter_core_example/single_child_scroll_view/single_child_scroll_view.dart';
+import 'package:flutter_core_example/single_child_scroll_view/single_child_scroll_view_keys.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:patrol/patrol.dart';
 
 void main() {
   patrolTest(
-    'counter state is the same after going to home and switching apps',
+    'CoreSingleChildScrollView functionality test',
     ($) async {
-      // Uygulama çalıştırılır
       await $.pumpWidgetAndSettle(const SingleChildScrollViewExample());
 
-      // Notification izin butonu bul
-      final notificationPermissionButtonFinder = $(Key(PermissionManagerKeys.notificationPermissionButtonKey.rawValue));
+      // Butonun varlığı kontrol ediliyor
+      final refreshText = $(Key(SingleChildScrollViewKeys.pullDownToRefreshText.toString()));
 
-      // Butonun varlığını kontrol et
-      expect($(notificationPermissionButtonFinder), findsOneWidget);
+      // Pull up to go start yazısının mevcut olduğunu doğrula
+      expect($(refreshText), findsOneWidget);
 
-      // Butona tıkla
-      await $.tap(notificationPermissionButtonFinder);
+      // Refresh için kaydırma yapılıyor
+      await $.tester.drag($(SingleChildScrollViewExample), const Offset(0, 100));
+      await $.pump(500.milliseconds);
 
-      // Devam et butonunu bul
-      final continueButtonFinder = $(CoreFilledButton);
+      // Refresh Indicator kontrol ediliyor
+      expect($(Platform.isAndroid ? RefreshIndicator : CupertinoActivityIndicator), findsOneWidget);
 
-      // Butonun varlığını kontrol et
-      expect($(continueButtonFinder), findsOneWidget);
+      // String'in varlığı kontrol ediliyor
+      final goStartTextKey = Key(SingleChildScrollViewKeys.pullUpToGoStart.toString());
 
-      // butona tıkla
-      await $.tap(continueButtonFinder);
+      // List view kaydırarak pull up to go start yazısını görünür hale getir
+      await $.tester.dragUntilVisible(
+        $(goStartTextKey),
+        $(SingleChildScrollViewExample),
+        const Offset(0, -300),
+      );
 
-      // İzin verilmiyor
-      await $.native.denyPermission();
+      await $.pump(500.milliseconds);
 
-      // Notification izin butonu bul
-      final notificationPermissionButtonFinder2 = $(Key(PermissionManagerKeys.notificationPermissionButtonKey.rawValue));
+      // Pull up to go start yazısının mevcut olduğunu doğrula
+      expect($(goStartTextKey), findsOneWidget);
 
-      // Butonun varlığını kontrol et
-      expect($(notificationPermissionButtonFinder2), findsOneWidget);
+      // Pull down to refresh yazısını görünür hale getir
+      await $.tester.dragUntilVisible(
+        $(refreshText),
+        $(SingleChildScrollViewExample),
+        const Offset(0, 300),
+      );
 
-      // Butona tıkla
-      await $.tap(notificationPermissionButtonFinder2);
+      await $.pump(500.milliseconds);
 
-      // Dialogu kapat butonunu bul
-      final closeButtonFinder = $(CoreIconButton);
-
-      // Butonun varlığını kontrol et
-      expect($(closeButtonFinder), findsOneWidget);
-
-      // butona tıkla
-      await $.tap(closeButtonFinder);
-
-      // Notification izin butonu bul
-      final notificationPermissionButtonFinder3 = $(Key(PermissionManagerKeys.notificationPermissionButtonKey.rawValue));
-
-      // Butonun varlığını kontrol et
-      expect($(notificationPermissionButtonFinder3), findsOneWidget);
-
-      // Butona tıkla
-      await $.tap(notificationPermissionButtonFinder3);
-
-      // Devam et butonunu bul
-      final continueButtonFinder2 = $(CoreFilledButton);
-
-      // Butonun varlığını kontrol et
-      expect($(continueButtonFinder2), findsOneWidget);
-
-      // butona tıkla
-      await $.tap(continueButtonFinder2);
-
-      // iptal butonuna tıklanıyor
-      await $('İptal').tap();
-
-      // Butonun varlığını kontrol et
-      expect($(Key(PermissionManagerKeys.notificationPermissionButtonKey.rawValue)), findsOneWidget);
-
-      // Camera izin butonu bulunuyor.
-      final cameraPermissionButtonFinder = $(Key(PermissionManagerKeys.cameraPermissionButtonKey.rawValue));
-
-      // Butonun varlığını kontrol et
-      expect($(cameraPermissionButtonFinder), findsOneWidget);
-
-      // Butona tıkla
-      await $.tap(cameraPermissionButtonFinder);
-
-      // Devam et butonunu bul
-      final continueButtonFinder3 = $(CoreFilledButton);
-
-      // Butonun varlığını kontrol et
-      expect($(continueButtonFinder3), findsOneWidget);
-
-      // butona tıkla
-      await $.tap(continueButtonFinder3);
-
-      // İzin veriliyor
-      await $.native.grantPermissionWhenInUse();
-
-      // Butonun varlığını kontrol et
-      expect($(cameraPermissionButtonFinder), findsOneWidget);
-
-      // Fotoğraf izin butonu bulunuyor.
-      final photosPermissionButtonFinder = $(Key(PermissionManagerKeys.photosPermissionButtonKey.rawValue));
-
-      // Butonun varlığını kontrol et
-      expect($(photosPermissionButtonFinder), findsOneWidget);
-
-      // Butona tıkla
-      await $.tap(photosPermissionButtonFinder);
-
-      // Sonra hatırlat butonuna tıkla
-      await $('Sonra Hatırlat').tap();
-
-      // Status kontrolleri yapılıyor
-      expect($(Key(PermissionManagerKeys.notificationPermissionStatusKey.rawValue)).text, CorePermissionStatus.permanentlyDenied.toString());
-      expect($(Key(PermissionManagerKeys.cameraPermissionStatusKey.rawValue)).text, CorePermissionStatus.granted.toString());
-      expect($(Key(PermissionManagerKeys.photosPermissionStatusKey.rawValue)).text, CorePermissionStatus.postponed.toString());
+      // Pull down to refresh yazısının mevcut olduğunu doğrula
+      expect($(refreshText), findsOneWidget);
     },
   );
 }

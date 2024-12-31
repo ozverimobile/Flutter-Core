@@ -1,5 +1,6 @@
 enum SingleChildScrollViewKeys {
-  appBarSingleChildScrollViewKey,
+  pullDownToRefreshText,
+  pullUpToGoStart,
 }
 
 extension SingleChildScrollViewKeysExtension on SingleChildScrollViewKeys {
