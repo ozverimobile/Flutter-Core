@@ -10,7 +10,7 @@ import 'package:patrol/patrol.dart';
 
 void main() {
   patrolTest(
-    'CoreSingleChildScrollView functionality test',
+    'CoreSingleChildScrollView integration test',
     ($) async {
       await $.pumpWidgetAndSettle(const SingleChildScrollViewExample());
 

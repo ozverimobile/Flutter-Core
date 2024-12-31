@@ -38,7 +38,7 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> {
   Widget build(BuildContext context) {
     return Platform.isAndroid
         ? 
-              RefreshIndicator(
+          RefreshIndicator(
                 onRefresh: widget.onRefresh,
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
