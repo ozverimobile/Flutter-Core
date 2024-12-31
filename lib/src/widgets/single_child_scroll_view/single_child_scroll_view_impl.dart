@@ -37,22 +37,15 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> {
   @override
   Widget build(BuildContext context) {
     return Platform.isAndroid
-        ? LayoutBuilder(
-            builder: (context, constraints) {
-              return RefreshIndicator(
+        ? 
+              RefreshIndicator(
                 onRefresh: widget.onRefresh,
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   controller: _scrollController,
-                  child: SizedBox(
-                    height: constraints.maxHeight,
-                    width: constraints.maxWidth,
-                    child: widget.child,
-                  ),
+                  child: widget.child,
                 ),
-              );
-            },
-          )
+              )
         : NotificationListener<ScrollNotification>(
             onNotification: (notification) {
               /// Check if the scroll view is at the top.
@@ -85,7 +78,13 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> {
               slivers: [
                 /// Show the refresh indicator only when the scroll view is at the top.
                 if (_isAtTop) CupertinoSliverRefreshControl(onRefresh: widget.onRefresh),
-                SliverFillRemaining(child: widget.child),
+                SliverToBoxAdapter(child: widget.child),
+                // SliverList(
+                //   delegate: SliverChildBuilderDelegate(
+                //     (context, index) => widget.child,
+                //     childCount: 1,
+                //   ),
+                // ),
               ],
             ),
           );
