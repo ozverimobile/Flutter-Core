@@ -9,7 +9,7 @@ import 'package:patrol/src/native/contracts/contracts.dart';
 import 'package:test_api/src/backend/invoker.dart';
 
 // START: GENERATED TEST IMPORTS
-import 'permission_manager/permission_manager_test.dart' as permission_manager__permission_manager_test;
+import 'reorderable_listview/reorderable_listview_test.dart' as reorderable_listview__reorderable_listview_test;
 // END: GENERATED TEST IMPORTS
 
 Future<void> main() async {
@@ -69,7 +69,7 @@ Future<void> main() async {
   });
 
   // START: GENERATED TEST GROUPS
-  group('permission_manager.permission_manager_test', permission_manager__permission_manager_test.main);
+  group('reorderable_listview.reorderable_listview_test', reorderable_listview__reorderable_listview_test.main);
   // END: GENERATED TEST GROUPS
 
   final dartTestGroup = await testExplorationCompleter.future;
