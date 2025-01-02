@@ -197,7 +197,6 @@ class _CoreReorderableListViewState extends State<CoreReorderableListView> {
       header: widget.header,
       footer: widget.footer,
       scrollController: _scrollController,
-      primary: widget.primary,
       physics: widget.physics,
       shrinkWrap: widget.shrinkWrap,
       anchor: widget.anchor,
