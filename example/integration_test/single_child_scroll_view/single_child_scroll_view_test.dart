@@ -10,7 +10,7 @@ import 'package:patrol/patrol.dart';
 
 void main() {
   patrolTest(
-    'CoreSingleChildScrollView integration test',
+    'CoreSingleChildScrollView Integration Test',
     ($) async {
       await $.pumpWidgetAndSettle(const SingleChildScrollViewExample());
 
@@ -22,6 +22,8 @@ void main() {
 
       // Refresh için kaydırma yapılıyor
       await $.tester.drag($(SingleChildScrollViewExample), const Offset(0, 100));
+
+      // Ekranı beklet
       await $.pump(500.milliseconds);
 
       // Refresh Indicator kontrol ediliyor
@@ -37,6 +39,7 @@ void main() {
         const Offset(0, -300),
       );
 
+      // Ekranı beklet
       await $.pump(500.milliseconds);
 
       // Pull up to go start yazısının mevcut olduğunu doğrula
@@ -49,6 +52,7 @@ void main() {
         const Offset(0, 300),
       );
 
+      // Ekranı beklet
       await $.pump(500.milliseconds);
 
       // Pull down to refresh yazısının mevcut olduğunu doğrula
