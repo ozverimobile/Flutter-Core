@@ -9,7 +9,10 @@ import 'package:patrol/src/native/contracts/contracts.dart';
 import 'package:test_api/src/backend/invoker.dart';
 
 // START: GENERATED TEST IMPORTS
+
+import 'single_child_scroll_view/single_child_scroll_view_test.dart' as single_child_scroll_view__single_child_scroll_view_test;
 import 'reorderable_listview/reorderable_listview_test.dart' as reorderable_listview__reorderable_listview_test;
+
 // END: GENERATED TEST IMPORTS
 
 Future<void> main() async {
@@ -69,7 +72,10 @@ Future<void> main() async {
   });
 
   // START: GENERATED TEST GROUPS
+
+  group('single_child_scroll_view.single_child_scroll_view_test', single_child_scroll_view__single_child_scroll_view_test.main);
   group('reorderable_listview.reorderable_listview_test', reorderable_listview__reorderable_listview_test.main);
+
   // END: GENERATED TEST GROUPS
 
   final dartTestGroup = await testExplorationCompleter.future;
