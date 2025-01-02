@@ -7,7 +7,7 @@ import 'package:patrol/patrol.dart';
 
 void main() {
   patrolTest(
-    'counter state is the same after going to home and switching apps',
+    'Permission Manager Integration Test',
     ($) async {
       // Uygulama çalıştırılır
       await $.pumpWidgetAndSettle(const PermissionManagerApp());
