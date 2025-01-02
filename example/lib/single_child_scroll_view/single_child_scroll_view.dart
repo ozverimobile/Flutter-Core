@@ -40,7 +40,7 @@ class _SingleChildScrollViewExampleState extends State<SingleChildScrollViewExam
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      key: Key(SingleChildScrollViewKeys.pullDownToRefreshText.toString()),
+                      key: Key(SingleChildScrollViewKeys.pullDownToRefreshText.rawValue),
                       'Pull down to refresh!',
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
@@ -62,7 +62,7 @@ class _SingleChildScrollViewExampleState extends State<SingleChildScrollViewExam
                     ),
                          const SizedBox(height: 16),
                     Text(
-                      key: Key(SingleChildScrollViewKeys.pullUpToGoStart.toString()),
+                      key: Key(SingleChildScrollViewKeys.pullUpToGoStart.rawValue),
                       'Pull up to go start!',
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),

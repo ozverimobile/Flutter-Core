@@ -14,10 +14,10 @@ void main() {
     ($) async {
       await $.pumpWidgetAndSettle(const SingleChildScrollViewExample());
 
-      // Butonun varlığı kontrol ediliyor
-      final refreshText = $(Key(SingleChildScrollViewKeys.pullDownToRefreshText.toString()));
+      // String'in varlığı kontrol ediliyor
+      final refreshText = Key(SingleChildScrollViewKeys.pullDownToRefreshText.rawValue);
 
-      // Pull up to go start yazısının mevcut olduğunu doğrula
+      // Pull down to refresh yazısının mevcut olduğunu doğrula
       expect($(refreshText), findsOneWidget);
 
       // Refresh için kaydırma yapılıyor
@@ -30,7 +30,7 @@ void main() {
       expect($(Platform.isAndroid ? RefreshIndicator : CupertinoActivityIndicator), findsOneWidget);
 
       // String'in varlığı kontrol ediliyor
-      final goStartTextKey = Key(SingleChildScrollViewKeys.pullUpToGoStart.toString());
+      final goStartTextKey = Key(SingleChildScrollViewKeys.pullUpToGoStart.rawValue);
 
       // List view kaydırarak pull up to go start yazısını görünür hale getir
       await $.tester.dragUntilVisible(
@@ -60,3 +60,4 @@ void main() {
     },
   );
 }
+  
