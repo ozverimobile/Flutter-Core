@@ -1699,6 +1699,7 @@ class PopupManager implements IPopupManager {
                   },
                 ),
               const SizedBox(height: 15),
+              SizedBox(height: context.viewPadding.bottom,)
             ],
           ),
         ),
