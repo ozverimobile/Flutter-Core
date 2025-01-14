@@ -141,7 +141,7 @@ class _CoreReorderableListViewState extends State<CoreReorderableListView> {
   void dispose() {
     _primaryScrollController?.detach(_position);
     _scrollController.removeListener(_onScroll);
-    if (widget.controller.isNotNull || widget.scrollController.isNotNull) _scrollController.dispose();
+    if (widget.controller.isNull || widget.scrollController.isNull) _scrollController.dispose();
     super.dispose();
   }
 

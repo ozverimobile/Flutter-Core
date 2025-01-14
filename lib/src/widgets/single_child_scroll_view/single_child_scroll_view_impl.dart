@@ -37,7 +37,7 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> {
 
   @override
   void dispose() {
-    if (widget.controller.isNotNull) _scrollController.dispose();
+    if (widget.controller.isNull) _scrollController.dispose();
     super.dispose();
   }
 
