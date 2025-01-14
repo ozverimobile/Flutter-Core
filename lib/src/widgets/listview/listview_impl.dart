@@ -163,9 +163,8 @@ class _CoreListViewState extends State<CoreListView> {
   @override
   void dispose() {
     _primaryScrollController?.detach(_position);
-    _scrollController
-      ..removeListener(_onScroll)
-      ..dispose();
+    _scrollController.removeListener(_onScroll);
+    if (widget.controller.isNotNull) _scrollController.dispose();
     super.dispose();
   }
 

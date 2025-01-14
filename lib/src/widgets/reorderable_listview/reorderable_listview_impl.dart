@@ -31,6 +31,7 @@ class CoreReorderableListView extends StatefulWidget {
     this.scrollDirection = Axis.vertical,
     this.reverse = false,
     this.scrollController,
+    this.controller,
     this.primary,
     this.physics,
     this.shrinkWrap = false,
@@ -66,6 +67,7 @@ class CoreReorderableListView extends StatefulWidget {
     this.scrollDirection = Axis.vertical,
     this.reverse = false,
     this.scrollController,
+    this.controller,
     this.primary,
     this.physics,
     this.shrinkWrap = false,
@@ -98,7 +100,9 @@ class CoreReorderableListView extends StatefulWidget {
   final Widget? footer;
   final Axis scrollDirection;
   final bool reverse;
+  @Deprecated('Use controller property instead')
   final ScrollController? scrollController;
+  final ScrollController? controller;
   final bool? primary;
   final ScrollPhysics? physics;
   final bool shrinkWrap;
@@ -126,7 +130,7 @@ class _CoreReorderableListViewState extends State<CoreReorderableListView> {
   @override
   void initState() {
     super.initState();
-    _scrollController = widget.scrollController ?? ScrollController();
+    _scrollController = widget.controller ?? widget.scrollController ?? ScrollController();
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _primaryScrollController = PrimaryScrollController.maybeOf(context)?..attach(_position = _scrollController.position);
@@ -136,9 +140,8 @@ class _CoreReorderableListViewState extends State<CoreReorderableListView> {
   @override
   void dispose() {
     _primaryScrollController?.detach(_position);
-    _scrollController
-      ..removeListener(_onScroll)
-      ..dispose();
+    _scrollController.removeListener(_onScroll);
+    if (widget.controller.isNotNull || widget.scrollController.isNotNull) _scrollController.dispose();
     super.dispose();
   }
 

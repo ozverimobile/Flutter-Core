@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_core/flutter_core.dart';
 
 class CoreSingleChildScrollView extends StatefulWidget {
   const CoreSingleChildScrollView({
@@ -32,6 +33,12 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> {
   void initState() {
     _scrollController = widget.controller ?? ScrollController();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    if (widget.controller.isNotNull) _scrollController.dispose();
+    super.dispose();
   }
 
   @override
