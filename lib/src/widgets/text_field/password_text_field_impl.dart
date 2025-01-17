@@ -23,7 +23,7 @@ class CorePasswordTextField extends StatefulWidget {
     this.enabled,
     this.focusNode,
     this.autofillHints,
-    this.suffixIconSemanticLabel,
+    this.semanticsLabel,
     super.key,
   });
   final TextEditingController? controller;
@@ -45,7 +45,7 @@ class CorePasswordTextField extends StatefulWidget {
   final bool? enabled;
   final FocusNode? focusNode;
   final Iterable<String>? autofillHints;
-  final String? suffixIconSemanticLabel;
+  final String? semanticsLabel;
 
   @override
   State<CorePasswordTextField> createState() => _CorePasswordTextFieldState();
@@ -56,38 +56,41 @@ class _CorePasswordTextFieldState extends State<CorePasswordTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      enabled: widget.enabled,
-      focusNode: widget.focusNode,
-      obscureText: _obscureText,
-      controller: widget.controller,
-      validator: widget.validator,
-      onChanged: widget.onChanged,
-      textAlign: widget.textAlign,
-      autovalidateMode: widget.autovalidateMode,
-      onEditingComplete: widget.onEditingComplete,
-      onFieldSubmitted: widget.onFieldSubmitted,
-      textInputAction: widget.textInputAction,
-      keyboardType: widget.keyboardType,
-      maxLength: widget.maxLength,
-      buildCounter: widget.buildCounter,
-      autofillHints: widget.autofillHints,
-      decoration: InputDecoration(
-        prefixIcon: widget.prefixIcon,
-        hintText: widget.hintText,
-        labelText: widget.labelText,
-        suffixIcon: IconButton(
-          icon: CoreSemantics(
-            id: 'CorePasswordTextFieldSuffixIcon',
-            child: Icon(
-              _obscureText ? widget.suffixIcon ?? Icons.visibility_outlined : widget.suffixIconOff ?? Icons.visibility_off_outlined,
+    return CoreSemantics(
+      id: widget.semanticsLabel ?? 'CorePasswordTextField',
+      child: TextFormField(
+        enabled: widget.enabled,
+        focusNode: widget.focusNode,
+        obscureText: _obscureText,
+        controller: widget.controller,
+        validator: widget.validator,
+        onChanged: widget.onChanged,
+        textAlign: widget.textAlign,
+        autovalidateMode: widget.autovalidateMode,
+        onEditingComplete: widget.onEditingComplete,
+        onFieldSubmitted: widget.onFieldSubmitted,
+        textInputAction: widget.textInputAction,
+        keyboardType: widget.keyboardType,
+        maxLength: widget.maxLength,
+        buildCounter: widget.buildCounter,
+        autofillHints: widget.autofillHints,
+        decoration: InputDecoration(
+          prefixIcon: widget.prefixIcon,
+          hintText: widget.hintText,
+          labelText: widget.labelText,
+          suffixIcon: IconButton(
+            icon: CoreSemantics(
+              id: 'CorePasswordTextFieldSuffixIcon',
+              child: Icon(
+                _obscureText ? widget.suffixIcon ?? Icons.visibility_outlined : widget.suffixIconOff ?? Icons.visibility_off_outlined,
+              ),
             ),
+            onPressed: () {
+              setState(() {
+                _obscureText = !_obscureText;
+              });
+            },
           ),
-          onPressed: () {
-            setState(() {
-              _obscureText = !_obscureText;
-            });
-          },
         ),
       ),
     );

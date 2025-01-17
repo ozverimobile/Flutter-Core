@@ -364,24 +364,26 @@ class CoreText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final widget = switch (data) {
-      null || '' => emptyBox,
-      _ => Text(
-          data!,
-          style: style ?? _textTheme?.toTextStyle(context)?.copyWith(color: textColor, fontWeight: fontWeight),
-          strutStyle: strutStyle,
-          textAlign: textAlign,
-          textDirection: textDirection,
-          locale: locale,
-          softWrap: softWrap,
-          overflow: overflow,
-          textScaler: textScaler,
-          maxLines: maxLines,
-          textWidthBasis: textWidthBasis,
-          textHeightBehavior: textHeightBehavior,
-          selectionColor: selectionColor,
-        )
-    };
-    return semanticsLabel != null ? CoreSemantics(id: semanticsLabel!, child: widget) : widget;
+    return CoreSemantics(
+      id: semanticsLabel ?? 'CoreText',
+      child: switch (data) {
+        null || '' => emptyBox,
+        _ => Text(
+            data!,
+            style: style ?? _textTheme?.toTextStyle(context)?.copyWith(color: textColor, fontWeight: fontWeight),
+            strutStyle: strutStyle,
+            textAlign: textAlign,
+            textDirection: textDirection,
+            locale: locale,
+            softWrap: softWrap,
+            overflow: overflow,
+            textScaler: textScaler,
+            maxLines: maxLines,
+            textWidthBasis: textWidthBasis,
+            textHeightBehavior: textHeightBehavior,
+            selectionColor: selectionColor,
+          )
+      },
+    );
   }
 }
