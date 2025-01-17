@@ -13,6 +13,7 @@ abstract interface class ICore {
   String doubleToCurrency(double value);
   Future<void> updateApp({String? androidPackageName, String? iOSAppId, String? huaweiAppId, bool iosLaunchIntune = false});
   Future<void> vibrate({ImpactType type = ImpactType.mediumImpact});
+  String get packageName;
 }
 
 // ignore: non_constant_identifier_names
@@ -27,6 +28,7 @@ final class CoreImpl implements ICore {
   Future<void> initialize() async {
     try {
       await initializeDateFormatting();
+      packageName = (await CorePackageInfo.instance.packageName)!;
     } catch (e) {
       CoreLogger.log(e, color: LogColors.red);
       rethrow;
@@ -126,4 +128,7 @@ final class CoreImpl implements ICore {
       ImpactType.selectionClick => HapticFeedback.selectionClick(),
     };
   }
+
+  @override
+  late final String packageName;
 }

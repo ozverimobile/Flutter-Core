@@ -7,6 +7,7 @@ export 'relative_size/relative_size.dart';
 export 'reorderable_listview/reorderable_listview.dart';
 export 'responsive_layout/responsive_layout.dart';
 export 'selectable_search_sheet/selectable_search_sheet.dart';
+export 'semantics/semantics.dart';
 export 'single_child_scroll_view/single_child_scroll_view.dart';
 export 'sized_box/sized_box.dart';
 export 'text/text.dart';

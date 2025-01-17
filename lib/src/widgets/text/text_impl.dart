@@ -364,7 +364,7 @@ class CoreText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return switch (data) {
+    final widget = switch (data) {
       null || '' => emptyBox,
       _ => Text(
           data!,
@@ -377,11 +377,11 @@ class CoreText extends StatelessWidget {
           overflow: overflow,
           textScaler: textScaler,
           maxLines: maxLines,
-          semanticsLabel: semanticsLabel,
           textWidthBasis: textWidthBasis,
           textHeightBehavior: textHeightBehavior,
           selectionColor: selectionColor,
         )
     };
+    return semanticsLabel != null ? CoreSemantics(id: semanticsLabel!, child: widget) : widget;
   }
 }

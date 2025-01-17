@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_core/flutter_core.dart';
 
 @immutable
 class CorePasswordTextField extends StatefulWidget {
@@ -76,9 +77,11 @@ class _CorePasswordTextFieldState extends State<CorePasswordTextField> {
         hintText: widget.hintText,
         labelText: widget.labelText,
         suffixIcon: IconButton(
-          icon: Icon(
-            semanticLabel: widget.suffixIconSemanticLabel,
-            _obscureText ? widget.suffixIcon ?? Icons.visibility_outlined : widget.suffixIconOff ?? Icons.visibility_off_outlined,
+          icon: CoreSemantics(
+            id: 'CorePasswordTextFieldSuffixIcon',
+            child: Icon(
+              _obscureText ? widget.suffixIcon ?? Icons.visibility_outlined : widget.suffixIconOff ?? Icons.visibility_off_outlined,
+            ),
           ),
           onPressed: () {
             setState(() {
