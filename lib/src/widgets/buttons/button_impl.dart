@@ -10,6 +10,7 @@ class CoreButton extends StatefulWidget {
   const CoreButton({
     required this.child,
     required this.onPressed,
+    this.semanticsLabel,
     super.key,
   })  : _autoIndicator = false,
         _indicatorStyle = null;
@@ -17,6 +18,7 @@ class CoreButton extends StatefulWidget {
   const CoreButton.autoIndicator({
     required this.child,
     required this.onPressed,
+    this.semanticsLabel,
     super.key,
     IndicatorStyle? indicatorStyle,
   })  : _autoIndicator = true,
@@ -27,6 +29,7 @@ class CoreButton extends StatefulWidget {
   final Widget child;
   final bool _autoIndicator;
   final IndicatorStyle? _indicatorStyle;
+  final String? semanticsLabel;
 
   @override
   State<CoreButton> createState() => _CoreButtonState();
@@ -54,44 +57,47 @@ class _CoreButtonState extends State<CoreButton> {
 
   @override
   Widget build(BuildContext context) {
-    return Platform.isAndroid
-        ? IconButton(
-            padding: EdgeInsets.zero,
-            visualDensity: VisualDensity.compact,
-            onPressed: _onPressedCallback,
-            icon: !_isProcessing
-                ? widget.child
-                : Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      SizedBox(
-                        width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
-                        height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
-                        child: CircularProgressIndicator(
-                          color: widget._indicatorStyle?.color ?? context.theme.colorScheme.onPrimary,
-                          strokeWidth: widget._indicatorStyle?.strokeWidth ?? IndicatorStyle.defaultStrokeWidth,
+    return CoreSemantics(
+      id: widget.semanticsLabel ?? 'CoreButton',
+      child: Platform.isAndroid
+          ? IconButton(
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              onPressed: _onPressedCallback,
+              icon: !_isProcessing
+                  ? widget.child
+                  : Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox(
+                          width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                          height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                          child: CircularProgressIndicator(
+                            color: widget._indicatorStyle?.color ?? context.theme.colorScheme.onPrimary,
+                            strokeWidth: widget._indicatorStyle?.strokeWidth ?? IndicatorStyle.defaultStrokeWidth,
+                          ),
                         ),
-                      ),
-                      Opacity(opacity: 0.001, child: widget.child),
-                    ],
-                  ),
-          )
-        : CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: _onPressedCallback,
-            child: !_isProcessing
-                ? widget.child
-                : Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      CupertinoActivityIndicator(
-                        color: widget._indicatorStyle?.color ?? context.theme.colorScheme.onPrimary,
-                        radius: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius,
-                      ),
-                      Opacity(opacity: 0.001, child: widget.child),
-                    ],
-                  ),
-          );
+                        Opacity(opacity: 0.001, child: widget.child),
+                      ],
+                    ),
+            )
+          : CupertinoButton(
+              padding: EdgeInsets.zero,
+              onPressed: _onPressedCallback,
+              child: !_isProcessing
+                  ? widget.child
+                  : Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        CupertinoActivityIndicator(
+                          color: widget._indicatorStyle?.color ?? context.theme.colorScheme.onPrimary,
+                          radius: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius,
+                        ),
+                        Opacity(opacity: 0.001, child: widget.child),
+                      ],
+                    ),
+            ),
+    );
   }
 }
 
@@ -103,6 +109,7 @@ class CoreTextButton extends StatefulWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     this.minSize = kMinInteractiveDimensionCupertino,
     this.borderRadius = const BorderRadius.all(Radius.circular(8)),
+    this.semanticsLabel,
     super.key,
   })  : _autoIndicator = false,
         _indicatorStyle = null;
@@ -113,6 +120,7 @@ class CoreTextButton extends StatefulWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     this.minSize = kMinInteractiveDimensionCupertino,
     this.borderRadius = const BorderRadius.all(Radius.circular(8)),
+    this.semanticsLabel,
     super.key,
     IndicatorStyle? indicatorStyle,
   })  : _autoIndicator = true,
@@ -125,6 +133,7 @@ class CoreTextButton extends StatefulWidget {
   final BorderRadius borderRadius;
   final bool _autoIndicator;
   final IndicatorStyle? _indicatorStyle;
+  final String? semanticsLabel;
 
   @override
   State<CoreTextButton> createState() => _CoreTextButtonState();
@@ -152,53 +161,56 @@ class _CoreTextButtonState extends State<CoreTextButton> {
 
   @override
   Widget build(BuildContext context) {
-    return switch (context.theme.platform) {
-      TargetPlatform.iOS || TargetPlatform.macOS => CupertinoButton(
-          onPressed: _onPressedCallback,
-          padding: widget.padding,
-          minSize: widget.minSize,
-          child: !_isProcessing
-              ? widget.child
-              : Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    widget.child,
-                    horizontalBox12,
-                    CupertinoActivityIndicator(
-                      color: widget._indicatorStyle?.color,
-                      radius: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius,
-                    ),
-                  ],
-                ),
-        ),
-      _ => TextButton(
-          onPressed: _onPressedCallback,
-          style: TextButton.styleFrom(
+    return CoreSemantics(
+      id: widget.semanticsLabel ?? 'CoreTextButton',
+      child: switch (context.theme.platform) {
+        TargetPlatform.iOS || TargetPlatform.macOS => CupertinoButton(
+            onPressed: _onPressedCallback,
             padding: widget.padding,
-            minimumSize: Size(widget.minSize, widget.minSize),
-            shape: RoundedRectangleBorder(
-              borderRadius: widget.borderRadius,
-            ),
-          ),
-          child: !_isProcessing
-              ? widget.child
-              : Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    widget.child,
-                    horizontalBox12,
-                    SizedBox(
-                      width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
-                      height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
-                      child: CircularProgressIndicator(
+            minSize: widget.minSize,
+            child: !_isProcessing
+                ? widget.child
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      widget.child,
+                      horizontalBox12,
+                      CupertinoActivityIndicator(
                         color: widget._indicatorStyle?.color,
-                        strokeWidth: widget._indicatorStyle?.strokeWidth ?? IndicatorStyle.defaultStrokeWidth,
+                        radius: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius,
                       ),
-                    ),
-                  ],
-                ),
-        ),
-    };
+                    ],
+                  ),
+          ),
+        _ => TextButton(
+            onPressed: _onPressedCallback,
+            style: TextButton.styleFrom(
+              padding: widget.padding,
+              minimumSize: Size(widget.minSize, widget.minSize),
+              shape: RoundedRectangleBorder(
+                borderRadius: widget.borderRadius,
+              ),
+            ),
+            child: !_isProcessing
+                ? widget.child
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      widget.child,
+                      horizontalBox12,
+                      SizedBox(
+                        width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                        height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                        child: CircularProgressIndicator(
+                          color: widget._indicatorStyle?.color,
+                          strokeWidth: widget._indicatorStyle?.strokeWidth ?? IndicatorStyle.defaultStrokeWidth,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+      },
+    );
   }
 }
 
@@ -211,6 +223,7 @@ class CoreOutlinedButton extends StatefulWidget {
     this.minSize = kMinInteractiveDimensionCupertino,
     this.borderColor,
     this.borderRadius = const BorderRadius.all(Radius.circular(8)),
+    this.semanticsLabel,
     super.key,
   })  : _autoIndicator = false,
         _indicatorStyle = null;
@@ -222,6 +235,7 @@ class CoreOutlinedButton extends StatefulWidget {
     this.minSize = kMinInteractiveDimensionCupertino,
     this.borderColor,
     this.borderRadius = const BorderRadius.all(Radius.circular(8)),
+    this.semanticsLabel,
     super.key,
     IndicatorStyle? indicatorStyle,
   })  : _autoIndicator = true,
@@ -235,6 +249,7 @@ class CoreOutlinedButton extends StatefulWidget {
   final BorderRadius borderRadius;
   final bool _autoIndicator;
   final IndicatorStyle? _indicatorStyle;
+  final String? semanticsLabel;
 
   @override
   State<CoreOutlinedButton> createState() => _CoreOutlinedButtonState();
@@ -262,63 +277,66 @@ class _CoreOutlinedButtonState extends State<CoreOutlinedButton> {
 
   @override
   Widget build(BuildContext context) {
-    return switch (context.theme.platform) {
-      TargetPlatform.iOS || TargetPlatform.macOS => OutlinedButton(
-          onPressed: _onPressedCallback,
-          style: OutlinedButton.styleFrom(
-            splashFactory: NoSplash.splashFactory,
-            padding: widget.padding,
-            side: BorderSide(color: widget.borderColor ?? context.colorScheme.primary),
-            minimumSize: Size(widget.minSize, widget.minSize),
-            shape: RoundedRectangleBorder(
-              borderRadius: widget.borderRadius,
+    return CoreSemantics(
+      id: widget.semanticsLabel ?? 'CoreOutlinedButton',
+      child: switch (context.theme.platform) {
+        TargetPlatform.iOS || TargetPlatform.macOS => OutlinedButton(
+            onPressed: _onPressedCallback,
+            style: OutlinedButton.styleFrom(
+              splashFactory: NoSplash.splashFactory,
+              padding: widget.padding,
+              side: BorderSide(color: widget.borderColor ?? context.colorScheme.primary),
+              minimumSize: Size(widget.minSize, widget.minSize),
+              shape: RoundedRectangleBorder(
+                borderRadius: widget.borderRadius,
+              ),
             ),
-          ),
-          child: !_isProcessing
-              ? widget.child
-              : Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
-                      height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
-                      child: CupertinoActivityIndicator(
-                        color: widget._indicatorStyle?.color,
-                        radius: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius,
+            child: !_isProcessing
+                ? widget.child
+                : Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                        height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                        child: CupertinoActivityIndicator(
+                          color: widget._indicatorStyle?.color,
+                          radius: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius,
+                        ),
                       ),
-                    ),
-                    Opacity(opacity: 0.001, child: widget.child),
-                  ],
-                ),
-        ),
-      _ => OutlinedButton(
-          onPressed: _onPressedCallback,
-          style: OutlinedButton.styleFrom(
-            padding: widget.padding,
-            side: BorderSide(color: widget.borderColor ?? context.colorScheme.primary),
-            minimumSize: Size(widget.minSize, widget.minSize),
-            shape: RoundedRectangleBorder(
-              borderRadius: widget.borderRadius,
+                      Opacity(opacity: 0.001, child: widget.child),
+                    ],
+                  ),
+          ),
+        _ => OutlinedButton(
+            onPressed: _onPressedCallback,
+            style: OutlinedButton.styleFrom(
+              padding: widget.padding,
+              side: BorderSide(color: widget.borderColor ?? context.colorScheme.primary),
+              minimumSize: Size(widget.minSize, widget.minSize),
+              shape: RoundedRectangleBorder(
+                borderRadius: widget.borderRadius,
+              ),
             ),
-          ),
-          child: !_isProcessing
-              ? widget.child
-              : Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
-                      height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
-                      child: CircularProgressIndicator(
-                        color: widget._indicatorStyle?.color,
-                        strokeWidth: widget._indicatorStyle?.strokeWidth ?? IndicatorStyle.defaultStrokeWidth,
+            child: !_isProcessing
+                ? widget.child
+                : Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                        height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                        child: CircularProgressIndicator(
+                          color: widget._indicatorStyle?.color,
+                          strokeWidth: widget._indicatorStyle?.strokeWidth ?? IndicatorStyle.defaultStrokeWidth,
+                        ),
                       ),
-                    ),
-                    Opacity(opacity: 0.001, child: widget.child),
-                  ],
-                ),
-        ),
-    };
+                      Opacity(opacity: 0.001, child: widget.child),
+                    ],
+                  ),
+          ),
+      },
+    );
   }
 }
 
@@ -331,6 +349,7 @@ class CoreFilledButton extends StatefulWidget {
     this.minSize = kMinInteractiveDimensionCupertino,
     this.backgroundColor,
     this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    this.semanticsLabel,
     super.key,
   })  : _autoIndicator = false,
         _indicatorStyle = null;
@@ -342,6 +361,7 @@ class CoreFilledButton extends StatefulWidget {
     this.minSize = kMinInteractiveDimensionCupertino,
     this.backgroundColor,
     this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    this.semanticsLabel,
     super.key,
     IndicatorStyle? indicatorStyle,
   })  : _autoIndicator = true,
@@ -355,6 +375,7 @@ class CoreFilledButton extends StatefulWidget {
   final EdgeInsetsGeometry padding;
   final bool _autoIndicator;
   final IndicatorStyle? _indicatorStyle;
+  final String? semanticsLabel;
 
   @override
   State<CoreFilledButton> createState() => _CoreFilledButtonState();
@@ -382,54 +403,57 @@ class _CoreFilledButtonState extends State<CoreFilledButton> {
 
   @override
   Widget build(BuildContext context) {
-    return switch (context.theme.platform) {
-      TargetPlatform.iOS || TargetPlatform.macOS => CupertinoButton(
-          onPressed: _onPressedCallback,
-          padding: widget.padding,
-          color: widget.backgroundColor ?? context.theme.colorScheme.primary,
-          minSize: widget.minSize,
-          borderRadius: widget.borderRadius,
-          child: !_isProcessing
-              ? widget.child
-              : Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    CupertinoActivityIndicator(
-                      color: widget._indicatorStyle?.color ?? context.theme.colorScheme.onPrimary,
-                      radius: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius,
-                    ),
-                    Opacity(opacity: 0.001, child: widget.child),
-                  ],
-                ),
-        ),
-      _ => FilledButton(
-          onPressed: _onPressedCallback,
-          style: FilledButton.styleFrom(
-            shape: RoundedRectangleBorder(
-              borderRadius: widget.borderRadius,
-            ),
-            minimumSize: Size(widget.minSize, widget.minSize),
-            backgroundColor: widget.backgroundColor,
+    return CoreSemantics(
+      id: widget.semanticsLabel ?? 'CoreFilledButton',
+      child: switch (context.theme.platform) {
+        TargetPlatform.iOS || TargetPlatform.macOS => CupertinoButton(
+            onPressed: _onPressedCallback,
             padding: widget.padding,
-          ),
-          child: !_isProcessing
-              ? widget.child
-              : Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
-                      height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
-                      child: CircularProgressIndicator(
+            color: widget.backgroundColor ?? context.theme.colorScheme.primary,
+            minSize: widget.minSize,
+            borderRadius: widget.borderRadius,
+            child: !_isProcessing
+                ? widget.child
+                : Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CupertinoActivityIndicator(
                         color: widget._indicatorStyle?.color ?? context.theme.colorScheme.onPrimary,
-                        strokeWidth: widget._indicatorStyle?.strokeWidth ?? IndicatorStyle.defaultStrokeWidth,
+                        radius: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius,
                       ),
-                    ),
-                    Opacity(opacity: 0.001, child: widget.child),
-                  ],
-                ),
-        ),
-    };
+                      Opacity(opacity: 0.001, child: widget.child),
+                    ],
+                  ),
+          ),
+        _ => FilledButton(
+            onPressed: _onPressedCallback,
+            style: FilledButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: widget.borderRadius,
+              ),
+              minimumSize: Size(widget.minSize, widget.minSize),
+              backgroundColor: widget.backgroundColor,
+              padding: widget.padding,
+            ),
+            child: !_isProcessing
+                ? widget.child
+                : Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                        height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                        child: CircularProgressIndicator(
+                          color: widget._indicatorStyle?.color ?? context.theme.colorScheme.onPrimary,
+                          strokeWidth: widget._indicatorStyle?.strokeWidth ?? IndicatorStyle.defaultStrokeWidth,
+                        ),
+                      ),
+                      Opacity(opacity: 0.001, child: widget.child),
+                    ],
+                  ),
+          ),
+      },
+    );
   }
 }
 
@@ -439,6 +463,7 @@ class CoreIconButton extends StatefulWidget {
     required this.icon,
     required this.onPressed,
     this.radius = kMinInteractiveDimensionCupertino * 0.5,
+    this.semanticsLabel,
     super.key,
   })  : filled = false,
         backgroundColor = null,
@@ -450,6 +475,7 @@ class CoreIconButton extends StatefulWidget {
     required this.onPressed,
     this.radius = kMinInteractiveDimensionCupertino * 0.5,
     this.backgroundColor,
+    this.semanticsLabel,
     super.key,
   })  : filled = true,
         _autoIndicator = false,
@@ -460,6 +486,7 @@ class CoreIconButton extends StatefulWidget {
     required this.onPressed,
     this.radius = kMinInteractiveDimensionCupertino * 0.5,
     this.backgroundColor,
+    this.semanticsLabel,
     super.key,
     IndicatorStyle? indicatorStyle,
   })  : filled = false,
@@ -471,6 +498,7 @@ class CoreIconButton extends StatefulWidget {
     required this.onPressed,
     this.radius = kMinInteractiveDimensionCupertino * 0.5,
     this.backgroundColor,
+    this.semanticsLabel,
     super.key,
     IndicatorStyle? indicatorStyle,
   })  : filled = true,
@@ -484,6 +512,7 @@ class CoreIconButton extends StatefulWidget {
   final Color? backgroundColor;
   final bool _autoIndicator;
   final IndicatorStyle? _indicatorStyle;
+  final String? semanticsLabel;
 
   @override
   State<CoreIconButton> createState() => _CoreIconButtonState();
@@ -511,83 +540,86 @@ class _CoreIconButtonState extends State<CoreIconButton> {
 
   @override
   Widget build(BuildContext context) {
-    return switch (context.theme.platform) {
-      TargetPlatform.iOS || TargetPlatform.macOS => CupertinoButton(
-          onPressed: _onPressedCallback,
-          padding: EdgeInsets.zero,
-          minSize: widget.radius * 2,
-          child: widget.filled
-              ? CircleAvatar(
-                  backgroundColor: widget.backgroundColor ?? context.theme.colorScheme.primary,
-                  radius: widget.radius,
-                  child: !_isProcessing
-                      ? widget.icon
-                      : CupertinoActivityIndicator(
-                          color: widget._indicatorStyle?.color ?? context.theme.colorScheme.onPrimary,
-                          radius: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius,
-                        ),
-                )
-              : !_isProcessing
-                  ? widget.icon
-                  : Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        CupertinoActivityIndicator(
-                          color: widget._indicatorStyle?.color,
-                          radius: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius,
-                        ),
-                        Opacity(opacity: 0.001, child: widget.icon),
-                      ],
-                    ),
-        ),
-      _ => widget.filled
-          ? IconButton.filled(
-              onPressed: _onPressedCallback,
-              icon: !_isProcessing
-                  ? widget.icon
-                  : Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        SizedBox(
-                          width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
-                          height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
-                          child: CircularProgressIndicator(
+    return CoreSemantics(
+      id: widget.semanticsLabel ?? 'CoreIconButton',
+      child: switch (context.theme.platform) {
+        TargetPlatform.iOS || TargetPlatform.macOS => CupertinoButton(
+            onPressed: _onPressedCallback,
+            padding: EdgeInsets.zero,
+            minSize: widget.radius * 2,
+            child: widget.filled
+                ? CircleAvatar(
+                    backgroundColor: widget.backgroundColor ?? context.theme.colorScheme.primary,
+                    radius: widget.radius,
+                    child: !_isProcessing
+                        ? widget.icon
+                        : CupertinoActivityIndicator(
                             color: widget._indicatorStyle?.color ?? context.theme.colorScheme.onPrimary,
-                            strokeWidth: widget._indicatorStyle?.strokeWidth ?? IndicatorStyle.defaultStrokeWidth,
+                            radius: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius,
                           ),
-                        ),
-                        Opacity(opacity: 0.001, child: widget.icon),
-                      ],
-                    ),
-              padding: EdgeInsets.zero,
-              style: IconButton.styleFrom(
-                minimumSize: Size(widget.radius * 2, widget.radius * 2),
-                backgroundColor: widget.backgroundColor,
-              ),
-            )
-          : IconButton(
-              onPressed: _onPressedCallback,
-              icon: !_isProcessing
-                  ? widget.icon
-                  : Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        SizedBox(
-                          width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
-                          height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
-                          child: CircularProgressIndicator(
-                            color: widget._indicatorStyle?.color ,
-                            strokeWidth: widget._indicatorStyle?.strokeWidth ?? IndicatorStyle.defaultStrokeWidth,
+                  )
+                : !_isProcessing
+                    ? widget.icon
+                    : Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          CupertinoActivityIndicator(
+                            color: widget._indicatorStyle?.color,
+                            radius: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius,
                           ),
-                        ),
-                        Opacity(opacity: 0.001, child: widget.icon),
-                      ],
-                    ),
-              padding: EdgeInsets.zero,
-              style: IconButton.styleFrom(
-                minimumSize: Size(widget.radius * 2, widget.radius * 2),
+                          Opacity(opacity: 0.001, child: widget.icon),
+                        ],
+                      ),
+          ),
+        _ => widget.filled
+            ? IconButton.filled(
+                onPressed: _onPressedCallback,
+                icon: !_isProcessing
+                    ? widget.icon
+                    : Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          SizedBox(
+                            width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                            height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                            child: CircularProgressIndicator(
+                              color: widget._indicatorStyle?.color ?? context.theme.colorScheme.onPrimary,
+                              strokeWidth: widget._indicatorStyle?.strokeWidth ?? IndicatorStyle.defaultStrokeWidth,
+                            ),
+                          ),
+                          Opacity(opacity: 0.001, child: widget.icon),
+                        ],
+                      ),
+                padding: EdgeInsets.zero,
+                style: IconButton.styleFrom(
+                  minimumSize: Size(widget.radius * 2, widget.radius * 2),
+                  backgroundColor: widget.backgroundColor,
+                ),
+              )
+            : IconButton(
+                onPressed: _onPressedCallback,
+                icon: !_isProcessing
+                    ? widget.icon
+                    : Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          SizedBox(
+                            width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                            height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                            child: CircularProgressIndicator(
+                              color: widget._indicatorStyle?.color,
+                              strokeWidth: widget._indicatorStyle?.strokeWidth ?? IndicatorStyle.defaultStrokeWidth,
+                            ),
+                          ),
+                          Opacity(opacity: 0.001, child: widget.icon),
+                        ],
+                      ),
+                padding: EdgeInsets.zero,
+                style: IconButton.styleFrom(
+                  minimumSize: Size(widget.radius * 2, widget.radius * 2),
+                ),
               ),
-            ),
-    };
+      },
+    );
   }
 }
