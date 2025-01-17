@@ -256,6 +256,7 @@ final class _PermissionWidgetState extends State<_PermissionWidget> {
                       },
                       minSize: 50,
                       child: CoreText.titleMedium(
+                        semanticsLabel: 'ContinueButton',
                         'Devam Et',
                         textColor: context.colorScheme.onPrimary,
                         fontWeight: FontWeight.bold,
@@ -276,6 +277,7 @@ final class _PermissionWidgetState extends State<_PermissionWidget> {
                         },
                         minSize: 50,
                         child: CoreText.titleMedium(
+                          semanticsLabel: 'AskLaterButton',
                           'Sonra Hatırlat',
                           textColor: context.colorScheme.onSurface,
                           fontWeight: FontWeight.bold,
@@ -295,6 +297,7 @@ final class _PermissionWidgetState extends State<_PermissionWidget> {
                       height: kToolbarHeight,
                     ),
                     CoreIconButton.filled(
+                      semanticsLabel:  'CloseButton',
                       onPressed: () => widget.popupManager.hidePopup<CorePermissionStatus>(id: widget.id, result: CorePermissionStatus.neverPrompted),
                       icon: Icon(
                         Icons.close,
