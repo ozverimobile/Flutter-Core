@@ -11,7 +11,7 @@ class CoreCodePushManager implements ICoreCodePushManager {
 
   static final instance = CoreCodePushManager._();
 
-  @deprecated
+  @Deprecated('Use getLatestPatchInfo instead')
   Future<bool> isPatchUpdateForced({
     required FirebaseRemoteConfig remoteConfigInstance,
     required int? currentPatchNumber,
