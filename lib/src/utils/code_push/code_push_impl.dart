@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_core/flutter_core.dart';
-import 'package:flutter_core/src/common/patch_platform/patch_platform.dart';
 
 abstract interface class ICoreCodePushManager {}
 
@@ -32,14 +31,16 @@ class CoreCodePushManager implements ICoreCodePushManager {
 
       if (patches.isNullOrEmpty) return false;
 
+      patches!.sort((a, b) => (a.patchNumber ?? 0).compareTo(b.patchNumber ?? 0));
+
       if (currentPatchNumber.isNull) {
-        for (final patch in patches!) {
+        for (final patch in patches) {
           if (patch.patchNumber.isNotNull && patch.patchNumber! <= nextPatchNumber && (patch.forceUpdate ?? false)) {
             return true;
           }
         }
       } else {
-        for (final patch in patches!) {
+        for (final patch in patches) {
           if (patch.patchNumber.isNotNull && patch.patchNumber! > currentPatchNumber! && patch.patchNumber! <= nextPatchNumber && (patch.forceUpdate ?? false)) {
             return true;
           }
