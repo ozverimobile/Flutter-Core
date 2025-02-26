@@ -23,7 +23,7 @@ dev_dependencies:
 
   flutter_lints: ^3.0.0
   very_good_analysis: ^6.0.0
-  patrol: ^3.13.2
+  patrol: ^3.14.0
 
 dependency_overrides:
   meta: ^1.15.0

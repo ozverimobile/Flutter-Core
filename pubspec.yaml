@@ -41,6 +41,7 @@ dev_dependencies:
     sdk: flutter
   very_good_analysis: ^6.0.0
   sqflite_common_ffi: ^2.0.1
+  patrol: ^3.14.0
 
 flutter:
   plugin:

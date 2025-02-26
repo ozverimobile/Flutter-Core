@@ -9,20 +9,20 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   await Core.initialize();
-  runApp(const MyApp());
+  runApp(const PopupManagerApp());
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+class PopupManagerApp extends StatefulWidget {
+  const PopupManagerApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  State<PopupManagerApp> createState() => _PopupManagerAppState();
 }
 
 final rootPopupManager = PopupManager(navigatorKey: navKey);
 final navKey = GlobalKey<NavigatorState>();
 
-class _MyAppState extends State<MyApp> {
+class _PopupManagerAppState extends State<PopupManagerApp> {
   late final FlutterLocalization localization;
 
   @override
@@ -61,8 +61,6 @@ class PopupManagerWidget extends StatefulWidget {
 
 class _PopupManagerWidgetState extends State<PopupManagerWidget> {
   final popupManager = PopupManager(navigatorKey: navKey);
-  TestData? testSingle;
-  List<TestData> testMulti = [];
 
   @override
   Widget build(BuildContext context) {
@@ -269,32 +267,28 @@ class _PopupManagerWidgetState extends State<PopupManagerWidget> {
               child: const Text('Show single selectable search view'),
               onPressed: () async {
                 final items = List.generate(17, TestData.new);
-                if (kDebugMode) {
-                  testSingle = await popupManager.singleSelectableSearchSheet(
-                    title: 'Show Single Selectable Search View',
-                    showDragHandle: true,
-                    borderRadius: const BorderRadius.only(topLeft: Radius.circular(50), topRight: Radius.circular(50)),
-                    items: items,
-                    selected: testSingle,
-                    builder: (context, child) {
-                      return Theme(
-                        data: ThemeData(
-                          appBarTheme: AppBarTheme(
-                            backgroundColor: Colors.grey[50],
-                            elevation: 1,
-                            scrolledUnderElevation: 0,
-                          ),
-                          scaffoldBackgroundColor: Colors.white,
-                          radioTheme: RadioThemeData(
-                            fillColor: WidgetStateProperty.all(Colors.red),
-                          ),
+                await popupManager.singleSelectableSearchSheet(
+                  title: 'Show Single Selectable Search View',
+                  showDragHandle: true,
+                  borderRadius: const BorderRadius.only(topLeft: Radius.circular(50), topRight: Radius.circular(50)),
+                  items: items,
+                  builder: (context, child) {
+                    return Theme(
+                      data: ThemeData(
+                        appBarTheme: AppBarTheme(
+                          backgroundColor: Colors.grey[50],
+                          elevation: 1,
+                          scrolledUnderElevation: 0,
                         ),
-                        child: child,
-                      );
-                    },
-                  );
-                  print(testSingle?.title);
-                }
+                        scaffoldBackgroundColor: Colors.white,
+                        radioTheme: RadioThemeData(
+                          fillColor: WidgetStateProperty.all(Colors.red),
+                        ),
+                      ),
+                      child: child,
+                    );
+                  },
+                );
               },
             ),
             CoreTextButton(
@@ -302,7 +296,7 @@ class _PopupManagerWidgetState extends State<PopupManagerWidget> {
               onPressed: () async {
                 final items = List.generate(17, TestData.new);
                 if (kDebugMode) {
-                  final response = await popupManager.multiSelectableSearchSheet(
+                  final response = await popupManager.multiSelectableSearchSheet<SelectableSearchMixin>(
                     showDragHandle: true,
                     title: 'Show Multi Selectable Search View',
                     showItemCount: false,
@@ -326,10 +320,9 @@ class _PopupManagerWidgetState extends State<PopupManagerWidget> {
                       );
                     },
                     items: items,
-                    selectedItems: testMulti,
                     borderRadius: const BorderRadius.only(topLeft: Radius.circular(50), topRight: Radius.circular(50)),
                   );
-                  testMulti = List.from(response ?? []);
+                  debugPrint(response.toString());
                 }
               },
             ),
@@ -367,7 +360,7 @@ class TestData implements SelectableSearchMixin {
   String? get subtitle => null;
 
   @override
-  String? get title => '$index Test Content ${"aaa" * index}';
+  String? get title => index == 0 ? 'title' : '$index Test';
 
   @override
   bool filter(String query) => title?.toLowerCase().contains(query.toLowerCase()) ?? false;

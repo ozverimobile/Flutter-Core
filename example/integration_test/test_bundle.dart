@@ -9,7 +9,7 @@ import 'package:patrol/src/native/contracts/contracts.dart';
 import 'package:test_api/src/backend/invoker.dart';
 
 // START: GENERATED TEST IMPORTS
-import 'listview/listview_test.dart' as listview__listview_test;
+import 'selectable_search_sheet/selectable_search_sheet_test.dart' as selectable_search_sheet__selectable_search_sheet_test;
 // END: GENERATED TEST IMPORTS
 
 Future<void> main() async {
@@ -31,7 +31,7 @@ Future<void> main() async {
   // When running on iOS, the native side of Patrol (specifically: the
   // PATROL_INTEGRATION_TEST_IOS_RUNNER macro) makes an initial run to gather
   // the tests that it will later run (same as the Android). During that initial
-  // run, it makes an RPC call to PatrolAppSevice and asks it for Dart tests.
+  // run, it makes an RPC call to PatrolAppService and asks it for Dart tests.
   //
   // Once the native runner has the list of Dart tests, it dynamically creates
   // native test cases from them. On Android, this is done using the
@@ -69,7 +69,7 @@ Future<void> main() async {
   });
 
   // START: GENERATED TEST GROUPS
-  group('listview.listview_test', listview__listview_test.main);
+  group('selectable_search_sheet.selectable_search_sheet_test', selectable_search_sheet__selectable_search_sheet_test.main);
   // END: GENERATED TEST GROUPS
 
   final dartTestGroup = await testExplorationCompleter.future;
