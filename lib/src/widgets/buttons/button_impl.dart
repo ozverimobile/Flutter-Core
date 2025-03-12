@@ -36,7 +36,6 @@ class _CoreButtonState extends State<CoreButton> {
   var _isProcessing = false;
 
   Future<void> _onPressedCallback() async {
-    if (widget.onPressed == null) return;
     if (!widget._autoIndicator) return await widget.onPressed!.call();
     setState(() => _isProcessing = true);
     final overlayEntry = OverlayEntry(builder: (context) => const Positioned.fill(child: AbsorbPointer()));
@@ -58,7 +57,7 @@ class _CoreButtonState extends State<CoreButton> {
         ? IconButton(
             padding: EdgeInsets.zero,
             visualDensity: VisualDensity.compact,
-            onPressed: _onPressedCallback,
+            onPressed: widget.onPressed == null ? null : _onPressedCallback,
             icon: !_isProcessing
                 ? widget.child
                 : Stack(
@@ -78,7 +77,7 @@ class _CoreButtonState extends State<CoreButton> {
           )
         : CupertinoButton(
             padding: EdgeInsets.zero,
-            onPressed: _onPressedCallback,
+            onPressed: widget.onPressed == null ? null : _onPressedCallback,
             child: !_isProcessing
                 ? widget.child
                 : Stack(
@@ -134,7 +133,6 @@ class _CoreTextButtonState extends State<CoreTextButton> {
   var _isProcessing = false;
 
   Future<dynamic> _onPressedCallback() async {
-    if (widget.onPressed == null) return;
     if (!widget._autoIndicator) return await widget.onPressed!.call();
     setState(() => _isProcessing = true);
     final overlayEntry = OverlayEntry(builder: (context) => const Positioned.fill(child: AbsorbPointer()));
@@ -154,7 +152,7 @@ class _CoreTextButtonState extends State<CoreTextButton> {
   Widget build(BuildContext context) {
     return switch (context.theme.platform) {
       TargetPlatform.iOS || TargetPlatform.macOS => CupertinoButton(
-          onPressed: _onPressedCallback,
+          onPressed: widget.onPressed == null ? null : _onPressedCallback,
           padding: widget.padding,
           minSize: widget.minSize,
           child: !_isProcessing
@@ -172,7 +170,7 @@ class _CoreTextButtonState extends State<CoreTextButton> {
                 ),
         ),
       _ => TextButton(
-          onPressed: _onPressedCallback,
+          onPressed: widget.onPressed == null ? null : _onPressedCallback,
           style: TextButton.styleFrom(
             padding: widget.padding,
             minimumSize: Size(widget.minSize, widget.minSize),
@@ -210,6 +208,7 @@ class CoreOutlinedButton extends StatefulWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     this.minSize = kMinInteractiveDimensionCupertino,
     this.borderColor,
+    this.borderWith,
     this.borderRadius = const BorderRadius.all(Radius.circular(8)),
     super.key,
   })  : _autoIndicator = false,
@@ -221,6 +220,7 @@ class CoreOutlinedButton extends StatefulWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     this.minSize = kMinInteractiveDimensionCupertino,
     this.borderColor,
+    this.borderWith,
     this.borderRadius = const BorderRadius.all(Radius.circular(8)),
     super.key,
     IndicatorStyle? indicatorStyle,
@@ -232,6 +232,7 @@ class CoreOutlinedButton extends StatefulWidget {
   final EdgeInsetsGeometry padding;
   final double minSize;
   final Color? borderColor;
+  final double? borderWith;
   final BorderRadius borderRadius;
   final bool _autoIndicator;
   final IndicatorStyle? _indicatorStyle;
@@ -244,7 +245,6 @@ class _CoreOutlinedButtonState extends State<CoreOutlinedButton> {
   var _isProcessing = false;
 
   Future<dynamic> _onPressedCallback() async {
-    if (widget.onPressed == null) return;
     if (!widget._autoIndicator) return await widget.onPressed!.call();
     setState(() => _isProcessing = true);
     final overlayEntry = OverlayEntry(builder: (context) => const Positioned.fill(child: AbsorbPointer()));
@@ -264,11 +264,11 @@ class _CoreOutlinedButtonState extends State<CoreOutlinedButton> {
   Widget build(BuildContext context) {
     return switch (context.theme.platform) {
       TargetPlatform.iOS || TargetPlatform.macOS => OutlinedButton(
-          onPressed: _onPressedCallback,
+          onPressed: widget.onPressed == null ? null : _onPressedCallback,
           style: OutlinedButton.styleFrom(
             splashFactory: NoSplash.splashFactory,
             padding: widget.padding,
-            side: BorderSide(color: widget.borderColor ?? context.colorScheme.primary),
+            side: BorderSide(color: widget.borderColor ?? context.colorScheme.primary, width: widget.borderWith ?? 1),
             minimumSize: Size(widget.minSize, widget.minSize),
             shape: RoundedRectangleBorder(
               borderRadius: widget.borderRadius,
@@ -292,10 +292,10 @@ class _CoreOutlinedButtonState extends State<CoreOutlinedButton> {
                 ),
         ),
       _ => OutlinedButton(
-          onPressed: _onPressedCallback,
+          onPressed: widget.onPressed == null ? null : _onPressedCallback,
           style: OutlinedButton.styleFrom(
             padding: widget.padding,
-            side: BorderSide(color: widget.borderColor ?? context.colorScheme.primary),
+            side: BorderSide(color: widget.borderColor ?? context.colorScheme.primary, width: widget.borderWith ?? 1),
             minimumSize: Size(widget.minSize, widget.minSize),
             shape: RoundedRectangleBorder(
               borderRadius: widget.borderRadius,
@@ -364,7 +364,6 @@ class _CoreFilledButtonState extends State<CoreFilledButton> {
   var _isProcessing = false;
 
   Future<dynamic> _onPressedCallback() async {
-    if (widget.onPressed == null) return;
     if (!widget._autoIndicator) return await widget.onPressed!.call();
     setState(() => _isProcessing = true);
     final overlayEntry = OverlayEntry(builder: (context) => const Positioned.fill(child: AbsorbPointer()));
@@ -384,7 +383,7 @@ class _CoreFilledButtonState extends State<CoreFilledButton> {
   Widget build(BuildContext context) {
     return switch (context.theme.platform) {
       TargetPlatform.iOS || TargetPlatform.macOS => CupertinoButton(
-          onPressed: _onPressedCallback,
+          onPressed: widget.onPressed == null ? null : _onPressedCallback,
           padding: widget.padding,
           color: widget.backgroundColor ?? context.theme.colorScheme.primary,
           minSize: widget.minSize,
@@ -403,7 +402,7 @@ class _CoreFilledButtonState extends State<CoreFilledButton> {
                 ),
         ),
       _ => FilledButton(
-          onPressed: _onPressedCallback,
+          onPressed: widget.onPressed == null ? null : _onPressedCallback,
           style: FilledButton.styleFrom(
             shape: RoundedRectangleBorder(
               borderRadius: widget.borderRadius,
@@ -493,7 +492,6 @@ class _CoreIconButtonState extends State<CoreIconButton> {
   var _isProcessing = false;
 
   Future<dynamic> _onPressedCallback() async {
-    if (widget.onPressed == null) return;
     if (!widget._autoIndicator) return await widget.onPressed!.call();
     setState(() => _isProcessing = true);
     final overlayEntry = OverlayEntry(builder: (context) => const Positioned.fill(child: AbsorbPointer()));
@@ -513,7 +511,7 @@ class _CoreIconButtonState extends State<CoreIconButton> {
   Widget build(BuildContext context) {
     return switch (context.theme.platform) {
       TargetPlatform.iOS || TargetPlatform.macOS => CupertinoButton(
-          onPressed: _onPressedCallback,
+          onPressed: widget.onPressed == null ? null : _onPressedCallback,
           padding: EdgeInsets.zero,
           minSize: widget.radius * 2,
           child: widget.filled
@@ -542,7 +540,7 @@ class _CoreIconButtonState extends State<CoreIconButton> {
         ),
       _ => widget.filled
           ? IconButton.filled(
-              onPressed: _onPressedCallback,
+              onPressed: widget.onPressed == null ? null : _onPressedCallback,
               icon: !_isProcessing
                   ? widget.icon
                   : Stack(
@@ -566,7 +564,7 @@ class _CoreIconButtonState extends State<CoreIconButton> {
               ),
             )
           : IconButton(
-              onPressed: _onPressedCallback,
+              onPressed: widget.onPressed == null ? null : _onPressedCallback,
               icon: !_isProcessing
                   ? widget.icon
                   : Stack(
@@ -576,7 +574,7 @@ class _CoreIconButtonState extends State<CoreIconButton> {
                           width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
                           height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
                           child: CircularProgressIndicator(
-                            color: widget._indicatorStyle?.color ,
+                            color: widget._indicatorStyle?.color,
                             strokeWidth: widget._indicatorStyle?.strokeWidth ?? IndicatorStyle.defaultStrokeWidth,
                           ),
                         ),
