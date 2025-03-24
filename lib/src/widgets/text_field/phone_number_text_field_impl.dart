@@ -44,6 +44,8 @@ class CorePhoneNumberTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextFormField(
       controller: controller,
+      enabled: enabled,
+      focusNode: focusNode,
       validator: validator,
       onChanged: onChanged,
       textAlign: textAlign,
