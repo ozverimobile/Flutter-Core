@@ -12,7 +12,7 @@ abstract class CoreDefaultInputFormatter {
     );
   }
 
-  /// Currency formatter
+  /// Credit Card formatter
   static TextInputFormatter creditCard() {
     return CoreInputFormatter(
       mask: '#### #### #### ####',
@@ -21,7 +21,7 @@ abstract class CoreDefaultInputFormatter {
     );
   }
 
-  /// Currency formatter
+  /// Phone formatter
   static TextInputFormatter phoneNumber() {
     return CoreInputFormatter(
       mask: '(###) ### ## ##',
@@ -30,15 +30,24 @@ abstract class CoreDefaultInputFormatter {
     );
   }
 
-  /// Currency formatter
+  /// Phone formatter By Type
+  static TextInputFormatter phoneNumberByType(PhoneNumberFormat format) {
+    return CoreInputFormatter(
+      mask: format.mask,
+      filter: {'#': RegExp('[0-9]')},
+      type: MaskAutoCompletionType.eager,
+    );
+  }
+
+  /// Number formatter
   static TextInputFormatter number() => OnlyNumberFormatter();
 
-  /// Currency formatter
+  /// Lower Case formatter
   static TextInputFormatter lowerCase() => LowerCaseFormatter();
 
-  /// Currency formatter
+  /// Upper Case formatter
   static TextInputFormatter upperCase() => UpperCaseFormatter();
 
-  /// Currency formatter
+  /// Email formatter
   static TextInputFormatter email() => EmailFormatter();
 }

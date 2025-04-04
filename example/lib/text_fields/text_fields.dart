@@ -24,7 +24,10 @@ final class TextFieldsExample extends StatelessWidget {
                 verticalBox8,
                 CorePasswordTextField(hintText: 'RePassword'),
                 verticalBox8,
-                CorePhoneNumberTextField(hintText: 'Phone'),
+                CorePhoneNumberTextField(
+                  hintText: 'Phone',
+                  format: PhoneNumberFormat.prefixWithZeroParens,
+                ),
                 verticalBox8,
                 CoreSearchTextField(hintText: 'Search'),
                 verticalBox8,
