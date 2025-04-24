@@ -6,13 +6,14 @@ import 'package:flutter_core/src/utils/network_manager/error_messages.dart';
 
 @immutable
 final class CreatingErrorMessageFromDioException {
-  CreatingErrorMessageFromDioException(DioException exception, {ErrorMessages errorMessages = const ErrorMessages()}) {
+  CreatingErrorMessageFromDioException(DioException exception, {ErrorMessages errorMessages = const ErrorMessages(), this.includeDebugMessage = true}) {
     _exception = exception;
     _errorMessages = errorMessages;
   }
 
   late final DioException _exception;
   late final ErrorMessages _errorMessages;
+  late final bool includeDebugMessage;
 
   String get message => '${_prepareMessage()}${_getDioMessage(_exception)}';
 
@@ -28,15 +29,15 @@ final class CreatingErrorMessageFromDioException {
     return _errorMessages.somethingWentWrong;
   }
 
-  String _getDioMessage(DioException exception) => kDebugMode ? ' ---> ${exception.message}' : '';
+  String _getDioMessage(DioException exception) => (kDebugMode && includeDebugMessage) ? ' ---> ${exception.message}' : '';
 
   String _handleStatusCode(DioException exception) => _errorMessages.statusCodeMessages[exception.response?.statusCode] ?? _errorMessages.somethingWentWrong;
 
   String _handleExceptionType(DioException exception) => switch (exception.error) {
-        SocketException _ => 'İnternet bağlantısı yok.',
-        HttpException _ => 'Sunucuya bağlanırken bir hata oluştu. Lütfen tekrar deneyin.',
-        HandshakeException _ => 'Güvenlik sertifikası doğrulanamadı. Lütfen bağlantıyı kontrol edin.',
-        CertificateException _ => 'Sertifika hatası meydana geldi. Bağlantıyı kontrol edin veya tekrar deneyin.',
+        SocketException _ => _errorMessages.socketException,
+        HttpException _ => _errorMessages.httpException,
+        HandshakeException _ => _errorMessages.handshakeException,
+        CertificateException _ => _errorMessages.certificateException,
         _ => _errorMessages.somethingWentWrong,
       };
 }
