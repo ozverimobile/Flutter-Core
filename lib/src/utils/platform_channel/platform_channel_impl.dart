@@ -8,4 +8,6 @@ abstract class CorePlatformChannel {
   static Future<bool> isHuaweiApiAvailable() async {
     return (await _channel.invokeMethod('getHuaweiApiAvailability')) == 0;
   }
+
+  static Future<String?> getAndroidDeviceId() async => _channel.invokeMethod('getAndroidId');
 }
