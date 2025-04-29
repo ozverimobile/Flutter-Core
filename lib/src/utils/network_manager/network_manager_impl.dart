@@ -65,7 +65,7 @@ abstract class CoreNetworkManager with RequestLoggerMixin implements ICoreNetwor
       stopwatch.start();
       final mergedHeaders = generateHeaders(path: path)..addAll(headers ?? {});
 
-      if (kDebugMode && printLogRequestInfo) logRequestInfo(requestUrl: '${_dio.options.baseUrl}${path.asString}', type: type, data: data, pathSuffix: pathSuffix, headers: mergedHeaders, queryParameters: queryParameters);
+      if (kDebugMode && printLogRequestInfo) logRequestInfo(requestUrl: '${_dio.options.baseUrl}${path.asString}', type: type, data: data, pathSuffix: pathSuffix, headers: mergedHeaders, queryParameters: queryParameters, dioFormData: dioFormData);
 
       _dio.options = _dio.options.copyWith(connectTimeout: connectionTimeout, receiveTimeout: receiveTimeout, sendTimeout: sendTimeout, validateStatus: validateStatus);
 
@@ -135,7 +135,7 @@ abstract class CoreNetworkManager with RequestLoggerMixin implements ICoreNetwor
       final mergedHeaders = generateHeaders(path: path)..addAll(headers ?? {});
 
       if (kDebugMode) {
-        logRequestInfo(requestUrl: '${_dio.options.baseUrl}${path.asString}', type: type, data: data, pathSuffix: pathSuffix, headers: mergedHeaders, queryParameters: queryParameters);
+        logRequestInfo(requestUrl: '${_dio.options.baseUrl}${path.asString}', type: type, data: data, pathSuffix: pathSuffix, headers: mergedHeaders, queryParameters: queryParameters, dioFormData: dioFormData);
       }
       _dio.options = _dio.options.copyWith(connectTimeout: connectionTimeout, receiveTimeout: receiveTimeout, sendTimeout: sendTimeout, validateStatus: validateStatus);
 
