@@ -65,7 +65,7 @@ abstract class CoreNetworkManager with RequestLoggerMixin implements ICoreNetwor
       stopwatch.start();
       final mergedHeaders = generateHeaders(path: path)..addAll(headers ?? {});
 
-      if (kDebugMode && printLogRequestInfo) logRequestInfo(requestUrl: '${_dio.options.baseUrl}${path.asString}', type: type, data: data, pathSuffix: pathSuffix, headers: mergedHeaders, queryParameters: queryParameters);
+      if (kDebugMode && printLogRequestInfo) logRequestInfo(requestUrl: '${_dio.options.baseUrl}${path.asString}', type: type, data: data, pathSuffix: pathSuffix, headers: mergedHeaders, queryParameters: queryParameters, dioFormData: dioFormData);
 
       _dio.options = _dio.options.copyWith(connectTimeout: connectionTimeout, receiveTimeout: receiveTimeout, sendTimeout: sendTimeout, validateStatus: validateStatus);
 
@@ -134,9 +134,7 @@ abstract class CoreNetworkManager with RequestLoggerMixin implements ICoreNetwor
       stopwatch.start();
       final mergedHeaders = generateHeaders(path: path)..addAll(headers ?? {});
 
-      if (kDebugMode) {
-        logRequestInfo(requestUrl: '${_dio.options.baseUrl}${path.asString}', type: type, data: data, pathSuffix: pathSuffix, headers: mergedHeaders, queryParameters: queryParameters);
-      }
+      if (kDebugMode && printLogRequestInfo) logRequestInfo(requestUrl: '${_dio.options.baseUrl}${path.asString}', type: type, data: data, pathSuffix: pathSuffix, headers: mergedHeaders, queryParameters: queryParameters, dioFormData: dioFormData);
       _dio.options = _dio.options.copyWith(connectTimeout: connectionTimeout, receiveTimeout: receiveTimeout, sendTimeout: sendTimeout, validateStatus: validateStatus);
 
       final response = await _dio.request<T>(
@@ -157,7 +155,7 @@ abstract class CoreNetworkManager with RequestLoggerMixin implements ICoreNetwor
       stopwatch
         ..stop()
         ..reset();
-      if (kDebugMode) logResponseInfo(response: response, responseTime: stopwatch.elapsedMilliseconds, requestUrl: '${_dio.options.baseUrl}${path.asString}');
+      if (kDebugMode && printLogResponseInfo) logResponseInfo(response: response, responseTime: stopwatch.elapsedMilliseconds, requestUrl: '${_dio.options.baseUrl}${path.asString}');
       return getSuccessPrimitiveResponse(response: response);
     } catch (error) {
       stopwatch
@@ -168,7 +166,7 @@ abstract class CoreNetworkManager with RequestLoggerMixin implements ICoreNetwor
       if (statusCode == 401) onUnauthorized(error as DioException);
       if (statusCode == 503) onServiceUnavailable(error as DioException);
 
-      if (kDebugMode) logErrorResponseInfo(statusCode: statusCode, error: error, requestUrl: '${_dio.options.baseUrl}${path.asString}');
+      if (kDebugMode && printLogErrorResponseInfo) logErrorResponseInfo(statusCode: statusCode, error: error, requestUrl: '${_dio.options.baseUrl}${path.asString}');
       return getErrorResponse<T>(error: error);
     }
   }
