@@ -45,6 +45,12 @@ abstract class CoreDefaultInputFormatter {
   /// Lower Case formatter
   static TextInputFormatter lowerCase() => LowerCaseFormatter();
 
+  /// Upper Case first letter formatter
+  static TextInputFormatter upperCaseFirstLetter() => UpperCaseFirstLetterFormatter();
+
+  /// Title case formatter
+  static TextInputFormatter titleCase() => TitleCaseFormatter();
+
   /// Upper Case formatter
   static TextInputFormatter upperCase() => UpperCaseFormatter();
 

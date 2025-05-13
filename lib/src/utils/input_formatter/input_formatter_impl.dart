@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/services.dart';
+import 'package:flutter_core/flutter_core.dart';
 
 enum MaskAutoCompletionType {
   lazy,
@@ -383,6 +384,28 @@ class LowerCaseFormatter extends TextInputFormatter {
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
     return TextEditingValue(
       text: newValue.text.toLowerCase(),
+      selection: newValue.selection,
+    );
+  }
+}
+
+/// Convert first letter of each word to uppercase
+class UpperCaseFirstLetterFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    return TextEditingValue(
+      text: newValue.text.toCapitalized() ?? '',
+      selection: newValue.selection,
+    );
+  }
+}
+
+/// Title case formatter
+class TitleCaseFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    return TextEditingValue(
+      text: newValue.text.toTitleCase() ?? '',
       selection: newValue.selection,
     );
   }
