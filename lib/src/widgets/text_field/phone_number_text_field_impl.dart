@@ -48,7 +48,7 @@ enum PhoneNumberFormat {
       PhoneNumberFormat.prefixWithCountryParens => '##) ### ## ##',
       PhoneNumberFormat.prefixWithCountry => '## ### ## ##',
       PhoneNumberFormat.prefixWithZeroParens => '##) ### ## ##',
-      PhoneNumberFormat.prefixWithZero => '## ### ## ##',
+      PhoneNumberFormat.prefixWithZero => '(###) ### ## ##',
     };
   }
 
@@ -86,6 +86,7 @@ class CorePhoneNumberTextField extends StatelessWidget {
     this.countryCode = _trCountryCode,
     this.carrierPrefix = _trCarrierPrefix,
     this.floatingLabelBehavior = FloatingLabelBehavior.always,
+    this.enableInteractiveSelection = false,
     super.key,
   });
 
@@ -109,10 +110,12 @@ class CorePhoneNumberTextField extends StatelessWidget {
   final String countryCode;
   final String carrierPrefix;
   final FloatingLabelBehavior floatingLabelBehavior;
+  final bool enableInteractiveSelection;
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      enableInteractiveSelection: enableInteractiveSelection,
       controller: controller,
       enabled: enabled,
       focusNode: focusNode,
