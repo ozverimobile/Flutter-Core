@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter_core/flutter_core.dart';
 import 'package:meta/meta.dart';
 
 mixin IRetriable {
@@ -43,6 +44,14 @@ abstract class Retriable<T> implements IRetriable {
       } else {
         rethrow;
       }
+    } finally {
+      CoreLogger.log(
+        '[Retriable] ${className()} => '
+        'Success: $_isSuccess | '
+        'Total Retries: ${_currentRetry + 1}/$maxRetries | '
+        'Delay Multiplier: ${delayMultiplier.inMilliseconds}ms',
+        color: LogColors.yellow,
+      );
     }
   }
 }
