@@ -154,7 +154,7 @@ class _CoreTextButtonState extends State<CoreTextButton> {
       TargetPlatform.iOS || TargetPlatform.macOS => CupertinoButton(
           onPressed: widget.onPressed == null ? null : _onPressedCallback,
           padding: widget.padding,
-          minSize: widget.minSize,
+          minimumSize: Size(widget.minSize, widget.minSize),
           child: !_isProcessing
               ? widget.child
               : Row(
@@ -386,8 +386,8 @@ class _CoreFilledButtonState extends State<CoreFilledButton> {
           onPressed: widget.onPressed == null ? null : _onPressedCallback,
           padding: widget.padding,
           color: widget.backgroundColor ?? context.theme.colorScheme.primary,
-          minSize: widget.minSize,
           borderRadius: widget.borderRadius,
+          minimumSize: Size(widget.minSize, widget.minSize),
           child: !_isProcessing
               ? widget.child
               : Stack(
@@ -513,7 +513,7 @@ class _CoreIconButtonState extends State<CoreIconButton> {
       TargetPlatform.iOS || TargetPlatform.macOS => CupertinoButton(
           onPressed: widget.onPressed == null ? null : _onPressedCallback,
           padding: EdgeInsets.zero,
-          minSize: widget.radius * 2,
+          minimumSize: Size(widget.radius * 2, widget.radius * 2),
           child: widget.filled
               ? CircleAvatar(
                   backgroundColor: widget.backgroundColor ?? context.theme.colorScheme.primary,

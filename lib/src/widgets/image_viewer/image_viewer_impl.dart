@@ -337,7 +337,7 @@ class _CoreImageViewerState extends State<_CoreImageViewer> {
               final item = widget.images[index];
               return Container(
                 key: Key('image_$index'),
-                color: widget.backgroundColor.withOpacity(_opacity),
+                color: widget.backgroundColor.withValues(alpha: _opacity),
                 constraints: BoxConstraints.expand(
                   height: context.height,
                   width: context.width,

@@ -30,6 +30,7 @@ class CoreReorderableListView extends StatefulWidget {
     this.footer,
     this.scrollDirection = Axis.vertical,
     this.reverse = false,
+    @Deprecated('Use controller property instead')
     this.scrollController,
     this.controller,
     this.primary,
@@ -66,6 +67,7 @@ class CoreReorderableListView extends StatefulWidget {
     this.footer,
     this.scrollDirection = Axis.vertical,
     this.reverse = false,
+    @Deprecated('Use controller property instead')
     this.scrollController,
     this.controller,
     this.primary,
