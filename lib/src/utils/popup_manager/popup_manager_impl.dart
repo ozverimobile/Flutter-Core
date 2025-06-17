@@ -155,6 +155,7 @@ abstract interface class IPopupManager {
   Future<ImageSourceType?> showImageSourcePicker({BuildContext? context});
 
   Future<void> showPatchInstalledBottomSheet({required bool isForce, BuildContext? context});
+  Future<T?> showCupertinoBottomSheet<T>({required WidgetBuilder builder, BuildContext? context, String? id, bool enableDrag = true, RouteSettings? settings});
 
   void hidePopup<T>({String? id, T? result});
 
@@ -275,6 +276,32 @@ class PopupManager implements IPopupManager {
 
     _popupRoutes.add(route);
     _navigator.push(route);
+  }
+
+  /// Shows cupertino bottom sheet
+  @override
+  Future<T?> showCupertinoBottomSheet<T>({
+    required WidgetBuilder builder,
+    BuildContext? context,
+    String? id,
+    bool enableDrag = true,
+    RouteSettings? settings,
+  }) {
+    assert(
+      id == null || _popupRoutes.where((element) => element.id == id).isEmpty,
+      'There is already a cupertino sheet showing with id: $id',
+    );
+    final route = CSheetRoute<T>._(
+      builder: builder,
+      onCompleted: _onCompleted,
+      id: id,
+      enableDrag: enableDrag,
+      settings: settings,
+    );
+
+    _popupRoutes.add(route);
+    _navigator.push(route);
+    return route.completer.future;
   }
 
   /// Shows modal bottom sheet
@@ -1699,7 +1726,9 @@ class PopupManager implements IPopupManager {
                   },
                 ),
               const SizedBox(height: 15),
-              SizedBox(height: context.viewPadding.bottom,)
+              SizedBox(
+                height: context.viewPadding.bottom,
+              )
             ],
           ),
         ),

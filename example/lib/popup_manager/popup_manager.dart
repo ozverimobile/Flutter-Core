@@ -350,6 +350,27 @@ class _PopupManagerWidgetState extends State<PopupManagerWidget> {
                 );
               },
             ),
+            // cupertino bottom sheet
+            CoreTextButton(
+              child: const Text('Show Cupertino Bottom Sheet'),
+              onPressed: () {
+                final id = UniqueKey().toString();
+                popupManager.showCupertinoBottomSheet<void>(
+                  context: context,
+                  id: id,
+                  builder: (context) => Container(
+                    height: 300,
+                    color: Colors.white,
+                    child: Center(
+                      child: CupertinoButton.filled(
+                        onPressed:()=> popupManager.hidePopup<void>(id: id),
+                        child: const Text('Close'),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),

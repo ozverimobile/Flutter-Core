@@ -4,55 +4,55 @@ PODS:
   - CocoaAsyncSocket (7.6.5)
   - device_info_plus (0.0.1):
     - Flutter
-  - Firebase/CoreOnly (11.2.0):
-    - FirebaseCore (= 11.2.0)
-  - Firebase/RemoteConfig (11.2.0):
+  - Firebase/CoreOnly (11.13.0):
+    - FirebaseCore (~> 11.13.0)
+  - Firebase/RemoteConfig (11.13.0):
     - Firebase/CoreOnly
-    - FirebaseRemoteConfig (~> 11.2.0)
-  - firebase_core (3.6.0):
-    - Firebase/CoreOnly (= 11.2.0)
+    - FirebaseRemoteConfig (~> 11.13.0)
+  - firebase_core (3.14.0):
+    - Firebase/CoreOnly (= 11.13.0)
     - Flutter
-  - firebase_remote_config (5.1.3):
-    - Firebase/RemoteConfig (= 11.2.0)
+  - firebase_remote_config (5.4.5):
+    - Firebase/RemoteConfig (= 11.13.0)
     - firebase_core
     - Flutter
-  - FirebaseABTesting (11.4.0):
-    - FirebaseCore (~> 11.0)
-  - FirebaseCore (11.2.0):
-    - FirebaseCoreInternal (~> 11.0)
-    - GoogleUtilities/Environment (~> 8.0)
-    - GoogleUtilities/Logger (~> 8.0)
-  - FirebaseCoreInternal (11.4.2):
-    - "GoogleUtilities/NSData+zlib (~> 8.0)"
-  - FirebaseInstallations (11.4.0):
-    - FirebaseCore (~> 11.0)
-    - GoogleUtilities/Environment (~> 8.0)
-    - GoogleUtilities/UserDefaults (~> 8.0)
+  - FirebaseABTesting (11.13.0):
+    - FirebaseCore (~> 11.13.0)
+  - FirebaseCore (11.13.0):
+    - FirebaseCoreInternal (~> 11.13.0)
+    - GoogleUtilities/Environment (~> 8.1)
+    - GoogleUtilities/Logger (~> 8.1)
+  - FirebaseCoreInternal (11.13.0):
+    - "GoogleUtilities/NSData+zlib (~> 8.1)"
+  - FirebaseInstallations (11.13.0):
+    - FirebaseCore (~> 11.13.0)
+    - GoogleUtilities/Environment (~> 8.1)
+    - GoogleUtilities/UserDefaults (~> 8.1)
     - PromisesObjC (~> 2.4)
-  - FirebaseRemoteConfig (11.2.0):
+  - FirebaseRemoteConfig (11.13.0):
     - FirebaseABTesting (~> 11.0)
-    - FirebaseCore (~> 11.0)
+    - FirebaseCore (~> 11.13.0)
     - FirebaseInstallations (~> 11.0)
     - FirebaseRemoteConfigInterop (~> 11.0)
     - FirebaseSharedSwift (~> 11.0)
-    - GoogleUtilities/Environment (~> 8.0)
-    - "GoogleUtilities/NSData+zlib (~> 8.0)"
-  - FirebaseRemoteConfigInterop (11.4.0)
-  - FirebaseSharedSwift (11.4.0)
+    - GoogleUtilities/Environment (~> 8.1)
+    - "GoogleUtilities/NSData+zlib (~> 8.1)"
+  - FirebaseRemoteConfigInterop (11.14.0)
+  - FirebaseSharedSwift (11.14.0)
   - Flutter (1.0.0)
   - flutter_core (0.0.1):
     - Flutter
   - flutter_localization (0.0.1):
     - Flutter
-  - GoogleUtilities/Environment (8.0.2):
+  - GoogleUtilities/Environment (8.1.0):
     - GoogleUtilities/Privacy
-  - GoogleUtilities/Logger (8.0.2):
+  - GoogleUtilities/Logger (8.1.0):
     - GoogleUtilities/Environment
     - GoogleUtilities/Privacy
-  - "GoogleUtilities/NSData+zlib (8.0.2)":
+  - "GoogleUtilities/NSData+zlib (8.1.0)":
     - GoogleUtilities/Privacy
-  - GoogleUtilities/Privacy (8.0.2)
-  - GoogleUtilities/UserDefaults (8.0.2):
+  - GoogleUtilities/Privacy (8.1.0)
+  - GoogleUtilities/UserDefaults (8.1.0):
     - GoogleUtilities/Logger
     - GoogleUtilities/Privacy
   - integration_test (0.0.1):
@@ -147,34 +147,34 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
 
 SPEC CHECKSUMS:
-  app_settings: 017320c6a680cdc94c799949d95b84cb69389ebc
+  app_settings: 5127ae0678de1dcc19f2293271c51d37c89428b2
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
-  device_info_plus: 97af1d7e84681a90d0693e63169a5d50e0839a0d
-  Firebase: 98e6bf5278170668a7983e12971a66b2cd57fc8c
-  firebase_core: 2bedc3136ec7c7b8561c6123ed0239387b53f2af
-  firebase_remote_config: d522653d828836503715498f1662901a6efcd809
-  FirebaseABTesting: aef1719704fade00b200827e7973f352efc4caee
-  FirebaseCore: a282032ae9295c795714ded2ec9c522fc237f8da
-  FirebaseCoreInternal: 35731192cab10797b88411be84940d2beb33a238
-  FirebaseInstallations: 6ef4a1c7eb2a61ee1f74727d7f6ce2e72acf1414
-  FirebaseRemoteConfig: fca0b2d017fc1de52b28a4e5bcf2007c1a840457
-  FirebaseRemoteConfigInterop: e76f46ffa4d6a65e273d4dfebb6a79e588cec136
-  FirebaseSharedSwift: 505dae2d05969dbf6d43749a642bb1bf230f0252
+  device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
+  Firebase: 3435bc66b4d494c2f22c79fd3aae4c1db6662327
+  firebase_core: 700bac7ed92bb754fd70fbf01d72b36ecdd6d450
+  firebase_remote_config: 1c2a0ba5b23d5386142eebf5ffd2a646608d1b22
+  FirebaseABTesting: 4048f61cc10d2fad064d3089ace6bd5fb910169b
+  FirebaseCore: c692c7f1c75305ab6aff2b367f25e11d73aa8bd0
+  FirebaseCoreInternal: 29d7b3af4aaf0b8f3ed20b568c13df399b06f68c
+  FirebaseInstallations: 0ee9074f2c1e86561ace168ee1470dc67aabaf02
+  FirebaseRemoteConfig: 518ca257cdb2ccbc2b781ef2f2104f1104c7488f
+  FirebaseRemoteConfigInterop: 7b74ceaa54e28863ed17fa39da8951692725eced
+  FirebaseSharedSwift: bdd5c8674c4712a98e70287c936bc5cca5d640f6
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  flutter_core: 6da5ec51861fe77c1800795982c374ffc53c17e3
-  flutter_localization: f43b18844a2b3d2c71fd64f04ffd6b1e64dd54d4
-  GoogleUtilities: 26a3abef001b6533cf678d3eb38fd3f614b7872d
-  integration_test: 252f60fa39af5e17c3aa9899d35d908a0721b573
-  package_info_plus: 58f0028419748fad15bf008b270aaa8e54380b1c
-  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
-  patrol: 0564cee315ff6c86fb802b3647db05cc2d3d0624
-  permission_handler_apple: 9878588469a2b0d0fc1e048d9f43605f92e6cec2
+  flutter_core: c59d0284686a47e3412e73aa773388e25e858eeb
+  flutter_localization: 72299fb6cb4e51cae587bd953ed0b958040b71e6
+  GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
+  integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
+  package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
+  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
+  patrol: 51b76cc7c11a2933ee3e72482d930c75b9d4ec73
+  permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
-  share_plus: 8875f4f2500512ea181eef553c3e27dba5135aad
-  shared_preferences_foundation: fcdcbc04712aee1108ac7fda236f363274528f78
-  sqflite_darwin: a553b1fd6fe66f53bbb0fe5b4f5bab93f08d7a13
-  url_launcher_ios: 5334b05cef931de560670eeae103fd3e431ac3fe
+  share_plus: 50da8cb520a8f0f65671c6c6a99b3617ed10a58a
+  shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
+  sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
+  url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
 
-PODFILE CHECKSUM: c8a8a3ae383dca2fb05b33da48dac9e10d951d0c
+PODFILE CHECKSUM: 64c6b50a5977b131be1554208add1f8f2de84d5d
 
 COCOAPODS: 1.16.2
