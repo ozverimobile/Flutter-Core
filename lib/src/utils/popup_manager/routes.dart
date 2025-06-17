@@ -67,6 +67,32 @@ final class BSheetRoute<T> extends ModalBottomSheetRoute<T> implements ICorePopu
   }
 }
 
+/// A [CupertinoSheetRoute] shows an iOS style bottom sheet
+final class CSheetRoute<T> extends CupertinoSheetRoute<T> implements ICorePopupController {
+  CSheetRoute._({
+    required super.builder,
+    required this.onCompleted,
+    this.id,
+    super.enableDrag,
+    super.settings,
+  });
+
+  @override
+  final String? id;
+  @override
+  final Completer<T?> completer = Completer<T?>();
+
+  @override
+  void Function(ICorePopupController controller) onCompleted;
+
+  @override
+  void didComplete(T? result) {
+    onCompleted(this);
+    if (!completer.isCompleted) completer.complete(result);
+    super.didComplete(result);
+  }
+}
+
 /// A [DialogRoute] shows dialog
 final class DRoute<T> extends DialogRoute<T> implements ICorePopupController {
   DRoute._({
