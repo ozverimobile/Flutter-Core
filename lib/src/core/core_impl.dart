@@ -6,7 +6,7 @@ import 'package:flutter_core/flutter_core.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-// ignore: one_member_abstracts
+
 abstract interface class ICore {
   Future<void> initialize();
   void closeKeyboard();
@@ -14,7 +14,7 @@ abstract interface class ICore {
   Future<void> updateApp({String? androidPackageName, String? iOSAppId, String? huaweiAppId, bool iosLaunchIntune = false});
   Future<void> vibrate({ImpactType type = ImpactType.mediumImpact});
 }
-
+// It's okay to be ignored
 // ignore: non_constant_identifier_names
 CoreImpl Core = CoreImpl._();
 

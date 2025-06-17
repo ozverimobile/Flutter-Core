@@ -14,7 +14,7 @@ class CorePackageInfo implements ICorePackageInfo{
   CorePackageInfo._();
 
   static final instance = CorePackageInfo._();
-  final _packageInfo = PackageInfo.fromPlatform();
+  final Future<PackageInfo> _packageInfo = PackageInfo.fromPlatform();
 
   @override
   Future<String?> get appName async {

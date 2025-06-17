@@ -1,5 +1,5 @@
 /// A core library for Flutter Mobile Apps.
-library flutter_core;
+library;
 
 export 'package:collection/collection.dart';
 export 'package:dio/dio.dart' show BaseOptions, CancelToken, Dio, DioException, DioExceptionType, ErrorInterceptorHandler, FormData, Headers, InterceptorsWrapper, MultipartFile, Options, RequestInterceptorHandler, RequestOptions, Response, ResponseInterceptorHandler, ResponseType;
