@@ -38,6 +38,19 @@ class CoreDeviceInfo implements ICoreDeviceInfo {
       product: androidInfo.product,
       isPhysicalDevice: androidInfo.isPhysicalDevice,
       serialNumber: androidInfo.serialNumber,
+      hardware: androidInfo.hardware,
+      display: androidInfo.display,
+      fingerprint: androidInfo.fingerprint,
+      host: androidInfo.host,
+      tags: androidInfo.tags,
+      type: androidInfo.type,
+      bootloader: androidInfo.bootloader,
+      board: androidInfo.board,
+      supported32BitAbis: androidInfo.supported32BitAbis,
+      supported64BitAbis: androidInfo.supported64BitAbis,
+      supportedAbis: androidInfo.supportedAbis,
+      isLowRamDevice: androidInfo.isLowRamDevice,
+      systemFeatures: androidInfo.systemFeatures,
     );
   }
 
@@ -52,6 +65,13 @@ class CoreDeviceInfo implements ICoreDeviceInfo {
       localizedModel: iosInfo.localizedModel,
       identifierForVendor: iosInfo.identifierForVendor,
       isPhysicalDevice: iosInfo.isPhysicalDevice,
+      utsname: CoreIosUtsname(
+        sysname: iosInfo.utsname.sysname,
+        nodename: iosInfo.utsname.nodename,
+        release: iosInfo.utsname.release,
+        version: iosInfo.utsname.version,
+        machine: iosInfo.utsname.machine,
+      ),
     );
   }
 
