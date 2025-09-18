@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:flutter_core/flutter_core.dart';
 import 'package:flutter_core/src/utils/share/protocol/protocol.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -39,9 +38,5 @@ class CoreShare implements ICoreShare {
     return CoreShareResultStatus.values[result.status.index];
   }
 
-  Rect? get _sharePositionOrigin {
-    // If the device is not a phone, the share dialog will be displayed in the center of the screen.
-    if (DeviceType.isPhone()) return null;
-    return const Rect.fromLTWH(0, 0, 300, 500);
-  }
+  Rect get _sharePositionOrigin => const Rect.fromLTWH(0, 0, 300, 500);
 }
