@@ -16,7 +16,7 @@ class CoreAndroidDeviceInfo {
     required this.manufacturer,
     required this.model,
     required this.product,
-    required this.serialNumber,
+  
     required this.isPhysicalDevice,
     required this.board,
     required this.bootloader,
@@ -83,11 +83,7 @@ class CoreAndroidDeviceInfo {
   /// https://developer.android.com/reference/android/os/Build#PRODUCT
   final String product;
 
-  /// Hardware serial number of the device, if available
-  ///
-  /// There are special restrictions on this identifier, more info here:
-  /// https://developer.android.com/reference/android/os/Build#getSerial()
-  final String serialNumber;
+  
 
   /// `false` if the application is running in an emulator, `true` otherwise.
   final bool isPhysicalDevice;
@@ -174,16 +170,16 @@ class CoreAndroidDeviceInfo {
         'manufacturer: $manufacturer, '
         'model: $model, '
         'product: $product, '
-        'serialNumber: $serialNumber, '
+     
         'isPhysicalDevice: $isPhysicalDevice'
         ')';
   }
 
   @override
-  bool operator ==(Object other) => identical(this, other) || other is CoreAndroidDeviceInfo && runtimeType == other.runtimeType && baseOS == other.baseOS && codename == other.codename && incremental == other.incremental && previewSdkInt == other.previewSdkInt && release == other.release && sdkInt == other.sdkInt && securityPatch == other.securityPatch && brand == other.brand && device == other.device && id == other.id && manufacturer == other.manufacturer && model == other.model && product == other.product && serialNumber == other.serialNumber && isPhysicalDevice == other.isPhysicalDevice;
+  bool operator ==(Object other) => identical(this, other) || other is CoreAndroidDeviceInfo && runtimeType == other.runtimeType && baseOS == other.baseOS && codename == other.codename && incremental == other.incremental && previewSdkInt == other.previewSdkInt && release == other.release && sdkInt == other.sdkInt && securityPatch == other.securityPatch && brand == other.brand && device == other.device && id == other.id && manufacturer == other.manufacturer && model == other.model && product == other.product && isPhysicalDevice == other.isPhysicalDevice;
 
   @override
-  int get hashCode => baseOS.hashCode ^ codename.hashCode ^ incremental.hashCode ^ previewSdkInt.hashCode ^ release.hashCode ^ sdkInt.hashCode ^ securityPatch.hashCode ^ brand.hashCode ^ device.hashCode ^ id.hashCode ^ manufacturer.hashCode ^ model.hashCode ^ product.hashCode ^ serialNumber.hashCode ^ isPhysicalDevice.hashCode;
+  int get hashCode => baseOS.hashCode ^ codename.hashCode ^ incremental.hashCode ^ previewSdkInt.hashCode ^ release.hashCode ^ sdkInt.hashCode ^ securityPatch.hashCode ^ brand.hashCode ^ device.hashCode ^ id.hashCode ^ manufacturer.hashCode ^ model.hashCode ^ product.hashCode ^ isPhysicalDevice.hashCode;
 }
 
 @immutable

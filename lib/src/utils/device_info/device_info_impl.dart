@@ -37,7 +37,7 @@ class CoreDeviceInfo implements ICoreDeviceInfo {
       model: androidInfo.model,
       product: androidInfo.product,
       isPhysicalDevice: androidInfo.isPhysicalDevice,
-      serialNumber: androidInfo.serialNumber,
+   
       hardware: androidInfo.hardware,
       display: androidInfo.display,
       fingerprint: androidInfo.fingerprint,
