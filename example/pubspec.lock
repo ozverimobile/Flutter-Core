@@ -20,10 +20,9 @@ packages:
   app_settings:
     dependency: transitive
     description:
-      name: app_settings
-      sha256: "3e46c561441e5820d3a25339bf8b51b9e45a5f686873851a20c257a530917795"
-      url: "https://pub.dev"
-    source: hosted
+      path: "../local_packages/app_settings-6.1.1"
+      relative: true
+    source: path
     version: "6.1.1"
   args:
     dependency: transitive
