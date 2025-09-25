@@ -25,6 +25,7 @@ class CorePasswordTextField extends StatefulWidget {
     this.suffixIconSemanticLabel,
     this.smartDashesType,
     this.smartQuotesType,
+    this.errorMaxLines,
     super.key,
   });
   final TextEditingController? controller;
@@ -49,6 +50,7 @@ class CorePasswordTextField extends StatefulWidget {
   final String? suffixIconSemanticLabel;
   final SmartDashesType? smartDashesType;
   final SmartQuotesType? smartQuotesType;
+  final int? errorMaxLines;
 
   @override
   State<CorePasswordTextField> createState() => _CorePasswordTextFieldState();
@@ -81,6 +83,7 @@ class _CorePasswordTextFieldState extends State<CorePasswordTextField> {
         prefixIcon: widget.prefixIcon,
         hintText: widget.hintText,
         labelText: widget.labelText,
+        errorMaxLines: widget.errorMaxLines,
         suffixIcon: IconButton(
           icon: Icon(
             semanticLabel: widget.suffixIconSemanticLabel,
