@@ -712,7 +712,7 @@ class PopupManager implements IPopupManager {
       TargetPlatform.iOS || TargetPlatform.macOS => showCupertinoDialog<T>(
           context: context,
           builder: (context) => CupertinoTheme(
-            data: const CupertinoThemeData(),
+            data: CupertinoThemeData(brightness: context.theme.brightness),
             child: alertDialogBuilder(context),
           ),
           id: id,
