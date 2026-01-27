@@ -10,12 +10,14 @@ class CoreSingleChildScrollView extends StatefulWidget {
     required this.child,
     required this.onRefresh,
     this.controller,
+    this.primary,
     super.key,
   });
 
   final Widget child;
   final Future<void> Function() onRefresh;
   final ScrollController? controller;
+  final bool? primary;
 
   @override
   State<CoreSingleChildScrollView> createState() => _CoreSingleChildScrollViewState();
@@ -27,17 +29,27 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> {
   /// This is used to determine whether to show the refresh indicator.
   var _isAtTop = true;
 
-  late final ScrollController _scrollController;
+  late ScrollController _scrollController;
 
   @override
   void initState() {
-    _scrollController = widget.controller ?? ScrollController();
+    _scrollController = ScrollController();
+
+    if (widget.primary != true) {
+      _scrollController.dispose();
+      _scrollController = widget.controller ?? ScrollController();
+    } else {
+      scheduleMicrotask(() {
+        _scrollController = PrimaryScrollController.of(context);
+      });
+    }
+
     super.initState();
   }
 
   @override
   void dispose() {
-    if (widget.controller.isNull) _scrollController.dispose();
+    if (widget.controller.isNull && widget.primary != true) _scrollController.dispose();
     super.dispose();
   }
 
@@ -47,8 +59,9 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> {
         ? RefreshIndicator(
             onRefresh: widget.onRefresh,
             child: SingleChildScrollView(
+              primary: widget.primary,
               physics: const AlwaysScrollableScrollPhysics(),
-              controller: _scrollController,
+              controller: (widget.primary ?? false) ? null : _scrollController,
               child: widget.child,
             ),
           )
@@ -79,8 +92,9 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> {
               return false;
             },
             child: CustomScrollView(
+              primary: widget.primary,
               physics: const AlwaysScrollableScrollPhysics(),
-              controller: _scrollController,
+              controller: (widget.primary ?? false) ? null : _scrollController,
               slivers: [
                 /// Show the refresh indicator only when the scroll view is at the top.
                 if (_isAtTop) CupertinoSliverRefreshControl(onRefresh: widget.onRefresh),
