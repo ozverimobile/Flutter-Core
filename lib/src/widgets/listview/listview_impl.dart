@@ -144,27 +144,32 @@ class CoreListView extends StatefulWidget {
 }
 
 class _CoreListViewState extends State<CoreListView> {
-  late final ScrollController _scrollController;
+  late ScrollController _scrollController;
   bool _showIndicator = false;
-  ScrollController? _primaryScrollController;
-  late ScrollPosition _position;
 
   @override
   void initState() {
     super.initState();
-    _scrollController = widget.controller ?? ScrollController();
+   _scrollController = ScrollController();
 
-    _scrollController.addListener(_onScroll);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _primaryScrollController = PrimaryScrollController.maybeOf(context)?..attach(_position = _scrollController.position);
-    });
+    if (widget.primary != true) {
+      _scrollController.dispose();
+      _scrollController = widget.controller ?? ScrollController();
+       _scrollController.addListener(_onScroll);
+    } else {
+      scheduleMicrotask(() {
+        _scrollController = PrimaryScrollController.of(context);
+         _scrollController.addListener(_onScroll);
+      });
+    }
+
+   
   }
 
   @override
   void dispose() {
-    _primaryScrollController?.detach(_position);
     _scrollController.removeListener(_onScroll);
-    if (widget.controller.isNull) _scrollController.dispose();
+    if (widget.controller.isNull && widget.primary != true) _scrollController.dispose();
     super.dispose();
   }
 
@@ -196,7 +201,7 @@ class _CoreListViewState extends State<CoreListView> {
     final listView = ListView(
       scrollDirection: widget.scrollDirection,
       reverse: widget.reverse,
-      controller: _scrollController,
+      controller: (widget.primary??false)? null: _scrollController,
       primary: widget.primary,
       physics: widget.physics,
       shrinkWrap: widget.shrinkWrap,
@@ -238,7 +243,7 @@ class _CoreListViewState extends State<CoreListView> {
     final listView = ListView.builder(
       scrollDirection: widget.scrollDirection,
       reverse: widget.reverse,
-      controller: _scrollController,
+      controller: (widget.primary??false)? null: _scrollController,
       primary: widget.primary,
       physics: widget.physics,
       shrinkWrap: widget.shrinkWrap,
@@ -290,7 +295,7 @@ class _CoreListViewState extends State<CoreListView> {
     final listView = ListView.separated(
       scrollDirection: widget.scrollDirection,
       reverse: widget.reverse,
-      controller: _scrollController,
+      controller:(widget.primary??false)? null: _scrollController,
       primary: widget.primary,
       physics: widget.physics,
       shrinkWrap: widget.shrinkWrap,
@@ -405,7 +410,7 @@ class _CustomScrollViewState extends State<_CustomScrollView> {
         physics: widget.physics,
         cacheExtent: widget.cacheExtent,
         clipBehavior: widget.clipBehavior,
-        controller: state._scrollController,
+        controller: (widget.primary??false)? null: state._scrollController,
         dragStartBehavior: widget.dragStartBehavior,
         keyboardDismissBehavior: widget.keyboardDismissBehavior,
         primary: widget.primary,
@@ -423,3 +428,4 @@ class _CustomScrollViewState extends State<_CustomScrollView> {
     );
   }
 }
+ 
