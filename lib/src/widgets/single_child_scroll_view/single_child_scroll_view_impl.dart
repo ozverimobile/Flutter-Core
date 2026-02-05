@@ -28,15 +28,22 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> {
   var _isAtTop = true;
 
   late final ScrollController _scrollController;
+  ScrollController? _primaryScrollController;
+  late ScrollPosition _position;
 
   @override
   void initState() {
-    _scrollController = widget.controller ?? ScrollController();
     super.initState();
+    _scrollController = widget.controller ?? ScrollController();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _primaryScrollController = PrimaryScrollController.maybeOf(context)?..attach(_position = _scrollController.position);
+    });
   }
 
   @override
   void dispose() {
+    _primaryScrollController?.detach(_position);
     if (widget.controller.isNull) _scrollController.dispose();
     super.dispose();
   }
@@ -47,7 +54,6 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> {
         ? RefreshIndicator(
             onRefresh: widget.onRefresh,
             child: SingleChildScrollView(
-              primary: true,
               physics: const AlwaysScrollableScrollPhysics(),
               controller: _scrollController,
               child: widget.child,
@@ -80,7 +86,6 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> {
               return false;
             },
             child: CustomScrollView(
-              primary: true,
               physics: const AlwaysScrollableScrollPhysics(),
               controller: _scrollController,
               slivers: [
