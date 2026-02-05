@@ -29,7 +29,7 @@ class _ListViewExampleState extends State<ListViewExample> {
                 ),
               ],
             ),
-            body: CoreSingleChildScrollView(    
+            body: CoreSingleChildScrollView(
               onRefresh: () async {
                 await 2.seconds.delay<void>();
               },
@@ -72,7 +72,6 @@ class _ListViewExampleState extends State<ListViewExample> {
                     child: SizedBox(
                       height: context.height - context.viewPadding.top - context.viewPadding.bottom,
                       child: CoreListView.separated(
-                          primary: true,
                         padding: const EdgeInsets.all(24),
                         onReachedEnd: () => 5.seconds.delay<void>(),
                         onRefresh: () => 2.seconds.delay<void>(),
@@ -95,5 +94,3 @@ class _ListViewExampleState extends State<ListViewExample> {
     );
   }
 }
-
- 

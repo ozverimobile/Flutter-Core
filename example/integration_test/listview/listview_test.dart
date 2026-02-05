@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
-import 'package:flutter_core_example/listview/listview.dart';
+import 'package:flutter_core_example/listview/listview.dart' hide CoreListView;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:patrol/patrol.dart';
 
