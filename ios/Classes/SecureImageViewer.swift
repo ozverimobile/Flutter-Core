@@ -208,6 +208,7 @@ public final class AsyncAuthHeaderModifier: AsyncImageDownloadRequestModifier {
 }
 
 // MARK: - 4. SwiftUI View (SSProtector)
+// MARK: - 4. SwiftUI View (SSProtector)
 struct SSProtector: View {
     let imageUrls: [String]
     var onClose: (() -> Void)?
@@ -240,7 +241,7 @@ struct SSProtector: View {
     var body: some View {
         ZStack(alignment: .topTrailing) {
 
-            // background dim
+            // Ana Resim Görüntüleyici Arka Planı (Karanlık Mod)
             Color.black
                 .ignoresSafeArea()
 
@@ -299,7 +300,7 @@ struct SSProtector: View {
             )
 
             // Close Button
-            if #available(iOS 26.0, *) { // iOS 17 logic (Future proof)
+            if #available(iOS 26.0, *) {
                  Button {
                     onClose?()
                 } label: {
@@ -307,7 +308,7 @@ struct SSProtector: View {
                         .font(.system(size: 16, weight: .bold))
                         .padding(10)
                 }
-                .buttonStyle(.glass) // Note: .glass custom olabilir veya system
+                .buttonStyle(.glass)
                 .buttonBorderShape(.circle)
                 .padding(.top, 30)
                 .padding(.trailing, 20)
@@ -318,9 +319,10 @@ struct SSProtector: View {
                     Image(systemName: "xmark")
                         .font(.system(size: 16, weight: .bold))
                         .padding(10)
+                        .foregroundColor(.white) // İkon rengi beyaz kalsın
                 }
                 .buttonStyle(.bordered)
-                .buttonBorderShape(.capsule) // Kare içerik + capsule = Daire
+                .buttonBorderShape(.capsule)
                 .padding(.top, 60)
                 .padding(.trailing, 20)
             }
@@ -340,26 +342,34 @@ struct SSProtector: View {
                 .ignoresSafeArea()
         }
         .background {
-            // iOS 17+ ContentUnavailableView check
-            if #available(iOS 17.0, *) {
-                ContentUnavailableView(
-                    "Not Allowed",
-                    systemImage: "iphone.slash",
-                    description: Text("Güvenlik nedeniyle ekran görüntüsü alınamaz.")
-                )
-            } else {
-                VStack(spacing: 12) {
-                    Image(systemName: "iphone.slash")
-                        .font(.system(size: 34, weight: .semibold))
-                    Text("Not Allowed")
-                        .font(.headline)
-                    Text("Güvenlik nedeniyle ekran görüntüsü alınamaz.")
-                        .font(.subheadline)
-                        .multilineTextAlignment(.center)
-                        .opacity(0.8)
+            // BURASI DEĞİŞTİ:
+            // "Not Allowed" ekranının arkasına açık renk (Beyaz) koyuyoruz.
+            ZStack {
+                Color.white.ignoresSafeArea() // Arka planı BEYAZ yaptık
+                
+                if #available(iOS 17.0, *) {
+                    ContentUnavailableView(
+                        "Görüntülenemez",
+                        systemImage: "eye.slash",
+                        description: Text("Güvenlik nedeniyle ekran görüntüsü alınamaz.")
+                    )
+                    // Arka plan beyaz olduğu için yazıları SİYAH yapıyoruz
+                    .foregroundStyle(.black) 
+                } else {
+                    VStack(spacing: 12) {
+                        Image(systemName: "eye.slash")
+                            .font(.system(size: 34, weight: .semibold))
+                        Text("Görüntülenemez")
+                            .font(.headline)
+                        Text("Güvenlik nedeniyle ekran görüntüsü alınamaz.")
+                            .font(.subheadline)
+                            .multilineTextAlignment(.center)
+                            .opacity(0.8)
+                    }
+                    // Yazıları SİYAH yapıyoruz
+                    .foregroundColor(.black)
+                    .padding()
                 }
-                .foregroundColor(.white)
-                .padding()
             }
         }
     }

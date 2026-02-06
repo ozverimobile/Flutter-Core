@@ -26,16 +26,25 @@ class CoreImageController {
   final GlobalKey<NavigatorState>? _navigatorKey;
 
   VoidCallback? _openContainer;
-  void _init(VoidCallback openContainer) {
+  void _init(VoidCallback openContainer, {required bool isSecure}) {
     _openContainer ??= openContainer;
+    this.isSecure ??= isSecure;
   }
 
+  bool? isSecure;
+
   void open() {
+    if ((isSecure ?? false) && Platform.isAndroid) {
+      AndroidScreenshotBlocker.setEnabled(true);
+    }
     _openContainer?.call();
   }
 
   void close() {
     if (_navigatorKey?.currentContext == null) throw Exception('Navigator key is null');
+    if ((isSecure ?? false) && Platform.isAndroid) {
+      AndroidScreenshotBlocker.setEnabled(false);
+    }
     Navigator.of(_navigatorKey!.currentContext!).pop();
   }
 }
@@ -67,6 +76,7 @@ class CoreImageViewer extends StatelessWidget {
     this.indicatorPadding = EdgeInsets.zero,
     this.headers,
     this.controller,
+    this.isSecure = false,
     super.key,
   })  : _imageType = _ImageType.network,
         _images = images;
@@ -99,6 +109,7 @@ class CoreImageViewer extends StatelessWidget {
     this.controller,
     super.key,
   })  : _imageType = _ImageType.asset,
+        isSecure = false,
         _images = images;
 
   const CoreImageViewer.file({
@@ -129,6 +140,7 @@ class CoreImageViewer extends StatelessWidget {
     this.controller,
     super.key,
   })  : _imageType = _ImageType.file,
+        isSecure = false,
         _images = images;
 
   const CoreImageViewer.memory({
@@ -159,6 +171,7 @@ class CoreImageViewer extends StatelessWidget {
     this.controller,
     super.key,
   })  : _imageType = _ImageType.memory,
+        isSecure = false,
         _images = images;
 
   final Widget child;
@@ -187,13 +200,23 @@ class CoreImageViewer extends StatelessWidget {
   final Map<String, String>? headers;
   final _ImageType _imageType;
   final CoreImageController? controller;
+  final bool isSecure;
 
   @override
   Widget build(BuildContext context) {
     if (_images.isEmpty) return child;
     return _AnimationWrapper<int>(
       openBuilder: (_, __) {
-        return _CoreImageViewer(
+        final isSecureIOSNetworkImage = isSecure && context.theme.platform == TargetPlatform.iOS && _imageType == _ImageType.network && _images.every((element)=> element is String);
+        
+        if (isSecureIOSNetworkImage) {
+          return CupertinoSecureImageViewer(
+            imageUrls: _images as List<String>,
+            headers: headers,
+            onClose: Navigator.of(context).pop,
+          );
+        }
+        return  _CoreImageViewer(
           key: key,
           backgroundColor: backgroundColor,
           verticalDragCloseThreshold: verticalDragCloseThreshold,
@@ -219,7 +242,7 @@ class CoreImageViewer extends StatelessWidget {
         );
       },
       closedBuilder: (BuildContext _, VoidCallback openContainer) {
-        controller?._init(openContainer);
+        controller?._init(openContainer, isSecure: isSecure);
         return GestureDetector(
           onTap: openContainer,
           child: child,
