@@ -1,3 +1,4 @@
+export 'android_screenshot_blocker/android_screenshot_blocker.dart';
 export 'app_settings/app_settings.dart';
 export 'code_push/code_push.dart';
 export 'device_info/device_info.dart';
