@@ -56,6 +56,39 @@ class ImageViewer extends StatelessWidget {
             },
             child: const Text('Programmatically Open'),
           ),
+          CoreFilledButton(
+            onPressed: () {
+              showGeneralDialog(
+                context: context,
+                fullscreenDialog: true,
+                barrierColor: Colors.white,
+                pageBuilder: (context, animation, secondaryAnimation) {
+                  return CupertinoSecureImageViewer(
+                    imageUrls: const [
+                      'https://picsum.photos/id/1/200/200',
+                      'https://picsum.photos/id/2/200/200',
+                      'https://picsum.photos/id/3/200/200',
+                      'https://picsum.photos/id/4/200/200',
+                      'https://picsum.photos/id/1/200/200',
+                      'https://picsum.photos/id/2/200/200',
+                      'https://picsum.photos/id/3/200/200',
+                      'https://picsum.photos/id/4/200/200',
+                      'https://picsum.photos/id/1/200/200',
+                      'https://picsum.photos/id/2/200/200',
+                      'https://picsum.photos/id/3/200/200',
+                      'https://picsum.photos/id/4/200/200',
+                    ],
+                    headers: const {},
+                    onClose: Navigator.of(context).pop,
+                  );
+                },
+              );
+            },
+            child: const Text(
+              'Open Secure Image Viewer',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
         ],
       ),
     );

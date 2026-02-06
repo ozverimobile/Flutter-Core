@@ -1,10 +1,11 @@
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:animations/animations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_core/flutter_core.dart';
 
 enum _ImageType { network, asset, memory, file }
@@ -671,6 +672,34 @@ class _KeyMotionGestureDetector extends StatelessWidget {
         ),
       },
       child: child,
+    );
+  }
+}
+
+class CupertinoSecureImageViewer extends StatelessWidget {
+  const CupertinoSecureImageViewer({required this.imageUrls, required this.onClose, super.key, this.headers});
+  final List<String> imageUrls;
+  final Map<String, String>? headers;
+  final VoidCallback? onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    // Sadece iOS destekleniyor
+    if (defaultTargetPlatform != TargetPlatform.iOS) {
+      return const Center(child: Text('SSProtector is only available on iOS'));
+    }
+
+    return UiKitView(
+      viewType: 'secure_image_viewer', // AppDelegate'teki ID ile aynı olmalı
+      layoutDirection: TextDirection.ltr,
+      creationParams: {'imageUrls': imageUrls, 'headers': headers},
+      creationParamsCodec: const StandardMessageCodec(),
+      onPlatformViewCreated: (int id) {
+        // Kanalı dinlemeye başla
+        MethodChannel('com.cwa.ssprotector/view_$id').setMethodCallHandler((call) async {
+          if (call.method == 'onClose') onClose?.call();
+        });
+      },
     );
   }
 }
