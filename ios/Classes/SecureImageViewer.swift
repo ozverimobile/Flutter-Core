@@ -322,32 +322,19 @@ struct SSProtector: View {
             )
 
             // Close Button
-            if #available(iOS 26.0, *) {
-                 Button {
-                    onClose?()
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 16, weight: .bold))
-                        .padding(10)
-                }
-                .buttonStyle(.glass)
-                .buttonBorderShape(.circle)
-                .padding(.top, 30)
-                .padding(.trailing, 20)
-            } else {
-                Button {
-                    onClose?()
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 16, weight: .bold))
-                        .padding(10)
-                        .foregroundColor(.white) // İkon rengi beyaz kalsın
-                }
-                .buttonStyle(.bordered)
-                .buttonBorderShape(.capsule)
-                .padding(.top, 60)
-                .padding(.trailing, 20)
+
+            Button {
+                onClose?()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 16, weight: .bold))
+                    .padding(10)
+                    .foregroundColor(.white) // İkon rengi beyaz kalsın
             }
+            .buttonStyle(.bordered)
+            .buttonBorderShape(.capsule)
+            .padding(.top, 60)
+            .padding(.trailing, 20)
         }
         .onChange(of: isPagingEnabled) { newValue in
             if newValue == false {
