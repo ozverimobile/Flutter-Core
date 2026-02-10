@@ -35,12 +35,13 @@ class SSProtectorFactory: NSObject, FlutterPlatformViewFactory {
 class SSProtectorNativeView: NSObject, FlutterPlatformView {
     private var _view: UIView
     private var channel: FlutterMethodChannel
-    
-    // Güvenlik perdesi referansı
+
     private var privacyOverlay: UIVisualEffectView?
-    
-    // BUG FIX: Hızlı geçişlerde overlay'in silinmesini geciktirmek için work item
     private var removeOverlayWorkItem: DispatchWorkItem?
+
+    // ✅ Yeni: Viewer açıkken aktif olsun
+    private var protectionEnabled: Bool = true
+    private var observersInstalled: Bool = false
 
     init(
         frame: CGRect,
@@ -48,65 +49,78 @@ class SSProtectorNativeView: NSObject, FlutterPlatformView {
         arguments args: Any?,
         messenger: FlutterBinaryMessenger
     ) {
-        // 1. Kanalı oluştur
         channel = FlutterMethodChannel(name: "com.cwa.ssprotector/view_\(viewId)", binaryMessenger: messenger)
 
-        // 2. Parametreleri ayrıştır
         var imageUrls: [String] = []
         var headers: [String: String]? = nil
 
         if let params = args as? [String: Any] {
-            if let urls = params["imageUrls"] as? [String] {
-                imageUrls = urls
-            }
-            if let h = params["headers"] as? [String: String] {
-                headers = h
-            }
+            if let urls = params["imageUrls"] as? [String] { imageUrls = urls }
+            if let h = params["headers"] as? [String: String] { headers = h }
         }
 
-        // 3. super.init
         _view = UIView()
         super.init()
 
-        // 4. SwiftUI View oluştur
+        // ✅ Kapanışta protection kapat
         let swiftUIView = SSProtector(
             imageUrls: imageUrls,
             onClose: { [weak self] in
-                self?.channel.invokeMethod("onClose", arguments: nil)
+                guard let self = self else { return }
+                self.disablePrivacyProtection()          // 🔥 kritik
+                self.channel.invokeMethod("onClose", arguments: nil)
             },
             headers: headers
         )
 
-        // 5. Hosting Controller
         let hostingController = UIHostingController(rootView: swiftUIView)
         _view = hostingController.view
         _view.frame = frame
         _view.backgroundColor = .clear
-        
-        // 6. Lifecycle dinleyicilerini başlat
-        setupLifecycleObservers()
-    }
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-        // CRASH FIX: Animasyonsuz anında kaldır
-        removePrivacyOverlay(immediate: true)
+
+        enablePrivacyProtection() // ✅ observer'ları burada aç
     }
 
-    func view() -> UIView {
-        return _view
+    deinit {
+        disablePrivacyProtection(immediate: true)
     }
-    
-    // MARK: - Lifecycle & Privacy Logic (FIXED)
-    
-    private func setupLifecycleObservers() {
+
+    func view() -> UIView { _view }
+
+    // Flutter engine bazen dispose çağırır (cache/cleanup sırasında)
+    // ✅ ObjC selector olarak görünür olsun diye @objc ekliyoruz.
+    @objc func dispose() {
+        disablePrivacyProtection(immediate: true)
+    }
+
+    // MARK: - Enable/Disable
+
+    private func enablePrivacyProtection() {
+        protectionEnabled = true
+        setupLifecycleObserversIfNeeded()
+    }
+
+    private func disablePrivacyProtection(immediate: Bool = true) {
+        protectionEnabled = false
+
+        removeOverlayWorkItem?.cancel()
+        removeOverlayWorkItem = nil
+
+        removePrivacyOverlay(immediate: immediate)
+        removeLifecycleObserversIfNeeded()
+    }
+
+    private func setupLifecycleObserversIfNeeded() {
+        guard !observersInstalled else { return }
+        observersInstalled = true
+
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(appWillResignActive),
             name: UIApplication.willResignActiveNotification,
             object: nil
         )
-        
+
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(appDidBecomeActive),
@@ -114,71 +128,79 @@ class SSProtectorNativeView: NSObject, FlutterPlatformView {
             object: nil
         )
     }
-    
+
+    private func removeLifecycleObserversIfNeeded() {
+        guard observersInstalled else { return }
+        observersInstalled = false
+
+        NotificationCenter.default.removeObserver(self, name: UIApplication.willResignActiveNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIApplication.didBecomeActiveNotification, object: nil)
+    }
+
+    // MARK: - Lifecycle callbacks
+
     @objc private func appWillResignActive() {
-        // Eğer sırada bekleyen bir "kaldırma" işlemi varsa iptal et!
-        // (Kullanıcı çok hızlı gir-çık yapmıştır, perde kalkmasın)
+        guard protectionEnabled else { return }   // ✅ viewer kapalıysa blur yok
+
         removeOverlayWorkItem?.cancel()
         removeOverlayWorkItem = nil
-        
+
         showPrivacyOverlay()
     }
-    
+
     @objc private func appDidBecomeActive() {
-        // BUG FIX: Kaldırma işlemini hemen yapma, çok küçük (0.1s) gecikme koy.
-        // Bu, sistem animasyonları sırasındaki çakışmayı (race condition) önler.
+        guard protectionEnabled else { return }   // ✅ viewer kapalıysa dokunma
+
         let workItem = DispatchWorkItem { [weak self] in
             guard let self = self else { return }
-            // Sadece uygulama hala aktifse kaldır
             if UIApplication.shared.applicationState == .active {
                 self.removePrivacyOverlay(immediate: false)
             }
         }
-        
-        self.removeOverlayWorkItem = workItem
+
+        removeOverlayWorkItem = workItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1, execute: workItem)
     }
-    
-    private func showPrivacyOverlay() {
-        guard let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow }) else { return }
 
-        // Eğer zaten bir overlay varsa, sadece görünür yap ve en öne getir
-        if let existingOverlay = self.privacyOverlay {
+    private func showPrivacyOverlay() {
+        // ✅ Mümkünse bu view’in window’u; değilse keyWindow
+        let targetWindow = _view.window
+            ?? UIApplication.shared.windows.first(where: { $0.isKeyWindow })
+
+        guard let window = targetWindow else { return }
+
+        if let existingOverlay = privacyOverlay {
             existingOverlay.frame = window.bounds
             existingOverlay.alpha = 1
             window.bringSubviewToFront(existingOverlay)
             return
         }
-        
-        // Yoksa yeni oluştur
+
         let blurEffect = UIBlurEffect(style: .systemUltraThinMaterialDark)
         let overlay = UIVisualEffectView(effect: blurEffect)
         overlay.frame = window.bounds
         overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         overlay.alpha = 1
-        
+
         window.addSubview(overlay)
-        self.privacyOverlay = overlay
+        privacyOverlay = overlay
     }
-    
+
     private func removePrivacyOverlay(immediate: Bool) {
         guard let overlay = privacyOverlay else { return }
 
         if immediate {
             overlay.removeFromSuperview()
-            self.privacyOverlay = nil
+            privacyOverlay = nil
         } else {
             UIView.animate(withDuration: 0.2) {
                 overlay.alpha = 0
             } completion: { [weak self] _ in
-                // Animasyon bittiğinde kontrol et:
-                // Eğer self duruyorsa VE overlay hala aynıysa VE alpha hala 0 ise sil.
-                // (Kullanıcı animasyon sırasında tekrar app switcher'a girdiyse alpha 1 olmuştur, silme!)
                 guard let self = self,
                       let currentOverlay = self.privacyOverlay,
                       currentOverlay == overlay,
                       currentOverlay.alpha == 0 else { return }
-                
+
                 currentOverlay.removeFromSuperview()
                 self.privacyOverlay = nil
             }
