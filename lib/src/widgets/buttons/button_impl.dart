@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -5,15 +6,50 @@ import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
 
 @immutable
-class CoreButton extends StatelessWidget {
+class CoreButton extends StatefulWidget {
   const CoreButton({
     required this.child,
     required this.onPressed,
     super.key,
-  });
+  })  : _autoIndicator = false,
+        _indicatorStyle = null;
 
-  final VoidCallback? onPressed;
+  const CoreButton.autoIndicator({
+    required this.child,
+    required this.onPressed,
+    super.key,
+    IndicatorStyle? indicatorStyle,
+  })  : _autoIndicator = true,
+        _indicatorStyle = indicatorStyle;
+
+  final FutureOr<dynamic> Function()? onPressed;
+
   final Widget child;
+  final bool _autoIndicator;
+  final IndicatorStyle? _indicatorStyle;
+
+  @override
+  State<CoreButton> createState() => _CoreButtonState();
+}
+
+class _CoreButtonState extends State<CoreButton> {
+  var _isProcessing = false;
+
+  Future<void> _onPressedCallback() async {
+    if (!widget._autoIndicator) return await widget.onPressed!.call();
+    setState(() => _isProcessing = true);
+    final overlayEntry = OverlayEntry(builder: (context) => const Positioned.fill(child: AbsorbPointer()));
+    Overlay.of(context).insert(overlayEntry);
+    try {
+      await widget.onPressed!.call();
+      if (mounted) setState(() => _isProcessing = false);
+      overlayEntry.remove();
+    } catch (e) {
+      if (mounted) setState(() => _isProcessing = false);
+      overlayEntry.remove();
+      rethrow;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,19 +57,45 @@ class CoreButton extends StatelessWidget {
         ? IconButton(
             padding: EdgeInsets.zero,
             visualDensity: VisualDensity.compact,
-            onPressed: onPressed,
-            icon: child,
+            onPressed: widget.onPressed == null ? null : _onPressedCallback,
+            icon: !_isProcessing
+                ? widget.child
+                : Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                        height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                        child: CircularProgressIndicator(
+                          color: widget._indicatorStyle?.color ?? context.theme.colorScheme.onPrimary,
+                          strokeWidth: widget._indicatorStyle?.strokeWidth ?? IndicatorStyle.defaultStrokeWidth,
+                        ),
+                      ),
+                      Opacity(opacity: 0.001, child: widget.child),
+                    ],
+                  ),
           )
         : CupertinoButton(
             padding: EdgeInsets.zero,
-            onPressed: onPressed,
-            child: child,
+            onPressed: widget.onPressed == null ? null : _onPressedCallback,
+            child: !_isProcessing
+                ? widget.child
+                : Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CupertinoActivityIndicator(
+                        color: widget._indicatorStyle?.color ?? context.theme.colorScheme.onPrimary,
+                        radius: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius,
+                      ),
+                      Opacity(opacity: 0.001, child: widget.child),
+                    ],
+                  ),
           );
   }
 }
 
 @immutable
-class CoreTextButton extends StatelessWidget {
+class CoreTextButton extends StatefulWidget {
   const CoreTextButton({
     required this.child,
     required this.onPressed,
@@ -41,91 +103,227 @@ class CoreTextButton extends StatelessWidget {
     this.minSize = kMinInteractiveDimensionCupertino,
     this.borderRadius = const BorderRadius.all(Radius.circular(8)),
     super.key,
-  });
+  })  : _autoIndicator = false,
+        _indicatorStyle = null;
+
+  const CoreTextButton.autoIndicator({
+    required this.child,
+    required this.onPressed,
+    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    this.minSize = kMinInteractiveDimensionCupertino,
+    this.borderRadius = const BorderRadius.all(Radius.circular(8)),
+    super.key,
+    IndicatorStyle? indicatorStyle,
+  })  : _autoIndicator = true,
+        _indicatorStyle = indicatorStyle;
 
   final Widget child;
-  final VoidCallback? onPressed;
+  final FutureOr<dynamic> Function()? onPressed;
   final EdgeInsetsGeometry padding;
   final double minSize;
   final BorderRadius borderRadius;
+  final bool _autoIndicator;
+  final IndicatorStyle? _indicatorStyle;
+
+  @override
+  State<CoreTextButton> createState() => _CoreTextButtonState();
+}
+
+class _CoreTextButtonState extends State<CoreTextButton> {
+  var _isProcessing = false;
+
+  Future<dynamic> _onPressedCallback() async {
+    if (!widget._autoIndicator) return await widget.onPressed!.call();
+    setState(() => _isProcessing = true);
+    final overlayEntry = OverlayEntry(builder: (context) => const Positioned.fill(child: AbsorbPointer()));
+    Overlay.of(context).insert(overlayEntry);
+    try {
+      await widget.onPressed!.call();
+      if (mounted) setState(() => _isProcessing = false);
+      overlayEntry.remove();
+    } catch (e) {
+      if (mounted) setState(() => _isProcessing = false);
+      overlayEntry.remove();
+      rethrow;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return switch (context.theme.platform) {
       TargetPlatform.iOS || TargetPlatform.macOS => CupertinoButton(
-          onPressed: onPressed,
-          padding: padding,
-          minSize: minSize,
-          child: child,
+          onPressed: widget.onPressed == null ? null : _onPressedCallback,
+          padding: widget.padding,
+          minimumSize: Size(widget.minSize, widget.minSize),
+          child: !_isProcessing
+              ? widget.child
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    widget.child,
+                    horizontalBox12,
+                    CupertinoActivityIndicator(
+                      color: widget._indicatorStyle?.color,
+                      radius: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius,
+                    ),
+                  ],
+                ),
         ),
       _ => TextButton(
-          onPressed: onPressed,
+          onPressed: widget.onPressed == null ? null : _onPressedCallback,
           style: TextButton.styleFrom(
-            padding: padding,
-            minimumSize: Size(minSize, minSize),
+            padding: widget.padding,
+            minimumSize: Size(widget.minSize, widget.minSize),
             shape: RoundedRectangleBorder(
-              borderRadius: borderRadius,
+              borderRadius: widget.borderRadius,
             ),
           ),
-          child: child,
+          child: !_isProcessing
+              ? widget.child
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    widget.child,
+                    horizontalBox12,
+                    SizedBox(
+                      width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                      height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                      child: CircularProgressIndicator(
+                        color: widget._indicatorStyle?.color,
+                        strokeWidth: widget._indicatorStyle?.strokeWidth ?? IndicatorStyle.defaultStrokeWidth,
+                      ),
+                    ),
+                  ],
+                ),
         ),
     };
   }
 }
 
 @immutable
-class CoreOutlinedButton extends StatelessWidget {
+class CoreOutlinedButton extends StatefulWidget {
   const CoreOutlinedButton({
     required this.child,
     required this.onPressed,
     this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     this.minSize = kMinInteractiveDimensionCupertino,
     this.borderColor,
+    this.borderWith,
     this.borderRadius = const BorderRadius.all(Radius.circular(8)),
     super.key,
-  });
+  })  : _autoIndicator = false,
+        _indicatorStyle = null;
+
+  const CoreOutlinedButton.autoIndicator({
+    required this.child,
+    required this.onPressed,
+    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    this.minSize = kMinInteractiveDimensionCupertino,
+    this.borderColor,
+    this.borderWith,
+    this.borderRadius = const BorderRadius.all(Radius.circular(8)),
+    super.key,
+    IndicatorStyle? indicatorStyle,
+  })  : _autoIndicator = true,
+        _indicatorStyle = indicatorStyle;
 
   final Widget child;
-  final VoidCallback? onPressed;
+  final FutureOr<dynamic> Function()? onPressed;
   final EdgeInsetsGeometry padding;
   final double minSize;
   final Color? borderColor;
+  final double? borderWith;
   final BorderRadius borderRadius;
+  final bool _autoIndicator;
+  final IndicatorStyle? _indicatorStyle;
+
+  @override
+  State<CoreOutlinedButton> createState() => _CoreOutlinedButtonState();
+}
+
+class _CoreOutlinedButtonState extends State<CoreOutlinedButton> {
+  var _isProcessing = false;
+
+  Future<dynamic> _onPressedCallback() async {
+    if (!widget._autoIndicator) return await widget.onPressed!.call();
+    setState(() => _isProcessing = true);
+    final overlayEntry = OverlayEntry(builder: (context) => const Positioned.fill(child: AbsorbPointer()));
+    Overlay.of(context).insert(overlayEntry);
+    try {
+      await widget.onPressed!.call();
+      if (mounted) setState(() => _isProcessing = false);
+      overlayEntry.remove();
+    } catch (e) {
+      if (mounted) setState(() => _isProcessing = false);
+      overlayEntry.remove();
+      rethrow;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return switch (context.theme.platform) {
       TargetPlatform.iOS || TargetPlatform.macOS => OutlinedButton(
-          onPressed: onPressed,
+          onPressed: widget.onPressed == null ? null : _onPressedCallback,
           style: OutlinedButton.styleFrom(
             splashFactory: NoSplash.splashFactory,
-            padding: padding,
-            side: BorderSide(color: borderColor ?? context.colorScheme.primary),
-            minimumSize: Size(minSize, minSize),
+            padding: widget.padding,
+            side: BorderSide(color: widget.borderColor ?? context.colorScheme.primary, width: widget.borderWith ?? 1),
+            minimumSize: Size(widget.minSize, widget.minSize),
             shape: RoundedRectangleBorder(
-              borderRadius: borderRadius,
+              borderRadius: widget.borderRadius,
             ),
           ),
-          child: child,
+          child: !_isProcessing
+              ? widget.child
+              : Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                      height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                      child: CupertinoActivityIndicator(
+                        color: widget._indicatorStyle?.color,
+                        radius: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius,
+                      ),
+                    ),
+                    Opacity(opacity: 0.001, child: widget.child),
+                  ],
+                ),
         ),
       _ => OutlinedButton(
-          onPressed: onPressed,
+          onPressed: widget.onPressed == null ? null : _onPressedCallback,
           style: OutlinedButton.styleFrom(
-            padding: padding,
-            side: BorderSide(color: borderColor ?? context.colorScheme.primary),
-            minimumSize: Size(minSize, minSize),
+            padding: widget.padding,
+            side: BorderSide(color: widget.borderColor ?? context.colorScheme.primary, width: widget.borderWith ?? 1),
+            minimumSize: Size(widget.minSize, widget.minSize),
             shape: RoundedRectangleBorder(
-              borderRadius: borderRadius,
+              borderRadius: widget.borderRadius,
             ),
           ),
-          child: child,
+          child: !_isProcessing
+              ? widget.child
+              : Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                      height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                      child: CircularProgressIndicator(
+                        color: widget._indicatorStyle?.color,
+                        strokeWidth: widget._indicatorStyle?.strokeWidth ?? IndicatorStyle.defaultStrokeWidth,
+                      ),
+                    ),
+                    Opacity(opacity: 0.001, child: widget.child),
+                  ],
+                ),
         ),
     };
   }
 }
 
 @immutable
-class CoreFilledButton extends StatelessWidget {
+class CoreFilledButton extends StatefulWidget {
   const CoreFilledButton({
     required this.child,
     required this.onPressed,
@@ -134,51 +332,117 @@ class CoreFilledButton extends StatelessWidget {
     this.backgroundColor,
     this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     super.key,
-  });
+  })  : _autoIndicator = false,
+        _indicatorStyle = null;
+
+  const CoreFilledButton.autoIndicator({
+    required this.child,
+    required this.onPressed,
+    this.borderRadius = const BorderRadius.all(Radius.circular(8)),
+    this.minSize = kMinInteractiveDimensionCupertino,
+    this.backgroundColor,
+    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    super.key,
+    IndicatorStyle? indicatorStyle,
+  })  : _autoIndicator = true,
+        _indicatorStyle = indicatorStyle;
 
   final Widget child;
-  final VoidCallback? onPressed;
+  final FutureOr<dynamic> Function()? onPressed;
   final BorderRadius borderRadius;
   final double minSize;
   final Color? backgroundColor;
   final EdgeInsetsGeometry padding;
+  final bool _autoIndicator;
+  final IndicatorStyle? _indicatorStyle;
+
+  @override
+  State<CoreFilledButton> createState() => _CoreFilledButtonState();
+}
+
+class _CoreFilledButtonState extends State<CoreFilledButton> {
+  var _isProcessing = false;
+
+  Future<dynamic> _onPressedCallback() async {
+    if (!widget._autoIndicator) return await widget.onPressed!.call();
+    setState(() => _isProcessing = true);
+    final overlayEntry = OverlayEntry(builder: (context) => const Positioned.fill(child: AbsorbPointer()));
+    Overlay.of(context).insert(overlayEntry);
+    try {
+      await widget.onPressed!.call();
+      if (mounted) setState(() => _isProcessing = false);
+      overlayEntry.remove();
+    } catch (e) {
+      if (mounted) setState(() => _isProcessing = false);
+      overlayEntry.remove();
+      rethrow;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return switch (context.theme.platform) {
       TargetPlatform.iOS || TargetPlatform.macOS => CupertinoButton(
-          onPressed: onPressed,
-          padding: padding,
-          color: backgroundColor ?? context.theme.colorScheme.primary,
-          minSize: minSize,
-          borderRadius: borderRadius,
-          child: child,
+          onPressed: widget.onPressed == null ? null : _onPressedCallback,
+          padding: widget.padding,
+          color: widget.backgroundColor ?? context.theme.colorScheme.primary,
+          borderRadius: widget.borderRadius,
+          minimumSize: Size(widget.minSize, widget.minSize),
+          child: !_isProcessing
+              ? widget.child
+              : Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CupertinoActivityIndicator(
+                      color: widget._indicatorStyle?.color ?? context.theme.colorScheme.onPrimary,
+                      radius: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius,
+                    ),
+                    Opacity(opacity: 0.001, child: widget.child),
+                  ],
+                ),
         ),
       _ => FilledButton(
-          onPressed: onPressed,
+          onPressed: widget.onPressed == null ? null : _onPressedCallback,
           style: FilledButton.styleFrom(
             shape: RoundedRectangleBorder(
-              borderRadius: borderRadius,
+              borderRadius: widget.borderRadius,
             ),
-            minimumSize: Size(minSize, minSize),
-            backgroundColor: backgroundColor,
-            padding: padding,
+            minimumSize: Size(widget.minSize, widget.minSize),
+            backgroundColor: widget.backgroundColor,
+            padding: widget.padding,
           ),
-          child: child,
+          child: !_isProcessing
+              ? widget.child
+              : Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                      height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                      child: CircularProgressIndicator(
+                        color: widget._indicatorStyle?.color ?? context.theme.colorScheme.onPrimary,
+                        strokeWidth: widget._indicatorStyle?.strokeWidth ?? IndicatorStyle.defaultStrokeWidth,
+                      ),
+                    ),
+                    Opacity(opacity: 0.001, child: widget.child),
+                  ],
+                ),
         ),
     };
   }
 }
 
 @immutable
-class CoreIconButton extends StatelessWidget {
+class CoreIconButton extends StatefulWidget {
   const CoreIconButton({
     required this.icon,
     required this.onPressed,
     this.radius = kMinInteractiveDimensionCupertino * 0.5,
     super.key,
   })  : filled = false,
-        backgroundColor = null;
+        backgroundColor = null,
+        _autoIndicator = false,
+        _indicatorStyle = null;
 
   const CoreIconButton.filled({
     required this.icon,
@@ -186,45 +450,140 @@ class CoreIconButton extends StatelessWidget {
     this.radius = kMinInteractiveDimensionCupertino * 0.5,
     this.backgroundColor,
     super.key,
-  }) : filled = true;
+  })  : filled = true,
+        _autoIndicator = false,
+        _indicatorStyle = null;
+
+  const CoreIconButton.autoIndicator({
+    required this.icon,
+    required this.onPressed,
+    this.radius = kMinInteractiveDimensionCupertino * 0.5,
+    this.backgroundColor,
+    super.key,
+    IndicatorStyle? indicatorStyle,
+  })  : filled = false,
+        _autoIndicator = true,
+        _indicatorStyle = indicatorStyle;
+
+  const CoreIconButton.filledAutoIndicator({
+    required this.icon,
+    required this.onPressed,
+    this.radius = kMinInteractiveDimensionCupertino * 0.5,
+    this.backgroundColor,
+    super.key,
+    IndicatorStyle? indicatorStyle,
+  })  : filled = true,
+        _autoIndicator = true,
+        _indicatorStyle = indicatorStyle;
 
   final Widget icon;
-  final VoidCallback? onPressed;
+  final FutureOr<dynamic> Function()? onPressed;
   final bool filled;
   final double radius;
   final Color? backgroundColor;
+  final bool _autoIndicator;
+  final IndicatorStyle? _indicatorStyle;
+
+  @override
+  State<CoreIconButton> createState() => _CoreIconButtonState();
+}
+
+class _CoreIconButtonState extends State<CoreIconButton> {
+  var _isProcessing = false;
+
+  Future<dynamic> _onPressedCallback() async {
+    if (!widget._autoIndicator) return await widget.onPressed!.call();
+    setState(() => _isProcessing = true);
+    final overlayEntry = OverlayEntry(builder: (context) => const Positioned.fill(child: AbsorbPointer()));
+    Overlay.of(context).insert(overlayEntry);
+    try {
+      await widget.onPressed!.call();
+      if (mounted) setState(() => _isProcessing = false);
+      overlayEntry.remove();
+    } catch (e) {
+      if (mounted) setState(() => _isProcessing = false);
+      overlayEntry.remove();
+      rethrow;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return switch (context.theme.platform) {
       TargetPlatform.iOS || TargetPlatform.macOS => CupertinoButton(
-          onPressed: onPressed,
+          onPressed: widget.onPressed == null ? null : _onPressedCallback,
           padding: EdgeInsets.zero,
-          minSize: radius * 2,
-          child: filled
+          minimumSize: Size(widget.radius * 2, widget.radius * 2),
+          child: widget.filled
               ? CircleAvatar(
-                  backgroundColor: backgroundColor ?? context.theme.colorScheme.primary,
-                  radius: radius,
-                  child: icon,
+                  backgroundColor: widget.backgroundColor ?? context.theme.colorScheme.primary,
+                  radius: widget.radius,
+                  child: !_isProcessing
+                      ? widget.icon
+                      : CupertinoActivityIndicator(
+                          color: widget._indicatorStyle?.color ?? context.theme.colorScheme.onPrimary,
+                          radius: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius,
+                        ),
                 )
-              : icon,
+              : !_isProcessing
+                  ? widget.icon
+                  : Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        CupertinoActivityIndicator(
+                          color: widget._indicatorStyle?.color,
+                          radius: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius,
+                        ),
+                        Opacity(opacity: 0.001, child: widget.icon),
+                      ],
+                    ),
         ),
-      _ => filled
+      _ => widget.filled
           ? IconButton.filled(
-              onPressed: onPressed,
-              icon: icon,
+              onPressed: widget.onPressed == null ? null : _onPressedCallback,
+              icon: !_isProcessing
+                  ? widget.icon
+                  : Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox(
+                          width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                          height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                          child: CircularProgressIndicator(
+                            color: widget._indicatorStyle?.color ?? context.theme.colorScheme.onPrimary,
+                            strokeWidth: widget._indicatorStyle?.strokeWidth ?? IndicatorStyle.defaultStrokeWidth,
+                          ),
+                        ),
+                        Opacity(opacity: 0.001, child: widget.icon),
+                      ],
+                    ),
               padding: EdgeInsets.zero,
               style: IconButton.styleFrom(
-                minimumSize: Size(radius * 2, radius * 2),
-                backgroundColor: backgroundColor,
+                minimumSize: Size(widget.radius * 2, widget.radius * 2),
+                backgroundColor: widget.backgroundColor,
               ),
             )
           : IconButton(
-              onPressed: onPressed,
-              icon: icon,
+              onPressed: widget.onPressed == null ? null : _onPressedCallback,
+              icon: !_isProcessing
+                  ? widget.icon
+                  : Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox(
+                          width: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                          height: widget._indicatorStyle?.radius ?? IndicatorStyle.defaultRadius * 2,
+                          child: CircularProgressIndicator(
+                            color: widget._indicatorStyle?.color,
+                            strokeWidth: widget._indicatorStyle?.strokeWidth ?? IndicatorStyle.defaultStrokeWidth,
+                          ),
+                        ),
+                        Opacity(opacity: 0.001, child: widget.icon),
+                      ],
+                    ),
               padding: EdgeInsets.zero,
               style: IconButton.styleFrom(
-                minimumSize: Size(radius * 2, radius * 2),
+                minimumSize: Size(widget.radius * 2, widget.radius * 2),
               ),
             ),
     };

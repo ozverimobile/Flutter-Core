@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
@@ -153,6 +154,9 @@ abstract interface class IPopupManager {
 
   Future<ImageSourceType?> showImageSourcePicker({BuildContext? context});
 
+  Future<void> showPatchInstalledBottomSheet({required bool isForce, BuildContext? context});
+  Future<T?> showCupertinoBottomSheet<T>({required WidgetBuilder builder, BuildContext? context, String? id, bool enableDrag = true, RouteSettings? settings});
+
   void hidePopup<T>({String? id, T? result});
 
   void hideAllPopups();
@@ -272,6 +276,32 @@ class PopupManager implements IPopupManager {
 
     _popupRoutes.add(route);
     _navigator.push(route);
+  }
+
+  /// Shows cupertino bottom sheet
+  @override
+  Future<T?> showCupertinoBottomSheet<T>({
+    required WidgetBuilder builder,
+    BuildContext? context,
+    String? id,
+    bool enableDrag = true,
+    RouteSettings? settings,
+  }) {
+    assert(
+      id == null || _popupRoutes.where((element) => element.id == id).isEmpty,
+      'There is already a cupertino sheet showing with id: $id',
+    );
+    final route = CSheetRoute<T>._(
+      builder: builder,
+      onCompleted: _onCompleted,
+      id: id,
+      enableDrag: enableDrag,
+      settings: settings,
+    );
+
+    _popupRoutes.add(route);
+    _navigator.push(route);
+    return route.completer.future;
   }
 
   /// Shows modal bottom sheet
@@ -682,7 +712,7 @@ class PopupManager implements IPopupManager {
       TargetPlatform.iOS || TargetPlatform.macOS => showCupertinoDialog<T>(
           context: context,
           builder: (context) => CupertinoTheme(
-            data: const CupertinoThemeData(),
+            data: CupertinoThemeData(brightness: context.theme.brightness),
             child: alertDialogBuilder(context),
           ),
           id: id,
@@ -803,6 +833,7 @@ class PopupManager implements IPopupManager {
       _ => _showMaterialDateAndTimePickerConsecutively(
           context: context,
           mode: mode,
+          id: id,
           initialDateTime: initialDateTime,
           minimumDate: minimumDate,
           maximumDate: maximumDate,
@@ -877,6 +908,7 @@ class PopupManager implements IPopupManager {
     required DatePickerEntryMode datePickerInitialEntryModeAndroid,
     required TimePickerEntryMode timePickerInitialEntryModeAndroid,
     required AdaptiveDatePickerMode mode,
+    String? id,
     BuildContext? context,
     TextInputType? keyboardTypeAndroid,
     String? cancelTextAndroid,
@@ -899,6 +931,7 @@ class PopupManager implements IPopupManager {
       case AdaptiveDatePickerMode.date:
         return showDialog<DateTime>(
           context: context,
+          id: id,
           builder: (context) => DatePickerDialog(
             firstDate: minimumDate,
             lastDate: maximumDate,
@@ -1501,6 +1534,117 @@ class PopupManager implements IPopupManager {
     };
   }
 
+  @override
+  Future<void> showPatchInstalledBottomSheet({
+    required bool isForce,
+    BuildContext? context,
+    String? title,
+    String? message,
+    String? closeButtonLabel,
+    String? laterButtonLabel,
+    VoidCallback? onPrimaryButtonPressed,
+  }) async {
+    final id = UniqueKey().toString();
+    final currentContext = context ?? _navigatorContext;
+
+    final title0 = title ?? (currentContext.locale.languageCode.toLowerCase() == 'tr' ? 'En güncel sürümü kullanmaya başlayabilirsiniz.' : 'You can start using the latest version.');
+    final message0 = message ?? (currentContext.locale.languageCode.toLowerCase() == 'tr' ? 'Yeni özellikler ve hata düzeltmeleri ile uygulamanızı daha güvenli ve verimli kullanabilirsiniz. En son sürümü kullanmak için uygulamanızı yeniden başlatın.' : 'You can use your application more securely and efficiently with new features and bug fixes. Restart your application to use the latest version.');
+    final closeButtonLabel0 = closeButtonLabel ?? (currentContext.locale.languageCode.toLowerCase() == 'tr' ? 'Uygulamayı Kapat' : 'Close Application');
+    final laterButtonLabel0 = laterButtonLabel ?? (currentContext.locale.languageCode.toLowerCase() == 'tr' ? 'Daha Sonra' : 'Later');
+    return showModalBottomSheet(
+      context: currentContext,
+      id: id,
+      showDragHandle: false,
+      isScrollControlled: true,
+      isDismissible: !isForce,
+      enableDrag: !isForce,
+      builder: (context) => PopScope(
+        canPop: !isForce,
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            if (!isForce)
+              Positioned(
+                top: 12,
+                right: 12,
+                child: IconButton.filled(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => hidePopup<void>(id: id),
+                ),
+              ),
+            SafeArea(
+              child: SizedBox(
+                width: double.infinity,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      verticalBox20,
+                      SizedBox(
+                        height: 80,
+                        width: 80,
+                        child: Card(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          color: context.theme.colorScheme.primary,
+                          child: Icon(
+                            Icons.downloading_rounded,
+                            size: 36,
+                            color: context.colorScheme.onPrimary,
+                          ),
+                        ),
+                      ),
+                      verticalBox12,
+                      CoreText.titleLarge(
+                        title0,
+                        fontWeight: FontWeight.bold,
+                        textAlign: TextAlign.center,
+                      ),
+                      verticalBox12,
+                      CoreText.bodyMedium(
+                        message0,
+                        textAlign: TextAlign.center,
+                      ),
+                      verticalBox32,
+                      const Divider(),
+                      verticalBox4,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        width: context.width,
+                        height: 50,
+                        child: CoreFilledButton(
+                          onPressed: onPrimaryButtonPressed ?? () => exit(0),
+                          borderRadius: BorderRadius.circular(10),
+                          child: CoreText.bodyLarge(
+                            closeButtonLabel0,
+                            fontWeight: FontWeight.bold,
+                            textColor: context.colorScheme.onError,
+                          ),
+                        ),
+                      ),
+                      if (!isForce) ...[
+                        verticalBox8,
+                        CoreTextButton(
+                          child: CoreText.bodyLarge(
+                            laterButtonLabel0,
+                            fontWeight: FontWeight.w600,
+                            textColor: context.colorScheme.primary,
+                          ),
+                          onPressed: () => hidePopup<void>(id: id),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   /// Shows adaptive action sheet
   @override
   Future<AdaptiveAction?> showAdaptiveActionSheet({
@@ -1582,6 +1726,9 @@ class PopupManager implements IPopupManager {
                   },
                 ),
               const SizedBox(height: 15),
+              SizedBox(
+                height: context.viewPadding.bottom,
+              )
             ],
           ),
         ),

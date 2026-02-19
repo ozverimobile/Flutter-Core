@@ -12,6 +12,7 @@ enum CorePermission {
   photos(sharedPrefKey: '${_permissionKeyPrefix}Photos'),
   microphone(sharedPrefKey: '${_permissionKeyPrefix}Microphone'),
   speech(sharedPrefKey: '${_permissionKeyPrefix}Speech'),
+  location(sharedPrefKey: '${_permissionKeyPrefix}Location'),
   contact(sharedPrefKey: '${_permissionKeyPrefix}Contact');
 
   const CorePermission({required this.sharedPrefKey});
@@ -30,6 +31,7 @@ enum CorePermission {
       CorePermission.microphone => Permission.microphone,
       CorePermission.speech => Permission.speech,
       CorePermission.contact => Permission.contacts,
+      CorePermission.location => Permission.location,
     };
   }
 
@@ -41,6 +43,7 @@ enum CorePermission {
       CorePermission.microphone => 'Mikrofon İzni',
       CorePermission.speech => 'Konuşma İzni',
       CorePermission.contact => 'Rehber İzni',
+      CorePermission.location => 'Konum İzni',
     };
   }
 
@@ -53,6 +56,7 @@ enum CorePermission {
       CorePermission.microphone => '$appName mikrofonu kullanabilmeniz için izin istiyor',
       CorePermission.speech => '$appName konuşma tanıma yapabilmeniz için izin istiyor',
       CorePermission.contact => '$appName rehberi kullanabilmeniz için izin istiyor',
+      CorePermission.location => '$appName konum bilgilerinizi kullanabilmemiz için izin istiyor',
     };
   }
 
@@ -80,6 +84,11 @@ enum CorePermission {
         ),
       CorePermission.contact => Icon(
           Icons.contact_phone,
+          size: 50,
+          color: context.colorScheme.onPrimary,
+        ),
+      CorePermission.location => Icon(
+          Icons.location_on,
           size: 50,
           color: context.colorScheme.onPrimary,
         ),

@@ -1,10 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_core/flutter_core.dart';
 import 'package:flutter_localization/flutter_localization.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   await Core.initialize();
   runApp(const MyApp());
 }
@@ -336,6 +339,36 @@ class _PopupManagerWidgetState extends State<PopupManagerWidget> {
                 if (kDebugMode) {
                   print(await popupManager.showImageSourcePicker(context: context));
                 }
+              },
+            ),
+            CoreTextButton(
+              child: const Text('Show Patch Installed BottomSheet'),
+              onPressed: () async {
+                await popupManager.showPatchInstalledBottomSheet(
+                  context: context,
+                  isForce: false,
+                );
+              },
+            ),
+            // cupertino bottom sheet
+            CoreTextButton(
+              child: const Text('Show Cupertino Bottom Sheet'),
+              onPressed: () {
+                final id = UniqueKey().toString();
+                popupManager.showCupertinoBottomSheet<void>(
+                  context: context,
+                  id: id,
+                  builder: (context) => Container(
+                    height: 300,
+                    color: Colors.white,
+                    child: Center(
+                      child: CupertinoButton.filled(
+                        onPressed:()=> popupManager.hidePopup<void>(id: id),
+                        child: const Text('Close'),
+                      ),
+                    ),
+                  ),
+                );
               },
             ),
           ],

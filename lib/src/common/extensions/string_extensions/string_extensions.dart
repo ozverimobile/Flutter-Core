@@ -18,4 +18,16 @@ extension StringExtensionNullable on String? {
 
   /// Truncates the string to the given length
   String? truncateToLength({int length = 25, String suffix = '...'}) => this != null && this!.length > length ? '${this!.substring(0, length)}$suffix' : this;
+
+  /// To capitalized string => hello world => Hello world
+  String? toCapitalized() {
+    if (isNullOrEmpty) return null;
+    return '${this![0].toUpperCase()}${this!.substring(1).toLowerCase()}';
+  }
+
+  /// To title case string => hello world => Hello World
+  String? toTitleCase() {
+    if (isNullOrEmpty) return null;
+    return this?.replaceAll(RegExp(' +'), ' ').split(' ').map((str) => str.toCapitalized() ?? '').join(' ');
+  }
 }

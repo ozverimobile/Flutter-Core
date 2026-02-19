@@ -10,6 +10,7 @@ abstract interface class ICoreDeviceInfo {
   Future<CoreIosDeviceInfo> get iosInfo;
 
   Future<String?> get deviceName;
+  Future<String?> get deviceIdentifier;
 }
 
 class CoreDeviceInfo implements ICoreDeviceInfo {
@@ -36,7 +37,20 @@ class CoreDeviceInfo implements ICoreDeviceInfo {
       model: androidInfo.model,
       product: androidInfo.product,
       isPhysicalDevice: androidInfo.isPhysicalDevice,
-      serialNumber: androidInfo.serialNumber,
+   
+      hardware: androidInfo.hardware,
+      display: androidInfo.display,
+      fingerprint: androidInfo.fingerprint,
+      host: androidInfo.host,
+      tags: androidInfo.tags,
+      type: androidInfo.type,
+      bootloader: androidInfo.bootloader,
+      board: androidInfo.board,
+      supported32BitAbis: androidInfo.supported32BitAbis,
+      supported64BitAbis: androidInfo.supported64BitAbis,
+      supportedAbis: androidInfo.supportedAbis,
+      isLowRamDevice: androidInfo.isLowRamDevice,
+      systemFeatures: androidInfo.systemFeatures,
     );
   }
 
@@ -51,22 +65,34 @@ class CoreDeviceInfo implements ICoreDeviceInfo {
       localizedModel: iosInfo.localizedModel,
       identifierForVendor: iosInfo.identifierForVendor,
       isPhysicalDevice: iosInfo.isPhysicalDevice,
+      utsname: CoreIosUtsname(
+        sysname: iosInfo.utsname.sysname,
+        nodename: iosInfo.utsname.nodename,
+        release: iosInfo.utsname.release,
+        version: iosInfo.utsname.version,
+        machine: iosInfo.utsname.machine,
+      ),
     );
   }
 
   @override
+  @Deprecated('Use deviceIdentifier instead')
   Future<String?> get deviceName async {
-    return Platform.isIOS ? _getIosDeviceName : _getAndroidDeviceName;
+    return Platform.isIOS ? _getIosDeviceIdentifier : _getAndroidDeviceIdentifier;
   }
 
-  Future<String?> get _getIosDeviceName async {
+  @override
+  Future<String?> get deviceIdentifier async {
+    return Platform.isIOS ? _getIosDeviceIdentifier : _getAndroidDeviceIdentifier;
+  }
+
+  Future<String?> get _getIosDeviceIdentifier async {
     final iosInfo = await _deviceInfoPlugin.iosInfo;
-    return iosInfo.identifierForVendor ?? iosInfo.localizedModel;
+    return iosInfo.identifierForVendor;
   }
 
-  Future<String?> get _getAndroidDeviceName async {
-    // TODO(Huseyin): Hüseyinin yaptığı android id kütüphanesi eklenecek.
-    return null;
+  Future<String?> get _getAndroidDeviceIdentifier async {
+    return CorePlatformChannel.getAndroidDeviceId();
   }
 
   Future<bool> isHuaweiApiAvailable() {

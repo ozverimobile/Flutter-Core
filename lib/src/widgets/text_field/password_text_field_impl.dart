@@ -22,6 +22,10 @@ class CorePasswordTextField extends StatefulWidget {
     this.enabled,
     this.focusNode,
     this.autofillHints,
+    this.suffixIconSemanticLabel,
+    this.smartDashesType,
+    this.smartQuotesType,
+    this.errorMaxLines,
     super.key,
   });
   final TextEditingController? controller;
@@ -43,6 +47,10 @@ class CorePasswordTextField extends StatefulWidget {
   final bool? enabled;
   final FocusNode? focusNode;
   final Iterable<String>? autofillHints;
+  final String? suffixIconSemanticLabel;
+  final SmartDashesType? smartDashesType;
+  final SmartQuotesType? smartQuotesType;
+  final int? errorMaxLines;
 
   @override
   State<CorePasswordTextField> createState() => _CorePasswordTextFieldState();
@@ -54,6 +62,8 @@ class _CorePasswordTextFieldState extends State<CorePasswordTextField> {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      smartDashesType: widget.smartDashesType,
+      smartQuotesType: widget.smartQuotesType,
       enabled: widget.enabled,
       focusNode: widget.focusNode,
       obscureText: _obscureText,
@@ -73,8 +83,10 @@ class _CorePasswordTextFieldState extends State<CorePasswordTextField> {
         prefixIcon: widget.prefixIcon,
         hintText: widget.hintText,
         labelText: widget.labelText,
+        errorMaxLines: widget.errorMaxLines,
         suffixIcon: IconButton(
           icon: Icon(
+            semanticLabel: widget.suffixIconSemanticLabel,
             _obscureText ? widget.suffixIcon ?? Icons.visibility_outlined : widget.suffixIconOff ?? Icons.visibility_off_outlined,
           ),
           onPressed: () {

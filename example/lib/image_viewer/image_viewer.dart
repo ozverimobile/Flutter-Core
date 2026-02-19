@@ -13,9 +13,15 @@ void main() {
   );
 }
 
-class ImageViewer extends StatelessWidget {
+class ImageViewer extends StatefulWidget {
   const ImageViewer({super.key});
 
+  @override
+  State<ImageViewer> createState() => _ImageViewerState();
+}
+
+class _ImageViewerState extends State<ImageViewer> {
+  final _secureImageViewerController = CoreImageController(navigatorKey: navigatorKey);
   @override
   Widget build(BuildContext context) {
     const image1 = '../assets/test_image_1.jpeg';
@@ -29,6 +35,36 @@ class ImageViewer extends StatelessWidget {
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          Center(
+            child: CoreImageViewer.network(
+              controller: _secureImageViewerController,
+              isSecure: true,
+              images: const [
+                'https://picsum.photos/id/1/200/200',
+                'https://picsum.photos/id/2/200/200',
+                'https://picsum.photos/id/3/200/200',
+                'https://picsum.photos/id/4/200/200',
+                'https://picsum.photos/id/1/200/200',
+                'https://picsum.photos/id/2/200/200',
+                'https://picsum.photos/id/3/200/200',
+                'https://picsum.photos/id/4/200/200',
+                'https://picsum.photos/id/1/200/200',
+                'https://picsum.photos/id/2/200/200',
+                'https://picsum.photos/id/3/200/200',
+                'https://picsum.photos/id/4/200/200',
+              ],
+              child: CoreFilledButton(
+                child: const Text(
+                  'Open Secure Image Viewer',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onPressed: () {
+                  _secureImageViewerController.open();
+                },
+              ),
+            ),
+          ),
+          verticalBox12,
           Center(
             child: CoreImageViewer.asset(
               controller: _imageController,
@@ -55,6 +91,39 @@ class ImageViewer extends StatelessWidget {
               _imageController.close();
             },
             child: const Text('Programmatically Open'),
+          ),
+          CoreFilledButton(
+            onPressed: () {
+              showGeneralDialog(
+                context: context,
+                fullscreenDialog: true,
+                barrierColor: Colors.white,
+                pageBuilder: (context, animation, secondaryAnimation) {
+                  return CupertinoSecureImageViewer(
+                    imageUrls: const [
+                      'https://picsum.photos/id/1/200/200',
+                      'https://picsum.photos/id/2/200/200',
+                      'https://picsum.photos/id/3/200/200',
+                      'https://picsum.photos/id/4/200/200',
+                      'https://picsum.photos/id/1/200/200',
+                      'https://picsum.photos/id/2/200/200',
+                      'https://picsum.photos/id/3/200/200',
+                      'https://picsum.photos/id/4/200/200',
+                      'https://picsum.photos/id/1/200/200',
+                      'https://picsum.photos/id/2/200/200',
+                      'https://picsum.photos/id/3/200/200',
+                      'https://picsum.photos/id/4/200/200',
+                    ],
+                    headers: const {},
+                    onClose: Navigator.of(context).pop,
+                  );
+                },
+              );
+            },
+            child: const Text(
+              'Open Cupertino Secure Image Viewer (iOS Only)',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),

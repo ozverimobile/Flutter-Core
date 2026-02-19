@@ -51,11 +51,13 @@ abstract interface class ICoreSqfliteManager {
 abstract class CoreSqfliteManager implements ICoreSqfliteManager {
   CoreSqfliteManager({
     required this.version,
+    this.path,
     this.readOnly = false,
     this.singleInstance = true,
   });
 
   final int version;
+  final String? path;
   final bool readOnly;
   final bool singleInstance;
 
@@ -63,7 +65,7 @@ abstract class CoreSqfliteManager implements ICoreSqfliteManager {
 
   String? _databasePath;
 
-  String? get databasePath => _databasePath;
+  String? get databasePath => path ?? _databasePath;
 
   Database? _db;
 
@@ -306,7 +308,7 @@ abstract class CoreSqfliteManager implements ICoreSqfliteManager {
   @nonVirtual
   Future<BaseResult<void>> deleteDB() async {
     try {
-      await deleteDatabase(_databasePath!);
+      await deleteDatabase(databasePath!);
       _db = null;
       return BaseResult.success();
     } catch (e) {
@@ -317,13 +319,13 @@ abstract class CoreSqfliteManager implements ICoreSqfliteManager {
   Future<Database> _initDB() async {
     if (_db?.isOpen ?? false) return _db!;
 
-    if (_databasePath == null) {
+    if (databasePath == null) {
       final directory = Directory.fromUri(Uri.directory(await getDatabasesPath()));
       _databasePath = '${directory.path}$_databaseName.db';
     }
 
     _db = await openDatabase(
-      _databasePath!,
+      databasePath!,
       version: version,
       onConfigure: onConfigure,
       onCreate: onCreate,

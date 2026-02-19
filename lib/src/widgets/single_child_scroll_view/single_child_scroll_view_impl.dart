@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_core/flutter_core.dart';
 
 class CoreSingleChildScrollView extends StatefulWidget {
   const CoreSingleChildScrollView({
@@ -27,31 +28,36 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> {
   var _isAtTop = true;
 
   late final ScrollController _scrollController;
+  ScrollController? _primaryScrollController;
+  late ScrollPosition _position;
 
   @override
   void initState() {
-    _scrollController = widget.controller ?? ScrollController();
     super.initState();
+    _scrollController = widget.controller ?? ScrollController();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _primaryScrollController = PrimaryScrollController.maybeOf(context)?..attach(_position = _scrollController.position);
+    });
+  }
+
+  @override
+  void dispose() {
+    _primaryScrollController?.detach(_position);
+    if (widget.controller.isNull) _scrollController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Platform.isAndroid
-        ? LayoutBuilder(
-            builder: (context, constraints) {
-              return RefreshIndicator(
-                onRefresh: widget.onRefresh,
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  controller: _scrollController,
-                  child: SizedBox(
-                    height: constraints.maxHeight,
-                    width: constraints.maxWidth,
-                    child: widget.child,
-                  ),
-                ),
-              );
-            },
+        ? RefreshIndicator(
+            onRefresh: widget.onRefresh,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              controller: _scrollController,
+              child: widget.child,
+            ),
           )
         : NotificationListener<ScrollNotification>(
             onNotification: (notification) {
@@ -85,7 +91,7 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> {
               slivers: [
                 /// Show the refresh indicator only when the scroll view is at the top.
                 if (_isAtTop) CupertinoSliverRefreshControl(onRefresh: widget.onRefresh),
-                SliverFillRemaining(child: widget.child),
+                SliverToBoxAdapter(child: widget.child),
               ],
             ),
           );

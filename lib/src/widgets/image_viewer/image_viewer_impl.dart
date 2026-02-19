@@ -1,10 +1,11 @@
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:animations/animations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_core/flutter_core.dart';
 
 enum _ImageType { network, asset, memory, file }
@@ -25,16 +26,25 @@ class CoreImageController {
   final GlobalKey<NavigatorState>? _navigatorKey;
 
   VoidCallback? _openContainer;
-  void _init(VoidCallback openContainer) {
+  void _init(VoidCallback openContainer, {required bool isSecure}) {
     _openContainer ??= openContainer;
+    this.isSecure ??= isSecure;
   }
 
+  bool? isSecure;
+
   void open() {
+    if ((isSecure ?? false) && Platform.isAndroid) {
+      AndroidScreenshotBlocker.setEnabled(true);
+    }
     _openContainer?.call();
   }
 
   void close() {
     if (_navigatorKey?.currentContext == null) throw Exception('Navigator key is null');
+    if ((isSecure ?? false) && Platform.isAndroid) {
+      AndroidScreenshotBlocker.setEnabled(false);
+    }
     Navigator.of(_navigatorKey!.currentContext!).pop();
   }
 }
@@ -66,6 +76,7 @@ class CoreImageViewer extends StatelessWidget {
     this.indicatorPadding = EdgeInsets.zero,
     this.headers,
     this.controller,
+    this.isSecure = false,
     super.key,
   })  : _imageType = _ImageType.network,
         _images = images;
@@ -98,6 +109,7 @@ class CoreImageViewer extends StatelessWidget {
     this.controller,
     super.key,
   })  : _imageType = _ImageType.asset,
+        isSecure = false,
         _images = images;
 
   const CoreImageViewer.file({
@@ -128,6 +140,7 @@ class CoreImageViewer extends StatelessWidget {
     this.controller,
     super.key,
   })  : _imageType = _ImageType.file,
+        isSecure = false,
         _images = images;
 
   const CoreImageViewer.memory({
@@ -158,6 +171,7 @@ class CoreImageViewer extends StatelessWidget {
     this.controller,
     super.key,
   })  : _imageType = _ImageType.memory,
+        isSecure = false,
         _images = images;
 
   final Widget child;
@@ -186,13 +200,23 @@ class CoreImageViewer extends StatelessWidget {
   final Map<String, String>? headers;
   final _ImageType _imageType;
   final CoreImageController? controller;
+  final bool isSecure;
 
   @override
   Widget build(BuildContext context) {
     if (_images.isEmpty) return child;
     return _AnimationWrapper<int>(
       openBuilder: (_, __) {
-        return _CoreImageViewer(
+        final isSecureIOSNetworkImage = isSecure && context.theme.platform == TargetPlatform.iOS && _imageType == _ImageType.network && _images.every((element)=> element is String);
+        
+        if (isSecureIOSNetworkImage) {
+          return CupertinoSecureImageViewer(
+            imageUrls: _images as List<String>,
+            headers: headers,
+            onClose: Navigator.of(context).pop,
+          );
+        }
+        return  _CoreImageViewer(
           key: key,
           backgroundColor: backgroundColor,
           verticalDragCloseThreshold: verticalDragCloseThreshold,
@@ -218,7 +242,7 @@ class CoreImageViewer extends StatelessWidget {
         );
       },
       closedBuilder: (BuildContext _, VoidCallback openContainer) {
-        controller?._init(openContainer);
+        controller?._init(openContainer, isSecure: isSecure);
         return GestureDetector(
           onTap: openContainer,
           child: child,
@@ -337,7 +361,7 @@ class _CoreImageViewerState extends State<_CoreImageViewer> {
               final item = widget.images[index];
               return Container(
                 key: Key('image_$index'),
-                color: widget.backgroundColor.withOpacity(_opacity),
+                color: widget.backgroundColor.withValues(alpha: _opacity),
                 constraints: BoxConstraints.expand(
                   height: context.height,
                   width: context.width,
@@ -671,6 +695,34 @@ class _KeyMotionGestureDetector extends StatelessWidget {
         ),
       },
       child: child,
+    );
+  }
+}
+
+class CupertinoSecureImageViewer extends StatelessWidget {
+  const CupertinoSecureImageViewer({required this.imageUrls, required this.onClose, super.key, this.headers});
+  final List<String> imageUrls;
+  final Map<String, String>? headers;
+  final VoidCallback? onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    // Sadece iOS destekleniyor
+    if (defaultTargetPlatform != TargetPlatform.iOS) {
+      return const Center(child: Text('SSProtector is only available on iOS'));
+    }
+
+    return UiKitView(
+      viewType: 'secure_image_viewer', // AppDelegate'teki ID ile aynı olmalı
+      layoutDirection: TextDirection.ltr,
+      creationParams: {'imageUrls': imageUrls, 'headers': headers},
+      creationParamsCodec: const StandardMessageCodec(),
+      onPlatformViewCreated: (int id) {
+        // Kanalı dinlemeye başla
+        MethodChannel('com.cwa.ssprotector/view_$id').setMethodCallHandler((call) async {
+          if (call.method == 'onClose') onClose?.call();
+        });
+      },
     );
   }
 }

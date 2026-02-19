@@ -38,17 +38,20 @@ final class Patch with BaseModel<Patch> {
   const Patch({
     this.patchNumber,
     this.forceUpdate,
+    this.showInfoBottomSheet,
   });
 
   factory Patch.fromJson(Map<String, dynamic> json) {
     return Patch(
       patchNumber: json['patchNumber'] as int?,
       forceUpdate: json['forceUpdate'] as bool?,
+      showInfoBottomSheet: json['showInfoBottomSheet'] as bool?,
     );
   }
 
   final int? patchNumber;
   final bool? forceUpdate;
+  final bool? showInfoBottomSheet;
 
   @override
   Patch fromJson(Map<String, Object?> json) => Patch.fromJson(json);
@@ -57,10 +60,11 @@ final class Patch with BaseModel<Patch> {
   Map<String, Object?> toJson() => {
         'patchNumber': patchNumber,
         'forceUpdate': forceUpdate,
+        'showInfoBottomSheet': showInfoBottomSheet,
       };
 
   @override
   String toString() {
-    return 'Patch(patchNumber: $patchNumber, forceUpdate: $forceUpdate)';
+    return 'Patch(patchNumber: $patchNumber, forceUpdate: $forceUpdate, showInfoBottomSheet: $showInfoBottomSheet)';
   }
 }
