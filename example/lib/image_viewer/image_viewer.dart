@@ -66,6 +66,31 @@ class _ImageViewerState extends State<ImageViewer> {
           ),
           verticalBox12,
           Center(
+            child: CoreImageViewer.network(
+              controller: _imageController,
+              isSecure: true,
+              images: [
+                'https://picsum.photos/id/1/200/200',
+                'https://picsum.photos/id/2/200/200',
+                'https://picsum.photos/id/3/200/200',
+                'https://picsum.photos/id/4/200/200'
+              ],
+              errorBuilder: (context, error, stackTrace) {
+                return const Center(
+                  child: Text(
+                    'Error',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                );
+              },
+              child: Container(
+                height: 50,
+                width: 50,
+                color: Colors.blue,
+              ),
+            ),
+          ),
+          Center(
             child: CoreImageViewer.asset(
               controller: _imageController,
               images: images,

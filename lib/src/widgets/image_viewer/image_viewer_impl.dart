@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
@@ -207,8 +208,11 @@ class CoreImageViewer extends StatelessWidget {
     if (_images.isEmpty) return child;
     return _AnimationWrapper<int>(
       openBuilder: (_, __) {
-        final isSecureIOSNetworkImage = isSecure && context.theme.platform == TargetPlatform.iOS && _imageType == _ImageType.network && _images.every((element)=> element is String);
-        
+        final isSecureIOSNetworkImage = isSecure &&
+            context.theme.platform == TargetPlatform.iOS &&
+            _imageType == _ImageType.network &&
+            _images.every((element) => element is String);
+
         if (isSecureIOSNetworkImage) {
           return CupertinoSecureImageViewer(
             imageUrls: _images as List<String>,
@@ -216,7 +220,15 @@ class CoreImageViewer extends StatelessWidget {
             onClose: Navigator.of(context).pop,
           );
         }
-        return  _CoreImageViewer(
+
+        final isSecureAndroidNetworkImage = isSecure &&
+            context.theme.platform == TargetPlatform.android &&
+            _imageType == _ImageType.network &&
+            _images.every((element) => element is String);
+        if (isSecureAndroidNetworkImage) {
+          AndroidScreenshotBlocker.setEnabled(true);
+        }
+        return _CoreImageViewer(
           key: key,
           backgroundColor: backgroundColor,
           verticalDragCloseThreshold: verticalDragCloseThreshold,
@@ -665,6 +677,13 @@ class _AnimationWrapper<T extends int> extends StatelessWidget {
       closedColor: Colors.transparent,
       openColor: Colors.transparent,
       middleColor: Colors.transparent,
+      onClosed: (data) {
+        Future.delayed(transitionDuration ?? const Duration(milliseconds: 350), () {
+          scheduleMicrotask(() {
+            AndroidScreenshotBlocker.setEnabled(false);
+          });
+        });
+      },
     );
   }
 }
