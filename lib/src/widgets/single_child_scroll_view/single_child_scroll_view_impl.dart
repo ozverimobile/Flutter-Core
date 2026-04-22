@@ -12,6 +12,7 @@ class CoreSingleChildScrollView extends StatefulWidget {
     required this.onRefresh,
     this.controller,
     this.floatingChild,
+    this.floatingChildVisibilityCallback,
     this.refreshIndicatorStartPosition = .above,
     super.key,
   });
@@ -26,6 +27,14 @@ class CoreSingleChildScrollView extends StatefulWidget {
   /// the widget scrolls out with the content as the user scrolls down and
   /// snaps back in as soon as the user scrolls up.
   final Widget? floatingChild;
+
+  /// Called whenever the visibility of [floatingChild] changes.
+  ///
+  /// Fires with `true` when the header becomes visible again (snaps back in)
+  /// and with `false` once it has fully scrolled out. Invocations are
+  /// deduplicated and scheduled after the current frame to avoid
+  /// `setState`-during-build errors on the listener side.
+  final FloatingChildVisibilityCallback? floatingChildVisibilityCallback;
 
   final CoreRefreshIndicatorStartPosition refreshIndicatorStartPosition;
 
@@ -101,6 +110,7 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> w
             height: height,
             vsync: this,
             child: floatingChild,
+            onVisibilityChanged: widget.floatingChildVisibilityCallback,
           ),
         ),
 
@@ -200,10 +210,16 @@ class _FloatingChildHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.height,
     required this.vsync,
     required this.child,
+    this.onVisibilityChanged,
   });
 
   final double height;
   final Widget child;
+  final FloatingChildVisibilityCallback? onVisibilityChanged;
+
+  /// Cached last reported visibility signal, used to de-duplicate callback
+  /// invocations when [build] is called repeatedly with the same argument.
+  bool? _lastReportedVisibility;
 
   @override
   final TickerProvider vsync;
@@ -221,11 +237,30 @@ class _FloatingChildHeaderDelegate extends SliverPersistentHeaderDelegate {
     /// [shrinkOffset] is 0 when fully visible and grows up to [maxExtent]
     /// as the header scrolls out.
     final progress = maxExtent == 0 ? 1.0 : (1.0 - (shrinkOffset / maxExtent)).clamp(0.0, 1.0);
+
+    /// The header is considered visible as long as it occupies any space on
+    /// screen (progress > 0). Once fully scrolled out, progress is 0 and the
+    /// header is reported as hidden.
+    _notifyVisibilityIfChanged(progress > 0);
+
     final opacity = Curves.easeInOut.transform(progress);
     return Opacity(
       opacity: opacity,
       child: SizedBox.expand(child: child),
     );
+  }
+
+  void _notifyVisibilityIfChanged(bool isVisible) {
+    final callback = onVisibilityChanged;
+    if (callback == null) return;
+    if (_lastReportedVisibility == isVisible) return;
+    _lastReportedVisibility = isVisible;
+
+    /// Defer to the next frame to avoid triggering setState during build on
+    /// the listener side.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      callback(isVisible);
+    });
   }
 
   @override
@@ -236,6 +271,6 @@ class _FloatingChildHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(covariant _FloatingChildHeaderDelegate oldDelegate) {
-    return oldDelegate.height != height || oldDelegate.child != child;
+    return oldDelegate.height != height || oldDelegate.child != child || oldDelegate.onVisibilityChanged != onVisibilityChanged;
   }
 }

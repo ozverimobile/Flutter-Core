@@ -73,7 +73,8 @@ class _ListViewExampleState extends State<ListViewExample> {
                       height: context.height - context.viewPadding.top - context.viewPadding.bottom,
                       child: CoreListView.separated(
                         refreshIndicatorStartPosition: CoreRefreshIndicatorStartPosition.below,
-                        floatingChild: Container(color: Colors.red, height: 60, width: 400,),
+                       
+                        floatingChild: TextField(),
                         padding: const EdgeInsets.all(24),
                         onReachedEnd: () => 5.seconds.delay<void>(),
                         onRefresh: () => 2.seconds.delay<void>(),
