@@ -322,7 +322,7 @@ class _CoreListViewState extends State<CoreListView> with TickerProviderStateMix
       restorationId: widget.restorationId,
       clipBehavior: widget.clipBehavior,
       slivers: [
-        if (Platform.isIOS && widget.onRefresh != null && widget.refreshIndicatorStartPosition == .above) CupertinoSliverRefreshControl(key: UniqueKey(), onRefresh: widget.onRefresh),
+        if (Platform.isIOS && widget.onRefresh != null && widget.refreshIndicatorStartPosition == .above) CupertinoSliverRefreshControl(onRefresh: widget.onRefresh),
 
         SliverPersistentHeader(
           key: const ValueKey<String>('_core_listview_floating_header'),
@@ -334,7 +334,7 @@ class _CoreListViewState extends State<CoreListView> with TickerProviderStateMix
             onVisibilityChanged: widget.floatingChildVisibilityCallback,
           ),
         ),
-        if (Platform.isIOS && widget.onRefresh != null && widget.refreshIndicatorStartPosition == .below) CupertinoSliverRefreshControl(key: UniqueKey(), onRefresh: widget.onRefresh),
+        if (Platform.isIOS && widget.onRefresh != null && widget.refreshIndicatorStartPosition == .below) CupertinoSliverRefreshControl(onRefresh: widget.onRefresh),
         listSliver,
       ],
     );

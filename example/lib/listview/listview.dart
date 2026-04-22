@@ -87,7 +87,14 @@ class _ListViewExampleState extends State<ListViewExample> {
                             floatingChild: TextField(),
                             padding: const EdgeInsets.all(24),
                             onReachedEnd: () => 5.seconds.delay<void>(),
-                            onRefresh: () => 2.seconds.delay<void>(),
+                            onRefresh: () {
+                              return Future.delayed(Duration(seconds: 2), () {
+                                setState(() {
+                                  items.clear();
+                                  items.addAll(List.generate(40, (index) => 'Item $index'));
+                                });
+                              });
+                            },
                             itemBuilder: (context, index) {
                               return ListTile(
                                 onTap: () {

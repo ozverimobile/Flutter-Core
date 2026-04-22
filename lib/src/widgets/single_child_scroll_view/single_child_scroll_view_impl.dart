@@ -94,7 +94,7 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> w
     return [
       if (withCupertinoRefresh && widget.refreshIndicatorStartPosition == .above)
         CupertinoSliverRefreshControl(
-          key: UniqueKey(),
+       
           onRefresh: widget.onRefresh,
         ),
       if (floatingChild != null)
@@ -110,7 +110,7 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> w
 
       if (withCupertinoRefresh && widget.refreshIndicatorStartPosition == .below)
         CupertinoSliverRefreshControl(
-          key: UniqueKey(),
+          
           onRefresh: widget.onRefresh,
         ),
 
