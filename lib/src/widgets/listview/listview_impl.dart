@@ -201,14 +201,6 @@ class _CoreListViewState extends State<CoreListView> with TickerProviderStateMix
   }
 
   @override
-  void didUpdateWidget(covariant CoreListView oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.floatingChild != widget.floatingChild) {
-      _floatingChildHeight = null;
-    }
-  }
-
-  @override
   void dispose() {
     _primaryScrollController?.detach(_position);
     _scrollController.removeListener(_onScroll);
@@ -310,7 +302,6 @@ class _CoreListViewState extends State<CoreListView> with TickerProviderStateMix
   Widget _buildWithFloatingChild() {
     final floatingChild = widget.floatingChild!;
     final height = _floatingChildHeight;
-    final hasFloatingHeader = height != null && height > 0;
 
     final listSliver = SliverPadding(
       padding: widget.padding ?? EdgeInsets.zero,
@@ -332,17 +323,17 @@ class _CoreListViewState extends State<CoreListView> with TickerProviderStateMix
       clipBehavior: widget.clipBehavior,
       slivers: [
         if (Platform.isIOS && widget.onRefresh != null && widget.refreshIndicatorStartPosition == .above) CupertinoSliverRefreshControl(key: UniqueKey(), onRefresh: widget.onRefresh),
-        if (hasFloatingHeader)
-          SliverPersistentHeader(
-            key: const ValueKey<String>('_core_listview_floating_header'),
-            floating: true,
-            delegate: _FloatingChildHeaderDelegate(
-              height: height,
-              vsync: this,
-              child: floatingChild,
-              onVisibilityChanged: widget.floatingChildVisibilityCallback,
-            ),
+
+        SliverPersistentHeader(
+          key: const ValueKey<String>('_core_listview_floating_header'),
+          floating: true,
+          delegate: _FloatingChildHeaderDelegate(
+            height: height ?? 0,
+            vsync: this,
+            child: floatingChild,
+            onVisibilityChanged: widget.floatingChildVisibilityCallback,
           ),
+        ),
         if (Platform.isIOS && widget.onRefresh != null && widget.refreshIndicatorStartPosition == .below) CupertinoSliverRefreshControl(key: UniqueKey(), onRefresh: widget.onRefresh),
         listSliver,
       ],
