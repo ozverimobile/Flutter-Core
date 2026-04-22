@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_core/flutter_core.dart';
 
 class CoreSingleChildScrollView extends StatefulWidget {
@@ -10,6 +11,7 @@ class CoreSingleChildScrollView extends StatefulWidget {
     required this.child,
     required this.onRefresh,
     this.controller,
+    this.floatingChild,
     super.key,
   });
 
@@ -17,11 +19,18 @@ class CoreSingleChildScrollView extends StatefulWidget {
   final Future<void> Function() onRefresh;
   final ScrollController? controller;
 
+  /// Optional header-like widget placed at the top of the scroll view.
+  ///
+  /// Behaves like `SliverAppBar(floating: true, snap: true)`:
+  /// the widget scrolls out with the content as the user scrolls down and
+  /// snaps back in as soon as the user scrolls up.
+  final Widget? floatingChild;
+
   @override
   State<CoreSingleChildScrollView> createState() => _CoreSingleChildScrollViewState();
 }
 
-class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> {
+class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> with SingleTickerProviderStateMixin {
   /// Whether the scroll view is at the top.
   ///
   /// This is used to determine whether to show the refresh indicator.
@@ -30,6 +39,12 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> {
   late final ScrollController _scrollController;
   ScrollController? _primaryScrollController;
   late ScrollPosition _position;
+
+  /// Measured height of [CoreSingleChildScrollView.floatingChild].
+  ///
+  /// Required because [SliverPersistentHeader] needs a fixed extent.
+  double? _floatingChildHeight;
+  final GlobalKey _floatingChildMeasureKey = GlobalKey();
 
   @override
   void initState() {
@@ -42,21 +57,58 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> {
   }
 
   @override
+  void didUpdateWidget(covariant CoreSingleChildScrollView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.floatingChild != widget.floatingChild) {
+      _floatingChildHeight = null;
+    }
+  }
+
+  @override
   void dispose() {
     _primaryScrollController?.detach(_position);
     if (widget.controller.isNull) _scrollController.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
+  void _measureFloatingChild() {
+    if (!mounted) return;
+    final renderObject = _floatingChildMeasureKey.currentContext?.findRenderObject();
+    if (renderObject is! RenderBox || !renderObject.hasSize) return;
+    final newHeight = renderObject.size.height;
+    if (newHeight <= 0 || _floatingChildHeight == newHeight) return;
+    setState(() {
+      _floatingChildHeight = newHeight;
+    });
+  }
+
+  List<Widget> _buildSlivers({required bool withCupertinoRefresh}) {
+    final floatingChild = widget.floatingChild;
+    final height = _floatingChildHeight;
+    return [
+      if (withCupertinoRefresh) CupertinoSliverRefreshControl(key: UniqueKey(), onRefresh: widget.onRefresh),
+      if (floatingChild != null && height != null && height > 0)
+        SliverPersistentHeader(
+          floating: true,
+          delegate: _FloatingChildHeaderDelegate(
+            height: height,
+            vsync: this,
+            child: floatingChild,
+          ),
+        ),
+
+      SliverToBoxAdapter(child: widget.child),
+    ];
+  }
+
+  Widget _buildScrollView() {
     return Platform.isAndroid
         ? RefreshIndicator(
             onRefresh: widget.onRefresh,
-            child: SingleChildScrollView(
+            child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               controller: _scrollController,
-              child: widget.child,
+              slivers: _buildSlivers(withCupertinoRefresh: false),
             ),
           )
         : NotificationListener<ScrollNotification>(
@@ -88,12 +140,88 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> {
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               controller: _scrollController,
-              slivers: [
-                /// Show the refresh indicator only when the scroll view is at the top.
-                if (_isAtTop) CupertinoSliverRefreshControl(onRefresh: widget.onRefresh),
-                SliverToBoxAdapter(child: widget.child),
-              ],
+
+              /// Show the refresh indicator only when the scroll view is at the top.
+              slivers: _buildSlivers(withCupertinoRefresh: _isAtTop),
             ),
           );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final floatingChild = widget.floatingChild;
+
+    if (floatingChild == null) return _buildScrollView();
+
+    /// Schedule a measurement after layout so [_floatingChildHeight] can be
+    /// fed into [SliverPersistentHeader] on the next build.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measureFloatingChild());
+
+    return Stack(
+      children: [
+        Positioned.fill(child: _buildScrollView()),
+
+        /// Invisible measurement widget. It participates in layout so we can
+        /// read its intrinsic height, but it is not painted.
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 0,
+          child: IgnorePointer(
+            child: Offstage(
+              child: KeyedSubtree(
+                key: _floatingChildMeasureKey,
+                child: floatingChild,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FloatingChildHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _FloatingChildHeaderDelegate({
+    required this.height,
+    required this.vsync,
+    required this.child,
+  });
+
+  final double height;
+  final Widget child;
+
+  @override
+  final TickerProvider vsync;
+
+  @override
+  double get minExtent => height;
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    /// Fades the header in/out in sync with the floating snap animation.
+    ///
+    /// [shrinkOffset] is 0 when fully visible and grows up to [maxExtent]
+    /// as the header scrolls out.
+    final progress = maxExtent == 0 ? 1.0 : (1.0 - (shrinkOffset / maxExtent)).clamp(0.0, 1.0);
+    final opacity = Curves.easeInOut.transform(progress);
+    return Opacity(
+      opacity: opacity,
+      child: SizedBox.expand(child: child),
+    );
+  }
+
+  @override
+  FloatingHeaderSnapConfiguration get snapConfiguration => FloatingHeaderSnapConfiguration(
+    curve: Curves.easeInOut,
+    duration: const Duration(milliseconds: 200),
+  );
+
+  @override
+  bool shouldRebuild(covariant _FloatingChildHeaderDelegate oldDelegate) {
+    return oldDelegate.height != height || oldDelegate.child != child;
   }
 }
