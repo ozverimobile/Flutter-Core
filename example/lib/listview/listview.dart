@@ -14,6 +14,9 @@ class ListViewExample extends StatefulWidget {
 }
 
 class _ListViewExampleState extends State<ListViewExample> {
+  bool isEmpty = false;
+
+  List<String> items = List.generate(40, (index) => 'Item $index');
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -71,20 +74,36 @@ class _ListViewExampleState extends State<ListViewExample> {
                   Expanded(
                     child: SizedBox(
                       height: context.height - context.viewPadding.top - context.viewPadding.bottom,
-                      child: CoreListView.separated(
-                        refreshIndicatorStartPosition: CoreRefreshIndicatorStartPosition.below,
-                       
-                        floatingChild: TextField(),
-                        padding: const EdgeInsets.all(24),
-                        onReachedEnd: () => 5.seconds.delay<void>(),
-                        onRefresh: () => 2.seconds.delay<void>(),
-                        itemBuilder: (context, index) {
-                          return ListTile(
-                            title: Text('Item $index'),
+                      child: Builder(
+                        builder: (context) {
+                          if (items.isEmpty) {
+                            return const Center(child: Text('Empty'));
+                          }
+                          return CoreListView.separated(
+                            refreshIndicatorStartPosition: CoreRefreshIndicatorStartPosition.below,
+                            floatingChildVisibilityCallback: (isVisible) {
+                              print('isVisible: $isVisible');
+                            },
+                            floatingChild: TextField(),
+                            padding: const EdgeInsets.all(24),
+                            onReachedEnd: () => 5.seconds.delay<void>(),
+                            onRefresh: () => 2.seconds.delay<void>(),
+                            itemBuilder: (context, index) {
+                              return ListTile(
+                                onTap: () {
+                                  setState(() {
+                                    items
+                                      ..clear()
+                                      ..addAll(List.generate(40, (index) => 'Item $index'));
+                                  });
+                                },
+                                title: Text('Item $index'),
+                              );
+                            },
+                            separatorBuilder: (context, index) => const Divider(),
+                            itemCount: items.length,
                           );
                         },
-                        separatorBuilder: (context, index) => const Divider(),
-                        itemCount: 40,
                       ),
                     ),
                   ),

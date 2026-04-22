@@ -68,13 +68,7 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> w
     });
   }
 
-  @override
-  void didUpdateWidget(covariant CoreSingleChildScrollView oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.floatingChild != widget.floatingChild) {
-      _floatingChildHeight = null;
-    }
-  }
+ 
 
   @override
   void dispose() {
@@ -103,11 +97,11 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> w
           key: UniqueKey(),
           onRefresh: widget.onRefresh,
         ),
-      if (floatingChild != null && height != null && height > 0)
+      if (floatingChild != null)
         SliverPersistentHeader(
           floating: true,
           delegate: _FloatingChildHeaderDelegate(
-            height: height,
+            height: height ?? 0,
             vsync: this,
             child: floatingChild,
             onVisibilityChanged: widget.floatingChildVisibilityCallback,
