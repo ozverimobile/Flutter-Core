@@ -13,6 +13,14 @@ enum _CoreListViewType {
   separated,
 }
 
+/// Signature for callbacks that report the visibility state of
+/// [CoreListView.floatingChild].
+///
+/// [isVisible] is `true` whenever the floating header is currently painted
+/// on screen (fully or partially) and `false` once it has scrolled out
+/// completely.
+typedef FloatingChildVisibilityCallback = void Function(bool isVisible);
+
 class CoreListView extends StatefulWidget {
   const CoreListView({
     super.key,
@@ -40,11 +48,13 @@ class CoreListView extends StatefulWidget {
     this.onReachedEndPercentage = 0.7,
     this.onRefresh,
     this.floatingChild,
-  })  : _listViewType = _CoreListViewType.normal,
-        _itemBuilder = null,
-        _separatorBuilder = null,
-        findChildIndexCallback = null,
-        itemCount = null;
+    this.floatingChildVisibilityCallback,
+    this.refreshIndicatorStartPosition = .above,
+  }) : _listViewType = _CoreListViewType.normal,
+       _itemBuilder = null,
+       _separatorBuilder = null,
+       findChildIndexCallback = null,
+       itemCount = null;
 
   const CoreListView.builder({
     required IndexedWidgetBuilder itemBuilder,
@@ -74,10 +84,12 @@ class CoreListView extends StatefulWidget {
     this.onReachedEndPercentage = 0.7,
     this.onRefresh,
     this.floatingChild,
-  })  : _listViewType = _CoreListViewType.builder,
-        _separatorBuilder = null,
-        _itemBuilder = itemBuilder,
-        children = null;
+    this.floatingChildVisibilityCallback,
+    this.refreshIndicatorStartPosition = .above,
+  }) : _listViewType = _CoreListViewType.builder,
+       _separatorBuilder = null,
+       _itemBuilder = itemBuilder,
+       children = null;
 
   const CoreListView.separated({
     required IndexedWidgetBuilder itemBuilder,
@@ -108,10 +120,12 @@ class CoreListView extends StatefulWidget {
     this.onReachedEndPercentage = 0.7,
     this.onRefresh,
     this.floatingChild,
-  })  : _listViewType = _CoreListViewType.separated,
-        _separatorBuilder = separatorBuilder,
-        _itemBuilder = itemBuilder,
-        children = null;
+    this.floatingChildVisibilityCallback,
+    this.refreshIndicatorStartPosition = .above,
+  }) : _listViewType = _CoreListViewType.separated,
+       _separatorBuilder = separatorBuilder,
+       _itemBuilder = itemBuilder,
+       children = null;
 
   final _CoreListViewType _listViewType;
   final Axis scrollDirection;
@@ -149,11 +163,21 @@ class CoreListView extends StatefulWidget {
   /// snaps back (with a fade-in) as soon as the user scrolls up.
   final Widget? floatingChild;
 
+  /// Called whenever the visibility of [floatingChild] changes.
+  ///
+  /// Fires with `true` when the header becomes visible again (snaps back in)
+  /// and with `false` once it has fully scrolled out. Invocations are
+  /// deduplicated and scheduled after the current frame to avoid
+  /// `setState`-during-build errors on the listener side.
+  final FloatingChildVisibilityCallback? floatingChildVisibilityCallback;
+
+  final CoreRefreshIndicatorStartPosition refreshIndicatorStartPosition;
+
   @override
   State<CoreListView> createState() => _CoreListViewState();
 }
 
-class _CoreListViewState extends State<CoreListView> with SingleTickerProviderStateMixin {
+class _CoreListViewState extends State<CoreListView> with TickerProviderStateMixin {
   late final ScrollController _scrollController;
   bool _showIndicator = false;
   ScrollController? _primaryScrollController;
@@ -256,8 +280,8 @@ class _CoreListViewState extends State<CoreListView> with SingleTickerProviderSt
           itemCount: widget.itemCount == null
               ? 0
               : _showIndicator
-                  ? widget.itemCount! + 1
-                  : widget.itemCount!,
+              ? widget.itemCount! + 1
+              : widget.itemCount!,
         );
       case _CoreListViewType.separated:
         return SliverList.separated(
@@ -269,8 +293,8 @@ class _CoreListViewState extends State<CoreListView> with SingleTickerProviderSt
           itemCount: widget.itemCount == null
               ? 0
               : _showIndicator
-                  ? widget.itemCount! + 1
-                  : widget.itemCount!,
+              ? widget.itemCount! + 1
+              : widget.itemCount!,
         );
     }
   }
@@ -307,8 +331,7 @@ class _CoreListViewState extends State<CoreListView> with SingleTickerProviderSt
       restorationId: widget.restorationId,
       clipBehavior: widget.clipBehavior,
       slivers: [
-        if (Platform.isIOS && widget.onRefresh != null)
-          CupertinoSliverRefreshControl(onRefresh: widget.onRefresh!),
+        if (Platform.isIOS && widget.onRefresh != null && widget.refreshIndicatorStartPosition == .above) CupertinoSliverRefreshControl(key: UniqueKey(), onRefresh: widget.onRefresh),
         if (hasFloatingHeader)
           SliverPersistentHeader(
             key: const ValueKey<String>('_core_listview_floating_header'),
@@ -317,15 +340,15 @@ class _CoreListViewState extends State<CoreListView> with SingleTickerProviderSt
               height: height,
               vsync: this,
               child: floatingChild,
+              onVisibilityChanged: widget.floatingChildVisibilityCallback,
             ),
           ),
+        if (Platform.isIOS && widget.onRefresh != null && widget.refreshIndicatorStartPosition == .below) CupertinoSliverRefreshControl(key: UniqueKey(), onRefresh: widget.onRefresh),
         listSliver,
       ],
     );
 
-    final scrollable = Platform.isAndroid && widget.onRefresh != null
-        ? RefreshIndicator(onRefresh: widget.onRefresh!, child: customScrollView)
-        : customScrollView;
+    final scrollable = Platform.isAndroid && widget.onRefresh != null ? RefreshIndicator(edgeOffset: widget.refreshIndicatorStartPosition == .below ? _floatingChildHeight ?? 0 : 0, onRefresh: widget.onRefresh!, child: customScrollView) : customScrollView;
 
     return Stack(
       children: [
@@ -379,17 +402,17 @@ class _CoreListViewState extends State<CoreListView> with SingleTickerProviderSt
     return widget.onRefresh.isNull
         ? listView
         : Platform.isAndroid
-            ? RefreshIndicator(onRefresh: widget.onRefresh!, child: listView)
-            : _CustomScrollView(
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate(
-                    [
-                      ...widget.children!,
-                      if (_showIndicator) const _ListViewAdaptiveIndicator(),
-                    ],
-                  ),
-                ),
-              );
+        ? RefreshIndicator(onRefresh: widget.onRefresh!, child: listView)
+        : _CustomScrollView(
+            sliver: SliverList(
+              delegate: SliverChildListDelegate(
+                [
+                  ...widget.children!,
+                  if (_showIndicator) const _ListViewAdaptiveIndicator(),
+                ],
+              ),
+            ),
+          );
   }
 
   Widget get _listViewBuilder {
@@ -412,8 +435,8 @@ class _CoreListViewState extends State<CoreListView> with SingleTickerProviderSt
       itemCount: widget.itemCount == null
           ? 0
           : _showIndicator
-              ? widget.itemCount! + 1
-              : widget.itemCount!,
+          ? widget.itemCount! + 1
+          : widget.itemCount!,
       addAutomaticKeepAlives: widget.addAutomaticKeepAlives,
       addRepaintBoundaries: widget.addRepaintBoundaries,
       addSemanticIndexes: widget.addSemanticIndexes,
@@ -428,20 +451,20 @@ class _CoreListViewState extends State<CoreListView> with SingleTickerProviderSt
     return widget.onRefresh.isNull
         ? listView
         : Platform.isAndroid
-            ? RefreshIndicator(onRefresh: widget.onRefresh!, child: listView)
-            : _CustomScrollView(
-                sliver: SliverList.builder(
-                  itemBuilder: (context, index) {
-                    if (index == widget.itemCount!) return const _ListViewAdaptiveIndicator();
-                    return widget._itemBuilder!(context, index);
-                  },
-                  itemCount: widget.itemCount == null
-                      ? 0
-                      : _showIndicator
-                          ? widget.itemCount! + 1
-                          : widget.itemCount!,
-                ),
-              );
+        ? RefreshIndicator(onRefresh: widget.onRefresh!, child: listView)
+        : _CustomScrollView(
+            sliver: SliverList.builder(
+              itemBuilder: (context, index) {
+                if (index == widget.itemCount!) return const _ListViewAdaptiveIndicator();
+                return widget._itemBuilder!(context, index);
+              },
+              itemCount: widget.itemCount == null
+                  ? 0
+                  : _showIndicator
+                  ? widget.itemCount! + 1
+                  : widget.itemCount!,
+            ),
+          );
   }
 
   Widget get _listViewSeparated {
@@ -462,8 +485,8 @@ class _CoreListViewState extends State<CoreListView> with SingleTickerProviderSt
       itemCount: widget.itemCount == null
           ? 0
           : _showIndicator
-              ? widget.itemCount! + 1
-              : widget.itemCount!,
+          ? widget.itemCount! + 1
+          : widget.itemCount!,
       addAutomaticKeepAlives: widget.addAutomaticKeepAlives,
       addRepaintBoundaries: widget.addRepaintBoundaries,
       addSemanticIndexes: widget.addSemanticIndexes,
@@ -477,21 +500,21 @@ class _CoreListViewState extends State<CoreListView> with SingleTickerProviderSt
     return widget.onRefresh.isNull
         ? listView
         : Platform.isAndroid
-            ? RefreshIndicator(onRefresh: widget.onRefresh!, child: listView)
-            : _CustomScrollView(
-                sliver: SliverList.separated(
-                  itemBuilder: (context, index) {
-                    if (index == widget.itemCount!) return const _ListViewAdaptiveIndicator();
-                    return widget._itemBuilder!(context, index);
-                  },
-                  separatorBuilder: widget._separatorBuilder!,
-                  itemCount: widget.itemCount == null
-                      ? 0
-                      : _showIndicator
-                          ? widget.itemCount! + 1
-                          : widget.itemCount!,
-                ),
-              );
+        ? RefreshIndicator(onRefresh: widget.onRefresh!, child: listView)
+        : _CustomScrollView(
+            sliver: SliverList.separated(
+              itemBuilder: (context, index) {
+                if (index == widget.itemCount!) return const _ListViewAdaptiveIndicator();
+                return widget._itemBuilder!(context, index);
+              },
+              separatorBuilder: widget._separatorBuilder!,
+              itemCount: widget.itemCount == null
+                  ? 0
+                  : _showIndicator
+                  ? widget.itemCount! + 1
+                  : widget.itemCount!,
+            ),
+          );
   }
 }
 
@@ -587,10 +610,16 @@ class _FloatingChildHeaderDelegate extends SliverPersistentHeaderDelegate {
     required this.height,
     required this.vsync,
     required this.child,
+    this.onVisibilityChanged,
   });
 
   final double height;
   final Widget child;
+  final FloatingChildVisibilityCallback? onVisibilityChanged;
+
+  /// Cached last reported visibility signal, used to de-duplicate callback
+  /// invocations when [build] is called repeatedly with the same argument.
+  bool? _lastReportedVisibility;
 
   @override
   final TickerProvider vsync;
@@ -608,6 +637,12 @@ class _FloatingChildHeaderDelegate extends SliverPersistentHeaderDelegate {
     /// [shrinkOffset] is 0 when fully visible and grows up to [maxExtent]
     /// as the header scrolls out.
     final progress = maxExtent == 0 ? 1.0 : (1.0 - (shrinkOffset / maxExtent)).clamp(0.0, 1.0);
+
+    /// The header is considered visible as long as it occupies any space on
+    /// screen (progress > 0). Once fully scrolled out, progress is 0 and the
+    /// header is reported as hidden.
+    _notifyVisibilityIfChanged(progress > 0);
+
     final opacity = Curves.easeInOut.transform(progress);
     return Opacity(
       opacity: opacity,
@@ -615,14 +650,27 @@ class _FloatingChildHeaderDelegate extends SliverPersistentHeaderDelegate {
     );
   }
 
+  void _notifyVisibilityIfChanged(bool isVisible) {
+    final callback = onVisibilityChanged;
+    if (callback == null) return;
+    if (_lastReportedVisibility == isVisible) return;
+    _lastReportedVisibility = isVisible;
+
+    /// Defer to the next frame to avoid triggering setState during build on
+    /// the listener side.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      callback(isVisible);
+    });
+  }
+
   @override
   FloatingHeaderSnapConfiguration get snapConfiguration => FloatingHeaderSnapConfiguration(
-        curve: Curves.easeInOut,
-        duration: const Duration(milliseconds: 200),
-      );
+    curve: Curves.easeInOut,
+    duration: const Duration(milliseconds: 200),
+  );
 
   @override
   bool shouldRebuild(covariant _FloatingChildHeaderDelegate oldDelegate) {
-    return oldDelegate.height != height || oldDelegate.child != child;
+    return oldDelegate.height != height || oldDelegate.child != child || oldDelegate.onVisibilityChanged != onVisibilityChanged;
   }
 }
