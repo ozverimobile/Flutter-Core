@@ -39,6 +39,7 @@ class CoreListView extends StatefulWidget {
     this.onReachedEnd,
     this.onReachedEndPercentage = 0.7,
     this.onRefresh,
+    this.floatingChild,
   })  : _listViewType = _CoreListViewType.normal,
         _itemBuilder = null,
         _separatorBuilder = null,
@@ -72,6 +73,7 @@ class CoreListView extends StatefulWidget {
     this.onReachedEnd,
     this.onReachedEndPercentage = 0.7,
     this.onRefresh,
+    this.floatingChild,
   })  : _listViewType = _CoreListViewType.builder,
         _separatorBuilder = null,
         _itemBuilder = itemBuilder,
@@ -105,6 +107,7 @@ class CoreListView extends StatefulWidget {
     this.onReachedEnd,
     this.onReachedEndPercentage = 0.7,
     this.onRefresh,
+    this.floatingChild,
   })  : _listViewType = _CoreListViewType.separated,
         _separatorBuilder = separatorBuilder,
         _itemBuilder = itemBuilder,
@@ -139,15 +142,28 @@ class CoreListView extends StatefulWidget {
   final double onReachedEndPercentage;
   final Future<void> Function()? onRefresh;
 
+  /// Optional header-like widget placed at the top of the list.
+  ///
+  /// Behaves like `SliverAppBar(floating: true, snap: true)`:
+  /// the widget scrolls out with the content as the user scrolls down and
+  /// snaps back (with a fade-in) as soon as the user scrolls up.
+  final Widget? floatingChild;
+
   @override
   State<CoreListView> createState() => _CoreListViewState();
 }
 
-class _CoreListViewState extends State<CoreListView> {
+class _CoreListViewState extends State<CoreListView> with SingleTickerProviderStateMixin {
   late final ScrollController _scrollController;
   bool _showIndicator = false;
   ScrollController? _primaryScrollController;
   late ScrollPosition _position;
+
+  /// Measured height of [CoreListView.floatingChild].
+  ///
+  /// Required because [SliverPersistentHeader] needs a fixed extent.
+  double? _floatingChildHeight;
+  final GlobalKey _floatingChildMeasureKey = GlobalKey();
 
   @override
   void initState() {
@@ -161,6 +177,14 @@ class _CoreListViewState extends State<CoreListView> {
   }
 
   @override
+  void didUpdateWidget(covariant CoreListView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.floatingChild != widget.floatingChild) {
+      _floatingChildHeight = null;
+    }
+  }
+
+  @override
   void dispose() {
     _primaryScrollController?.detach(_position);
     _scrollController.removeListener(_onScroll);
@@ -170,6 +194,13 @@ class _CoreListViewState extends State<CoreListView> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.floatingChild != null) {
+      /// Schedule a measurement after layout so [_floatingChildHeight] can be
+      /// fed into [SliverPersistentHeader] on the next build.
+      WidgetsBinding.instance.addPostFrameCallback((_) => _measureFloatingChild());
+      return _buildWithFloatingChild();
+    }
+
     return switch (widget._listViewType) {
       _CoreListViewType.normal => _listView,
       _CoreListViewType.builder => _listViewBuilder,
@@ -190,6 +221,133 @@ class _CoreListViewState extends State<CoreListView> {
     final maxScroll = _scrollController.position.maxScrollExtent;
     final currentScroll = _scrollController.offset;
     return currentScroll >= (maxScroll * widget.onReachedEndPercentage);
+  }
+
+  void _measureFloatingChild() {
+    if (!mounted) return;
+    final renderObject = _floatingChildMeasureKey.currentContext?.findRenderObject();
+    if (renderObject is! RenderBox || !renderObject.hasSize) return;
+    final newHeight = renderObject.size.height;
+    if (newHeight <= 0 || _floatingChildHeight == newHeight) return;
+    setState(() {
+      _floatingChildHeight = newHeight;
+    });
+  }
+
+  /// Builds the sliver representing the underlying list. Used only on the
+  /// floating-child code path and on the iOS refresh path.
+  Widget _buildListSliver() {
+    switch (widget._listViewType) {
+      case _CoreListViewType.normal:
+        return SliverList(
+          delegate: SliverChildListDelegate(
+            [
+              ...widget.children!,
+              if (_showIndicator) const _ListViewAdaptiveIndicator(),
+            ],
+          ),
+        );
+      case _CoreListViewType.builder:
+        return SliverList.builder(
+          itemBuilder: (context, index) {
+            if (index == widget.itemCount!) return const _ListViewAdaptiveIndicator();
+            return widget._itemBuilder!(context, index);
+          },
+          itemCount: widget.itemCount == null
+              ? 0
+              : _showIndicator
+                  ? widget.itemCount! + 1
+                  : widget.itemCount!,
+        );
+      case _CoreListViewType.separated:
+        return SliverList.separated(
+          itemBuilder: (context, index) {
+            if (index == widget.itemCount!) return const _ListViewAdaptiveIndicator();
+            return widget._itemBuilder!(context, index);
+          },
+          separatorBuilder: widget._separatorBuilder!,
+          itemCount: widget.itemCount == null
+              ? 0
+              : _showIndicator
+                  ? widget.itemCount! + 1
+                  : widget.itemCount!,
+        );
+    }
+  }
+
+  /// Builds the scroll view when [CoreListView.floatingChild] is provided.
+  ///
+  /// Uses a unified [CustomScrollView] path (for both iOS and Android) so that
+  /// the floating [SliverPersistentHeader] has a stable position in the sliver
+  /// tree. The sliver list is intentionally kept the same length across
+  /// rebuilds; otherwise the floating header's internal scroll listener can
+  /// fire while its element is being reparented and crash with
+  /// "Looking up a deactivated widget's ancestor is unsafe".
+  Widget _buildWithFloatingChild() {
+    final floatingChild = widget.floatingChild!;
+    final height = _floatingChildHeight;
+    final hasFloatingHeader = height != null && height > 0;
+
+    final listSliver = SliverPadding(
+      padding: widget.padding ?? EdgeInsets.zero,
+      sliver: _buildListSliver(),
+    );
+
+    final customScrollView = CustomScrollView(
+      scrollDirection: widget.scrollDirection,
+      reverse: widget.reverse,
+      controller: _scrollController,
+      primary: widget.primary,
+      physics: widget.physics,
+      shrinkWrap: widget.shrinkWrap,
+      cacheExtent: widget.cacheExtent,
+      semanticChildCount: widget.semanticChildCount,
+      dragStartBehavior: widget.dragStartBehavior,
+      keyboardDismissBehavior: widget.keyboardDismissBehavior,
+      restorationId: widget.restorationId,
+      clipBehavior: widget.clipBehavior,
+      slivers: [
+        if (Platform.isIOS && widget.onRefresh != null)
+          CupertinoSliverRefreshControl(onRefresh: widget.onRefresh!),
+        if (hasFloatingHeader)
+          SliverPersistentHeader(
+            key: const ValueKey<String>('_core_listview_floating_header'),
+            floating: true,
+            delegate: _FloatingChildHeaderDelegate(
+              height: height,
+              vsync: this,
+              child: floatingChild,
+            ),
+          ),
+        listSliver,
+      ],
+    );
+
+    final scrollable = Platform.isAndroid && widget.onRefresh != null
+        ? RefreshIndicator(onRefresh: widget.onRefresh!, child: customScrollView)
+        : customScrollView;
+
+    return Stack(
+      children: [
+        Positioned.fill(child: scrollable),
+
+        /// Invisible measurement widget. It participates in layout so we can
+        /// read its intrinsic height, but it is not painted.
+        Positioned(
+          left: 0,
+          right: 0,
+          top: 0,
+          child: IgnorePointer(
+            child: Offstage(
+              child: KeyedSubtree(
+                key: _floatingChildMeasureKey,
+                child: floatingChild,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget get _listView {
@@ -421,5 +579,50 @@ class _CustomScrollViewState extends State<_CustomScrollView> {
         ],
       ),
     );
+  }
+}
+
+class _FloatingChildHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _FloatingChildHeaderDelegate({
+    required this.height,
+    required this.vsync,
+    required this.child,
+  });
+
+  final double height;
+  final Widget child;
+
+  @override
+  final TickerProvider vsync;
+
+  @override
+  double get minExtent => height;
+
+  @override
+  double get maxExtent => height;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    /// Fades the header in/out in sync with the floating snap animation.
+    ///
+    /// [shrinkOffset] is 0 when fully visible and grows up to [maxExtent]
+    /// as the header scrolls out.
+    final progress = maxExtent == 0 ? 1.0 : (1.0 - (shrinkOffset / maxExtent)).clamp(0.0, 1.0);
+    final opacity = Curves.easeInOut.transform(progress);
+    return Opacity(
+      opacity: opacity,
+      child: SizedBox.expand(child: child),
+    );
+  }
+
+  @override
+  FloatingHeaderSnapConfiguration get snapConfiguration => FloatingHeaderSnapConfiguration(
+        curve: Curves.easeInOut,
+        duration: const Duration(milliseconds: 200),
+      );
+
+  @override
+  bool shouldRebuild(covariant _FloatingChildHeaderDelegate oldDelegate) {
+    return oldDelegate.height != height || oldDelegate.child != child;
   }
 }
