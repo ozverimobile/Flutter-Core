@@ -12,6 +12,7 @@ class CoreSingleChildScrollView extends StatefulWidget {
     required this.onRefresh,
     this.controller,
     this.floatingChild,
+    this.refreshIndicatorStartPosition = .above,
     super.key,
   });
 
@@ -26,11 +27,13 @@ class CoreSingleChildScrollView extends StatefulWidget {
   /// snaps back in as soon as the user scrolls up.
   final Widget? floatingChild;
 
+  final CoreRefreshIndicatorStartPosition refreshIndicatorStartPosition;
+
   @override
   State<CoreSingleChildScrollView> createState() => _CoreSingleChildScrollViewState();
 }
 
-class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> with SingleTickerProviderStateMixin {
+class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> with TickerProviderStateMixin {
   /// Whether the scroll view is at the top.
   ///
   /// This is used to determine whether to show the refresh indicator.
@@ -86,7 +89,11 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> w
     final floatingChild = widget.floatingChild;
     final height = _floatingChildHeight;
     return [
-      if (withCupertinoRefresh) CupertinoSliverRefreshControl(key: UniqueKey(), onRefresh: widget.onRefresh),
+      if (withCupertinoRefresh && widget.refreshIndicatorStartPosition == .above)
+        CupertinoSliverRefreshControl(
+          key: UniqueKey(),
+          onRefresh: widget.onRefresh,
+        ),
       if (floatingChild != null && height != null && height > 0)
         SliverPersistentHeader(
           floating: true,
@@ -97,6 +104,12 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> w
           ),
         ),
 
+      if (withCupertinoRefresh && widget.refreshIndicatorStartPosition == .below)
+        CupertinoSliverRefreshControl(
+          key: UniqueKey(),
+          onRefresh: widget.onRefresh,
+        ),
+
       SliverToBoxAdapter(child: widget.child),
     ];
   }
@@ -104,6 +117,7 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> w
   Widget _buildScrollView() {
     return Platform.isAndroid
         ? RefreshIndicator(
+            edgeOffset: widget.refreshIndicatorStartPosition == .below ? _floatingChildHeight ?? 0 : 0,
             onRefresh: widget.onRefresh,
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),

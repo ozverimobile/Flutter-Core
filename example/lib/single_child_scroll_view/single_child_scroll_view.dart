@@ -32,6 +32,7 @@ class _SingleChildScrollViewExampleState extends State<SingleChildScrollViewExam
           return Scaffold(
             appBar: AppBar(title: const Text('CoreSingleChildScrollView Example')),
             body: CoreSingleChildScrollView(
+              refreshIndicatorStartPosition: CoreRefreshIndicatorStartPosition.below,
               floatingChild: Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Container(

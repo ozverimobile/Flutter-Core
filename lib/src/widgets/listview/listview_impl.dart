@@ -40,6 +40,7 @@ class CoreListView extends StatefulWidget {
     this.onReachedEndPercentage = 0.7,
     this.onRefresh,
     this.floatingChild,
+    this.refreshIndicatorStartPosition = .above,
   })  : _listViewType = _CoreListViewType.normal,
         _itemBuilder = null,
         _separatorBuilder = null,
@@ -74,6 +75,7 @@ class CoreListView extends StatefulWidget {
     this.onReachedEndPercentage = 0.7,
     this.onRefresh,
     this.floatingChild,
+    this.refreshIndicatorStartPosition = .above,
   })  : _listViewType = _CoreListViewType.builder,
         _separatorBuilder = null,
         _itemBuilder = itemBuilder,
@@ -108,6 +110,7 @@ class CoreListView extends StatefulWidget {
     this.onReachedEndPercentage = 0.7,
     this.onRefresh,
     this.floatingChild,
+    this.refreshIndicatorStartPosition = .above,
   })  : _listViewType = _CoreListViewType.separated,
         _separatorBuilder = separatorBuilder,
         _itemBuilder = itemBuilder,
@@ -149,11 +152,13 @@ class CoreListView extends StatefulWidget {
   /// snaps back (with a fade-in) as soon as the user scrolls up.
   final Widget? floatingChild;
 
+  final CoreRefreshIndicatorStartPosition refreshIndicatorStartPosition;
+
   @override
   State<CoreListView> createState() => _CoreListViewState();
 }
 
-class _CoreListViewState extends State<CoreListView> with SingleTickerProviderStateMixin {
+class _CoreListViewState extends State<CoreListView> with TickerProviderStateMixin {
   late final ScrollController _scrollController;
   bool _showIndicator = false;
   ScrollController? _primaryScrollController;
@@ -307,8 +312,8 @@ class _CoreListViewState extends State<CoreListView> with SingleTickerProviderSt
       restorationId: widget.restorationId,
       clipBehavior: widget.clipBehavior,
       slivers: [
-        if (Platform.isIOS && widget.onRefresh != null)
-          CupertinoSliverRefreshControl(onRefresh: widget.onRefresh!),
+        if (Platform.isIOS && widget.onRefresh != null && widget.refreshIndicatorStartPosition == .above)
+          CupertinoSliverRefreshControl(key: UniqueKey(), onRefresh: widget.onRefresh),
         if (hasFloatingHeader)
           SliverPersistentHeader(
             key: const ValueKey<String>('_core_listview_floating_header'),
@@ -319,12 +324,16 @@ class _CoreListViewState extends State<CoreListView> with SingleTickerProviderSt
               child: floatingChild,
             ),
           ),
+        if (Platform.isIOS && widget.onRefresh != null && widget.refreshIndicatorStartPosition == .below)
+          CupertinoSliverRefreshControl(key: UniqueKey(), onRefresh: widget.onRefresh),
         listSliver,
       ],
     );
 
     final scrollable = Platform.isAndroid && widget.onRefresh != null
-        ? RefreshIndicator(onRefresh: widget.onRefresh!, child: customScrollView)
+        ? RefreshIndicator(
+          edgeOffset: widget.refreshIndicatorStartPosition == .below ? _floatingChildHeight ?? 0 : 0
+          , onRefresh: widget.onRefresh!, child: customScrollView)
         : customScrollView;
 
     return Stack(

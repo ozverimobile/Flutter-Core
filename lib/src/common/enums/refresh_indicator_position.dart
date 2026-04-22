@@ -1,0 +1,4 @@
+enum CoreRefreshIndicatorStartPosition {
+  above,
+  below,
+}
