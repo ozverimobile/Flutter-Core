@@ -6,6 +6,7 @@ import android.content.Context
 import android.provider.Settings
 import android.view.WindowManager
 import androidx.annotation.NonNull
+import com.huawei.hms.api.HuaweiApiAvailability
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
@@ -65,8 +66,8 @@ class FlutterCorePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
         else if (call.method == "getHuaweiApiAvailability") {
             val sdkVersion = android.os.Build.VERSION.SDK_INT
             // Huawei kütüphanesi projenizde ekli varsayarak bu kodu koruyoruz:
-            // val availability = HuaweiApiAvailability.getInstance().isHuaweiMobileServicesAvailable(mContext!!, sdkVersion)
-            // result.success(availability)
+            val availability = HuaweiApiAvailability.getInstance().isHuaweiMobileServicesAvailable(mContext!!, sdkVersion)
+            result.success(availability)
             result.notImplemented() // Huawei importu yoksa hata vermemesi için kapattım, varsa açabilirsiniz.
         }
         else if (call.method == "getAndroidId") {
