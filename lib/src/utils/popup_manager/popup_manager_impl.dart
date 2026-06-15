@@ -254,7 +254,7 @@ class PopupManager implements IPopupManager {
                         color: Colors.grey.shade300,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const CupertinoActivityIndicator(),
+                      child: const CupertinoActivityIndicator(color: Colors.black),
                     ),
                   ),
                 _ => PopScope(
