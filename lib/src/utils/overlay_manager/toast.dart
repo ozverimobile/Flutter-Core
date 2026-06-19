@@ -17,10 +17,11 @@ class CoreToast extends StatelessWidget {
     this.messageStyle,
     this.messageMaxLines,
     this.dismissDirection,
-    this.builder,
+    this.child,
     this.leading,
     this.backgroundColor,
     this.shadowColor,
+    this.toastPositionRecord,
   });
 
   final String? title;
@@ -29,13 +30,14 @@ class CoreToast extends StatelessWidget {
   final TextStyle? messageStyle;
   final int? messageMaxLines;
   final DismissDirection? dismissDirection;
-  final Widget Function(BuildContext context, Widget? child)? builder;
+  final Widget? child;
   final Widget? leading;
   final Color? backgroundColor;
   final Color? shadowColor;
   final AnimationController slideAnimationController;
   final ToastPosition toastPosition;
   final ValueChanged<DismissDirection> onDismissed;
+  final ToastPositionRecord? toastPositionRecord;
 
   /// Default forward animation curve
   Cubic get _forwardAnimCurve => const Cubic(0.1, 0.8, 0.2, 1.275);
@@ -80,42 +82,11 @@ class CoreToast extends StatelessWidget {
   double get _defaultBelowShadowRadius => 12;
 
   /// Dart record instance of toast position
-  ToastPositionRecord _toastPositionRecord(BuildContext context) => toastPosition == ToastPosition.bottom ? (top: null, bottom: 40, left: 10, right: 10) : (top: context.viewPadding.top, bottom: null, left: 10, right: 10);
+  ToastPositionRecord _toastPositionRecord(BuildContext context) => toastPositionRecord ?? (toastPosition == ToastPosition.bottom ? (top: null, bottom: 40, left: 10, right: 10) : (top: context.viewPadding.top, bottom: null, left: 10, right: 10));
 
   @override
   Widget build(BuildContext context) {
     final position = _toastPositionRecord(context);
-
-    final child =  Row(
-                        children: [
-                          if (leading.isNotNull) ...[
-                            leading!,
-                            horizontalBox12,
-                          ],
-                          if (title.isNotNull || message.isNotNull)
-                            Expanded(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (title.isNotNull)
-                                    Text(
-                                      title!,
-                                      style: titleStyle ?? _defaultTitleStyle,
-                                    ),
-                                  if (message.isNotNull)
-                                    Text(
-                                      message!,
-                                      style: messageStyle ?? _defaultMessageStyle,
-                                      maxLines: messageMaxLines,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      )
-               ;
     return Positioned(
       bottom: position.bottom,
       right: position.right,
@@ -160,7 +131,36 @@ class CoreToast extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: builder?.call(context, child) ?? child,
+                  child: child ??
+                      Row(
+                        children: [
+                          if (leading.isNotNull) ...[
+                            leading!,
+                            horizontalBox12,
+                          ],
+                          if (title.isNotNull || message.isNotNull)
+                            Expanded(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (title.isNotNull)
+                                    Text(
+                                      title!,
+                                      style: titleStyle ?? _defaultTitleStyle,
+                                    ),
+                                  if (message.isNotNull)
+                                    Text(
+                                      message!,
+                                      style: messageStyle ?? _defaultMessageStyle,
+                                      maxLines: messageMaxLines,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
                 ),
               ),
             ),

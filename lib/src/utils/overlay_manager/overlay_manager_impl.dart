@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
 
 abstract interface class IOverlayManager {
-  void showToast({Key? key, String? title, String? message, TextStyle? titleStyle, TextStyle? messageStyle, int? messageMaxLines, ToastPosition toastPosition = ToastPosition.bottom, Color? backgroundColor, Color? shadowColor, DismissDirection? dismissDirection, Widget? leading, Duration? toastDuration, Duration? animationDuration, Duration? reverseAnimationDuration, Widget Function(BuildContext context, Widget? child)? builder});
+  void showToast({Key? key, String? title, String? message, TextStyle? titleStyle, TextStyle? messageStyle, int? messageMaxLines, ToastPosition toastPosition = ToastPosition.bottom, Color? backgroundColor, Color? shadowColor, DismissDirection? dismissDirection, Widget? leading, Duration? toastDuration, Duration? animationDuration, Duration? reverseAnimationDuration, Widget? child});
 
   void showOverlay({required PositionedBuilder builder, required String id});
 
@@ -60,7 +60,7 @@ class OverlayManager implements IOverlayManager {
     Duration? toastDuration,
     Duration? animationDuration,
     Duration? reverseAnimationDuration,
-    Widget Function(BuildContext context, Widget? child)? builder,
+    Widget? child,
   }) {
     _presentToast(
       key: key,
@@ -72,7 +72,7 @@ class OverlayManager implements IOverlayManager {
       reverseAnimationDuration: reverseAnimationDuration,
       toastPosition: toastPosition,
       dismissDirection: dismissDirection,
-      builder: builder,
+      child: child,
       backgroundColor: backgroundColor,
       messageStyle: messageStyle,
       messageMaxLines: messageMaxLines,
@@ -97,11 +97,14 @@ class OverlayManager implements IOverlayManager {
     int? messageMaxLines,
     DismissDirection? dismissDirection,
     Widget? leading,
-    Widget Function(BuildContext context, Widget? child)? builder,
+    Widget? child,
     Color? backgroundColor,
     Color? shadowColor,
   }) {
-   
+    if (child.isNotNull && (leading.isNotNull || title.isNotNull || message.isNotNull)) {
+      throw MisUsageToastError('If child is specified; leading, title and message must be null');
+    }
+
     final slideAnimationController = AnimationController(
       vsync: _overlayState,
       duration: animationDuration ?? _slideAnimationDuration,
@@ -134,7 +137,7 @@ class OverlayManager implements IOverlayManager {
           shadowColor: shadowColor,
           titleStyle: titleStyle,
           messageStyle: messageStyle,
-          builder: builder,
+          child: child,
         );
       },
     );
