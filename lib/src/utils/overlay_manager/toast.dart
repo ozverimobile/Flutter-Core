@@ -17,7 +17,7 @@ class CoreToast extends StatelessWidget {
     this.messageStyle,
     this.messageMaxLines,
     this.dismissDirection,
-    this.child,
+    this.builder,
     this.leading,
     this.backgroundColor,
     this.shadowColor,
@@ -29,7 +29,7 @@ class CoreToast extends StatelessWidget {
   final TextStyle? messageStyle;
   final int? messageMaxLines;
   final DismissDirection? dismissDirection;
-  final Widget? child;
+  final Widget Function(BuildContext context, Widget? child)? builder;
   final Widget? leading;
   final Color? backgroundColor;
   final Color? shadowColor;
@@ -85,6 +85,37 @@ class CoreToast extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final position = _toastPositionRecord(context);
+
+    final child =  Row(
+                        children: [
+                          if (leading.isNotNull) ...[
+                            leading!,
+                            horizontalBox12,
+                          ],
+                          if (title.isNotNull || message.isNotNull)
+                            Expanded(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (title.isNotNull)
+                                    Text(
+                                      title!,
+                                      style: titleStyle ?? _defaultTitleStyle,
+                                    ),
+                                  if (message.isNotNull)
+                                    Text(
+                                      message!,
+                                      style: messageStyle ?? _defaultMessageStyle,
+                                      maxLines: messageMaxLines,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      )
+               ;
     return Positioned(
       bottom: position.bottom,
       right: position.right,
@@ -129,36 +160,7 @@ class CoreToast extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: child ??
-                      Row(
-                        children: [
-                          if (leading.isNotNull) ...[
-                            leading!,
-                            horizontalBox12,
-                          ],
-                          if (title.isNotNull || message.isNotNull)
-                            Expanded(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (title.isNotNull)
-                                    Text(
-                                      title!,
-                                      style: titleStyle ?? _defaultTitleStyle,
-                                    ),
-                                  if (message.isNotNull)
-                                    Text(
-                                      message!,
-                                      style: messageStyle ?? _defaultMessageStyle,
-                                      maxLines: messageMaxLines,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
+                  child: builder?.call(context, child) ?? child,
                 ),
               ),
             ),
