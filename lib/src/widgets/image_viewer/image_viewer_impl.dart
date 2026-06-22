@@ -48,6 +48,12 @@ class CoreImageController {
     }
     Navigator.of(_navigatorKey!.currentContext!).pop();
   }
+
+  void evict(String url, {Map<String, String>? headers}) {
+    PaintingBinding.instance.imageCache.evict(
+      NetworkImage(url, headers: headers),
+    );
+  }
 }
 
 class CoreImageViewer extends StatelessWidget {
@@ -79,8 +85,8 @@ class CoreImageViewer extends StatelessWidget {
     this.controller,
     this.isSecure = false,
     super.key,
-  })  : _imageType = _ImageType.network,
-        _images = images;
+  }) : _imageType = _ImageType.network,
+       _images = images;
 
   const CoreImageViewer.asset({
     required this.child,
@@ -109,9 +115,9 @@ class CoreImageViewer extends StatelessWidget {
     this.headers,
     this.controller,
     super.key,
-  })  : _imageType = _ImageType.asset,
-        isSecure = false,
-        _images = images;
+  }) : _imageType = _ImageType.asset,
+       isSecure = false,
+       _images = images;
 
   const CoreImageViewer.file({
     required this.child,
@@ -140,9 +146,9 @@ class CoreImageViewer extends StatelessWidget {
     this.headers,
     this.controller,
     super.key,
-  })  : _imageType = _ImageType.file,
-        isSecure = false,
-        _images = images;
+  }) : _imageType = _ImageType.file,
+       isSecure = false,
+       _images = images;
 
   const CoreImageViewer.memory({
     required this.child,
@@ -171,9 +177,9 @@ class CoreImageViewer extends StatelessWidget {
     this.headers,
     this.controller,
     super.key,
-  })  : _imageType = _ImageType.memory,
-        isSecure = false,
-        _images = images;
+  }) : _imageType = _ImageType.memory,
+       isSecure = false,
+       _images = images;
 
   final Widget child;
   final List<dynamic> _images;
@@ -208,10 +214,7 @@ class CoreImageViewer extends StatelessWidget {
     if (_images.isEmpty) return child;
     return _AnimationWrapper<int>(
       openBuilder: (_, __) {
-        final isSecureIOSNetworkImage = isSecure &&
-            context.theme.platform == TargetPlatform.iOS &&
-            _imageType == _ImageType.network &&
-            _images.every((element) => element is String);
+        final isSecureIOSNetworkImage = isSecure && context.theme.platform == TargetPlatform.iOS && _imageType == _ImageType.network && _images.every((element) => element is String);
 
         if (isSecureIOSNetworkImage) {
           return CupertinoSecureImageViewer(
@@ -221,10 +224,7 @@ class CoreImageViewer extends StatelessWidget {
           );
         }
 
-        final isSecureAndroidNetworkImage = isSecure &&
-            context.theme.platform == TargetPlatform.android &&
-            _imageType == _ImageType.network &&
-            _images.every((element) => element is String);
+        final isSecureAndroidNetworkImage = isSecure && context.theme.platform == TargetPlatform.android && _imageType == _ImageType.network && _images.every((element) => element is String);
         if (isSecureAndroidNetworkImage) {
           AndroidScreenshotBlocker.setEnabled(true);
         }
@@ -433,43 +433,43 @@ class _CoreImageViewerState extends State<_CoreImageViewer> {
   Widget _getViewWidgetByImageType(dynamic image) {
     return switch (widget.imageType) {
       _ImageType.memory => Image.memory(
-          image as Uint8List,
-          errorBuilder: widget.errorBuilder,
-          height: widget.height,
-          width: widget.width,
-          cacheWidth: widget.cacheWidth,
-          cacheHeight: widget.cacheHeight,
-          fit: widget.fit,
-        ),
+        image as Uint8List,
+        errorBuilder: widget.errorBuilder,
+        height: widget.height,
+        width: widget.width,
+        cacheWidth: widget.cacheWidth,
+        cacheHeight: widget.cacheHeight,
+        fit: widget.fit,
+      ),
       _ImageType.file => Image.file(
-          image as File,
-          errorBuilder: widget.errorBuilder,
-          height: widget.height,
-          width: widget.width,
-          cacheWidth: widget.cacheWidth,
-          cacheHeight: widget.cacheHeight,
-          fit: widget.fit,
-        ),
+        image as File,
+        errorBuilder: widget.errorBuilder,
+        height: widget.height,
+        width: widget.width,
+        cacheWidth: widget.cacheWidth,
+        cacheHeight: widget.cacheHeight,
+        fit: widget.fit,
+      ),
       _ImageType.asset => Image.asset(
-          image as String,
-          errorBuilder: widget.errorBuilder,
-          height: widget.height,
-          width: widget.width,
-          cacheWidth: widget.cacheWidth,
-          cacheHeight: widget.cacheHeight,
-          fit: widget.fit,
-        ),
+        image as String,
+        errorBuilder: widget.errorBuilder,
+        height: widget.height,
+        width: widget.width,
+        cacheWidth: widget.cacheWidth,
+        cacheHeight: widget.cacheHeight,
+        fit: widget.fit,
+      ),
       _ImageType.network => Image.network(
-          image as String,
-          errorBuilder: widget.errorBuilder,
-          height: widget.height,
-          width: widget.width,
-          cacheWidth: widget.cacheWidth,
-          cacheHeight: widget.cacheHeight,
-          fit: widget.fit,
-          loadingBuilder: widget.loadingBuilder,
-          headers: widget.headers,
-        ),
+        image as String,
+        errorBuilder: widget.errorBuilder,
+        height: widget.height,
+        width: widget.width,
+        cacheWidth: widget.cacheWidth,
+        cacheHeight: widget.cacheHeight,
+        fit: widget.fit,
+        loadingBuilder: widget.loadingBuilder,
+        headers: widget.headers,
+      ),
     };
   }
 
