@@ -5,12 +5,7 @@ final navigatorKey = GlobalKey<NavigatorState>();
 final _imageController = CoreImageController(navigatorKey: navigatorKey);
 
 void main() {
-  runApp(
-    MaterialApp(
-      navigatorKey: navigatorKey,
-      home: const ImageViewer(),
-    ),
-  );
+  runApp(MaterialApp(navigatorKey: navigatorKey, home: const ImageViewer()));
 }
 
 class ImageViewer extends StatefulWidget {
@@ -29,9 +24,7 @@ class _ImageViewerState extends State<ImageViewer> {
     const image3 = '../assets/test_image_3.jpeg';
     final images = <String>[image1, image2, image3];
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Image Viewer'),
-      ),
+      appBar: AppBar(title: const Text('Image Viewer')),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -39,25 +32,9 @@ class _ImageViewerState extends State<ImageViewer> {
             child: CoreImageViewer.network(
               controller: _secureImageViewerController,
               isSecure: true,
-              images: const [
-                'https://picsum.photos/id/1/200/200',
-                'https://picsum.photos/id/2/200/200',
-                'https://picsum.photos/id/3/200/200',
-                'https://picsum.photos/id/4/200/200',
-                'https://picsum.photos/id/1/200/200',
-                'https://picsum.photos/id/2/200/200',
-                'https://picsum.photos/id/3/200/200',
-                'https://picsum.photos/id/4/200/200',
-                'https://picsum.photos/id/1/200/200',
-                'https://picsum.photos/id/2/200/200',
-                'https://picsum.photos/id/3/200/200',
-                'https://picsum.photos/id/4/200/200',
-              ],
+              images: const ['https://picsum.photos/id/1/200/200', 'https://picsum.photos/id/2/200/200', 'https://picsum.photos/id/3/200/200', 'https://picsum.photos/id/4/200/200', 'https://picsum.photos/id/1/200/200', 'https://picsum.photos/id/2/200/200', 'https://picsum.photos/id/3/200/200', 'https://picsum.photos/id/4/200/200', 'https://picsum.photos/id/1/200/200', 'https://picsum.photos/id/2/200/200', 'https://picsum.photos/id/3/200/200', 'https://picsum.photos/id/4/200/200'],
               child: CoreFilledButton(
-                child: const Text(
-                  'Open Secure Image Viewer',
-                  style: TextStyle(color: Colors.white),
-                ),
+                child: const Text('Open Secure Image Viewer', style: TextStyle(color: Colors.white)),
                 onPressed: () {
                   _secureImageViewerController.open();
                 },
@@ -69,25 +46,13 @@ class _ImageViewerState extends State<ImageViewer> {
             child: CoreImageViewer.network(
               controller: _imageController,
               isSecure: true,
-              images: [
-                'https://picsum.photos/id/1/200/200',
-                'https://picsum.photos/id/2/200/200',
-                'https://picsum.photos/id/3/200/200',
-                'https://picsum.photos/id/4/200/200'
-              ],
+              images: ['https://picsum.photos/id/1/200/200', 'https://picsum.photos/id/2/200/200', 'https://picsum.photos/id/3/200/200', 'https://picsum.photos/id/4/200/200'],
               errorBuilder: (context, error, stackTrace) {
                 return const Center(
-                  child: Text(
-                    'Error',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  child: Text('Error', style: TextStyle(color: Colors.white)),
                 );
               },
-              child: Container(
-                height: 50,
-                width: 50,
-                color: Colors.blue,
-              ),
+              child: Container(height: 50, width: 50, color: Colors.blue),
             ),
           ),
           Center(
@@ -96,17 +61,10 @@ class _ImageViewerState extends State<ImageViewer> {
               images: images,
               errorBuilder: (context, error, stackTrace) {
                 return const Center(
-                  child: Text(
-                    'Error',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  child: Text('Error', style: TextStyle(color: Colors.white)),
                 );
               },
-              child: Container(
-                height: 50,
-                width: 50,
-                color: Colors.blue,
-              ),
+              child: Container(height: 50, width: 50, color: Colors.blue),
             ),
           ),
           CoreTextButton(
@@ -124,31 +82,11 @@ class _ImageViewerState extends State<ImageViewer> {
                 fullscreenDialog: true,
                 barrierColor: Colors.white,
                 pageBuilder: (context, animation, secondaryAnimation) {
-                  return CupertinoSecureImageViewer(
-                    imageUrls: const [
-                      'https://picsum.photos/id/1/200/200',
-                      'https://picsum.photos/id/2/200/200',
-                      'https://picsum.photos/id/3/200/200',
-                      'https://picsum.photos/id/4/200/200',
-                      'https://picsum.photos/id/1/200/200',
-                      'https://picsum.photos/id/2/200/200',
-                      'https://picsum.photos/id/3/200/200',
-                      'https://picsum.photos/id/4/200/200',
-                      'https://picsum.photos/id/1/200/200',
-                      'https://picsum.photos/id/2/200/200',
-                      'https://picsum.photos/id/3/200/200',
-                      'https://picsum.photos/id/4/200/200',
-                    ],
-                    headers: const {},
-                    onClose: Navigator.of(context).pop,
-                  );
+                  return CupertinoSecureImageViewer(imageUrls: const ['https://picsum.photos/id/1/200/200', 'https://picsum.photos/id/2/200/200', 'https://picsum.photos/id/3/200/200', 'https://picsum.photos/id/4/200/200', 'https://picsum.photos/id/1/200/200', 'https://picsum.photos/id/2/200/200', 'https://picsum.photos/id/3/200/200', 'https://picsum.photos/id/4/200/200', 'https://picsum.photos/id/1/200/200', 'https://picsum.photos/id/2/200/200', 'https://picsum.photos/id/3/200/200', 'https://picsum.photos/id/4/200/200'], headers: const {}, onClose: Navigator.of(context).pop);
                 },
               );
             },
-            child: const Text(
-              'Open Cupertino Secure Image Viewer (iOS Only)',
-              style: TextStyle(color: Colors.white),
-            ),
+            child: const Text('Open Cupertino Secure Image Viewer (iOS Only)', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
