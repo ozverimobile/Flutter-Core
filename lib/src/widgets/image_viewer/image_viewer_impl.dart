@@ -36,7 +36,7 @@ class CoreImageController {
 
   void open() {
     if ((isSecure ?? false) && Platform.isAndroid) {
-      AndroidScreenshotBlocker.setEnabled(true);
+      unawaited(AndroidScreenshotBlocker.setEnabled(true));
     }
     _openContainer?.call();
   }
@@ -44,9 +44,15 @@ class CoreImageController {
   void close() {
     if (_navigatorKey?.currentContext == null) throw Exception('Navigator key is null');
     if ((isSecure ?? false) && Platform.isAndroid) {
-      AndroidScreenshotBlocker.setEnabled(false);
+      unawaited(AndroidScreenshotBlocker.setEnabled(false));
     }
     Navigator.of(_navigatorKey!.currentContext!).pop();
+  }
+
+  void evict(String url, {Map<String, String>? headers}) {
+    PaintingBinding.instance.imageCache.evict(
+      NetworkImage(url, headers: headers),
+    );
   }
 }
 
@@ -78,9 +84,11 @@ class CoreImageViewer extends StatelessWidget {
     this.headers,
     this.controller,
     this.isSecure = false,
+    this.cache = true,
+    this.cacheKey,
     super.key,
-  })  : _imageType = _ImageType.network,
-        _images = images;
+  }) : _imageType = _ImageType.network,
+       _images = images;
 
   const CoreImageViewer.asset({
     required this.child,
@@ -109,9 +117,11 @@ class CoreImageViewer extends StatelessWidget {
     this.headers,
     this.controller,
     super.key,
-  })  : _imageType = _ImageType.asset,
-        isSecure = false,
-        _images = images;
+  }) : _imageType = _ImageType.asset,
+       isSecure = false,
+       cache = false,
+       cacheKey = null,
+       _images = images;
 
   const CoreImageViewer.file({
     required this.child,
@@ -140,9 +150,11 @@ class CoreImageViewer extends StatelessWidget {
     this.headers,
     this.controller,
     super.key,
-  })  : _imageType = _ImageType.file,
-        isSecure = false,
-        _images = images;
+  }) : _imageType = _ImageType.file,
+       isSecure = false,
+       cache = false,
+       cacheKey = null,
+       _images = images;
 
   const CoreImageViewer.memory({
     required this.child,
@@ -171,9 +183,11 @@ class CoreImageViewer extends StatelessWidget {
     this.headers,
     this.controller,
     super.key,
-  })  : _imageType = _ImageType.memory,
-        isSecure = false,
-        _images = images;
+  }) : _imageType = _ImageType.memory,
+       isSecure = false,
+       cache = false,
+       cacheKey = null,
+       _images = images;
 
   final Widget child;
   final List<dynamic> _images;
@@ -202,31 +216,29 @@ class CoreImageViewer extends StatelessWidget {
   final _ImageType _imageType;
   final CoreImageController? controller;
   final bool isSecure;
+  final bool cache;
+  final String? cacheKey;
 
   @override
   Widget build(BuildContext context) {
     if (_images.isEmpty) return child;
     return _AnimationWrapper<int>(
       openBuilder: (_, __) {
-        final isSecureIOSNetworkImage = isSecure &&
-            context.theme.platform == TargetPlatform.iOS &&
-            _imageType == _ImageType.network &&
-            _images.every((element) => element is String);
+        final isSecureIOSNetworkImage = isSecure && context.theme.platform == TargetPlatform.iOS && _imageType == _ImageType.network && _images.every((element) => element is String);
 
         if (isSecureIOSNetworkImage) {
           return CupertinoSecureImageViewer(
             imageUrls: _images as List<String>,
             headers: headers,
             onClose: Navigator.of(context).pop,
+            cache: cache,
+            cacheKey: cacheKey,
           );
         }
 
-        final isSecureAndroidNetworkImage = isSecure &&
-            context.theme.platform == TargetPlatform.android &&
-            _imageType == _ImageType.network &&
-            _images.every((element) => element is String);
+        final isSecureAndroidNetworkImage = isSecure && context.theme.platform == TargetPlatform.android && _imageType == _ImageType.network && _images.every((element) => element is String);
         if (isSecureAndroidNetworkImage) {
-          AndroidScreenshotBlocker.setEnabled(true);
+          unawaited(AndroidScreenshotBlocker.setEnabled(true));
         }
         return _CoreImageViewer(
           key: key,
@@ -290,6 +302,8 @@ class _CoreImageViewer extends StatefulWidget {
     this.headers,
     this.pageIndicator,
     this.closeButton,
+    this.cache = true,
+    this.cacheKey,
     super.key,
   });
 
@@ -314,6 +328,8 @@ class _CoreImageViewer extends StatefulWidget {
   final EdgeInsets indicatorPadding;
   final _PageIndicatorBuilder? pageIndicator;
   final Map<String, String>? headers;
+  final bool cache;
+  final String? cacheKey;
 
   @override
   State<_CoreImageViewer> createState() => _CoreImageViewerState();
@@ -349,6 +365,24 @@ class _CoreImageViewerState extends State<_CoreImageViewer> {
     });
   }
 
+  List<dynamic> get _imageUrls {
+    if (widget.imageType != _ImageType.network) return widget.images;
+    if (widget.cache) return widget.images;
+    final updatedUrls = List.generate(widget.images.length, (index) {
+      final url = widget.images[index];
+      final uri = Uri.parse(url.toString());
+      return uri
+          .replace(
+            queryParameters: {
+              ...uri.queryParameters,
+              'ts': widget.cacheKey ?? DateTime.now().millisecondsSinceEpoch.toString(),
+            },
+          )
+          .toString();
+    });
+    return updatedUrls;
+  }
+
   @override
   void dispose() {
     super.dispose();
@@ -368,9 +402,9 @@ class _CoreImageViewerState extends State<_CoreImageViewer> {
             physics: _isScale ? const NeverScrollableScrollPhysics() : const ClampingScrollPhysics(),
             onPageChanged: _onPageChange,
             controller: _pageController,
-            itemCount: widget.images.length,
+            itemCount: _imageUrls.length,
             itemBuilder: (context, index) {
-              final item = widget.images[index];
+              final item = _imageUrls[index];
               return Container(
                 key: Key('image_$index'),
                 color: widget.backgroundColor.withValues(alpha: _opacity),
@@ -418,7 +452,7 @@ class _CoreImageViewerState extends State<_CoreImageViewer> {
             indicatorTextStyle: widget.indicatorTextStyle,
             pageIndicator: widget.pageIndicator,
             activePage: _activePage,
-            totalPages: widget.images.length,
+            totalPages: _imageUrls.length,
           ),
           _ImageViewerCloseButton(
             buttonAlignment: widget.buttonAlignment,
@@ -433,43 +467,43 @@ class _CoreImageViewerState extends State<_CoreImageViewer> {
   Widget _getViewWidgetByImageType(dynamic image) {
     return switch (widget.imageType) {
       _ImageType.memory => Image.memory(
-          image as Uint8List,
-          errorBuilder: widget.errorBuilder,
-          height: widget.height,
-          width: widget.width,
-          cacheWidth: widget.cacheWidth,
-          cacheHeight: widget.cacheHeight,
-          fit: widget.fit,
-        ),
+        image as Uint8List,
+        errorBuilder: widget.errorBuilder,
+        height: widget.height,
+        width: widget.width,
+        cacheWidth: widget.cacheWidth,
+        cacheHeight: widget.cacheHeight,
+        fit: widget.fit,
+      ),
       _ImageType.file => Image.file(
-          image as File,
-          errorBuilder: widget.errorBuilder,
-          height: widget.height,
-          width: widget.width,
-          cacheWidth: widget.cacheWidth,
-          cacheHeight: widget.cacheHeight,
-          fit: widget.fit,
-        ),
+        image as File,
+        errorBuilder: widget.errorBuilder,
+        height: widget.height,
+        width: widget.width,
+        cacheWidth: widget.cacheWidth,
+        cacheHeight: widget.cacheHeight,
+        fit: widget.fit,
+      ),
       _ImageType.asset => Image.asset(
-          image as String,
-          errorBuilder: widget.errorBuilder,
-          height: widget.height,
-          width: widget.width,
-          cacheWidth: widget.cacheWidth,
-          cacheHeight: widget.cacheHeight,
-          fit: widget.fit,
-        ),
+        image as String,
+        errorBuilder: widget.errorBuilder,
+        height: widget.height,
+        width: widget.width,
+        cacheWidth: widget.cacheWidth,
+        cacheHeight: widget.cacheHeight,
+        fit: widget.fit,
+      ),
       _ImageType.network => Image.network(
-          image as String,
-          errorBuilder: widget.errorBuilder,
-          height: widget.height,
-          width: widget.width,
-          cacheWidth: widget.cacheWidth,
-          cacheHeight: widget.cacheHeight,
-          fit: widget.fit,
-          loadingBuilder: widget.loadingBuilder,
-          headers: widget.headers,
-        ),
+        image as String,
+        errorBuilder: widget.errorBuilder,
+        height: widget.height,
+        width: widget.width,
+        cacheWidth: widget.cacheWidth,
+        cacheHeight: widget.cacheHeight,
+        fit: widget.fit,
+        loadingBuilder: widget.loadingBuilder,
+        headers: widget.headers,
+      ),
     };
   }
 
@@ -680,7 +714,9 @@ class _AnimationWrapper<T extends int> extends StatelessWidget {
       onClosed: (data) {
         Future.delayed(transitionDuration ?? const Duration(milliseconds: 350), () {
           scheduleMicrotask(() {
-            AndroidScreenshotBlocker.setEnabled(false);
+            if (Platform.isAndroid) {
+              unawaited(AndroidScreenshotBlocker.setEnabled(false));
+            }
           });
         });
       },
@@ -719,10 +755,12 @@ class _KeyMotionGestureDetector extends StatelessWidget {
 }
 
 class CupertinoSecureImageViewer extends StatelessWidget {
-  const CupertinoSecureImageViewer({required this.imageUrls, required this.onClose, super.key, this.headers});
+  const CupertinoSecureImageViewer({required this.imageUrls, required this.onClose, super.key, this.headers, this.cache = true, this.cacheKey});
   final List<String> imageUrls;
   final Map<String, String>? headers;
   final VoidCallback? onClose;
+  final bool cache;
+  final String? cacheKey;
 
   @override
   Widget build(BuildContext context) {
@@ -734,7 +772,7 @@ class CupertinoSecureImageViewer extends StatelessWidget {
     return UiKitView(
       viewType: 'secure_image_viewer', // AppDelegate'teki ID ile aynı olmalı
       layoutDirection: TextDirection.ltr,
-      creationParams: {'imageUrls': imageUrls, 'headers': headers},
+      creationParams: {'imageUrls': _imageUrls, 'headers': headers},
       creationParamsCodec: const StandardMessageCodec(),
       onPlatformViewCreated: (int id) {
         // Kanalı dinlemeye başla
@@ -743,5 +781,22 @@ class CupertinoSecureImageViewer extends StatelessWidget {
         });
       },
     );
+  }
+
+  List<String> get _imageUrls {
+    if (cache) return imageUrls;
+    final updatedUrls = List.generate(imageUrls.length, (index) {
+      final url = imageUrls[index];
+      final uri = Uri.parse(url);
+      return uri
+          .replace(
+            queryParameters: {
+              ...uri.queryParameters,
+              'ts': cacheKey ?? DateTime.now().millisecondsSinceEpoch.toString(),
+            },
+          )
+          .toString();
+    });
+    return updatedUrls;
   }
 }
