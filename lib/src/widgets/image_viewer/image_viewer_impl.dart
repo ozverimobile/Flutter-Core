@@ -231,6 +231,8 @@ class CoreImageViewer extends StatelessWidget {
             imageUrls: _images as List<String>,
             headers: headers,
             onClose: Navigator.of(context).pop,
+            cache: cache,
+            cacheKey: cacheKey,
           );
         }
 
