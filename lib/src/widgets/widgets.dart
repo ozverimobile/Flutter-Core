@@ -1,6 +1,7 @@
 export 'builder/builder.dart';
 export 'buttons/button.dart';
 export 'data_provider/data_provider.dart';
+export 'gridview/gridview.dart';
 export 'image_viewer/image_viewer.dart';
 export 'listview/listview.dart';
 export 'relative_size/relative_size.dart';
