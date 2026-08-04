@@ -84,12 +84,18 @@ abstract class CoreNetworkManager with RequestLoggerMixin implements ICoreNetwor
         ),
       );
 
-      stopwatch
-        ..stop()
-        ..reset();
+      stopwatch.stop();
       final responseTimeMilliseconds = stopwatch.elapsedMilliseconds;
 
-      if (kDebugMode && printLogResponseInfo) logResponseInfo(response: response, responseTime: responseTimeMilliseconds, requestUrl: '${dio.options.baseUrl}${path.asString}');
+      if (kDebugMode && printLogResponseInfo) {
+        logResponseInfo(
+          response: response,
+          responseTime: responseTimeMilliseconds,
+          requestUrl: '${dio.options.baseUrl}${path.asString}',
+          pathSuffix: pathSuffix,
+          queryParameters: queryParameters,
+        );
+      }
 
       return getSuccessResponse<T, M>(
         response: response,
@@ -97,15 +103,21 @@ abstract class CoreNetworkManager with RequestLoggerMixin implements ICoreNetwor
         hasBaseResponse: hasBaseResponse,
       );
     } catch (error) {
-      stopwatch
-        ..stop()
-        ..reset();
+      stopwatch.stop();
 
       final statusCode = error is DioException ? error.response?.statusCode : null;
       if (statusCode == 401) onUnauthorized(error as DioException);
       if (statusCode == 503) onServiceUnavailable(error as DioException);
 
-      if (kDebugMode && printLogErrorResponseInfo) logErrorResponseInfo(statusCode: statusCode, error: error, requestUrl: '${dio.options.baseUrl}${path.asString}');
+      if (kDebugMode && printLogErrorResponseInfo) {
+        logErrorResponseInfo(
+          statusCode: statusCode,
+          error: error,
+          requestUrl: '${dio.options.baseUrl}${path.asString}',
+          pathSuffix: pathSuffix,
+          queryParameters: queryParameters,
+        );
+      }
       return getErrorResponse<T>(error: error);
     }
   }
@@ -152,21 +164,33 @@ abstract class CoreNetworkManager with RequestLoggerMixin implements ICoreNetwor
         ),
       );
 
-      stopwatch
-        ..stop()
-        ..reset();
-      if (kDebugMode && printLogResponseInfo) logResponseInfo(response: response, responseTime: stopwatch.elapsedMilliseconds, requestUrl: '${dio.options.baseUrl}${path.asString}');
+      stopwatch.stop();
+      if (kDebugMode && printLogResponseInfo) {
+        logResponseInfo(
+          response: response,
+          responseTime: stopwatch.elapsedMilliseconds,
+          requestUrl: '${dio.options.baseUrl}${path.asString}',
+          pathSuffix: pathSuffix,
+          queryParameters: queryParameters,
+        );
+      }
       return getSuccessPrimitiveResponse(response: response);
     } catch (error) {
-      stopwatch
-        ..stop()
-        ..reset();
+      stopwatch.stop();
 
       final statusCode = error is DioException ? error.response?.statusCode : null;
       if (statusCode == 401) onUnauthorized(error as DioException);
       if (statusCode == 503) onServiceUnavailable(error as DioException);
 
-      if (kDebugMode && printLogErrorResponseInfo) logErrorResponseInfo(statusCode: statusCode, error: error, requestUrl: '${dio.options.baseUrl}${path.asString}');
+      if (kDebugMode && printLogErrorResponseInfo) {
+        logErrorResponseInfo(
+          statusCode: statusCode,
+          error: error,
+          requestUrl: '${dio.options.baseUrl}${path.asString}',
+          pathSuffix: pathSuffix,
+          queryParameters: queryParameters,
+        );
+      }
       return getErrorResponse<T>(error: error);
     }
   }

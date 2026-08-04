@@ -15,13 +15,14 @@ mixin class RequestLoggerMixin {
     final queryParamatersMap = queryParameters?.toJson();
     final queryParamatersString = queryParamatersMap?.keys.map((key) => '&$key=${queryParamatersMap[key]}').join() ?? '';
 
-    final requestLog = """
+    final requestLog =
+        """
 REQUEST
 ->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->
 Request Url: $requestUrl${pathSuffix ?? ''}$queryParamatersString,
 Method: ${type.name}
 DateTime: ${DateTime.now().toIso8601String()}
-Request Data: ${jsonEncode(data?.toJson(), toEncodable: (Object? unEncodable) => "Unencodable value of type ->${unEncodable.runtimeType}<-")}
+Request Data: ${jsonEncode(data?.toJson(), toEncodable: (unEncodable) => "Unencodable value of type ->${unEncodable.runtimeType}<-")}
 Request DioFormData: ${dioFormData?.fields} ${dioFormData?.files}
 Headers: $headers
 ->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->""";
@@ -32,27 +33,43 @@ Headers: $headers
     required Response<dynamic> response,
     required int responseTime,
     required String requestUrl,
+    BaseModel<dynamic>? queryParameters,
+    String? pathSuffix,
   }) {
-    final responseLog = """
+    final queryParamatersMap = queryParameters?.toJson();
+    final queryParamatersString = queryParamatersMap?.keys.map((key) => '&$key=${queryParamatersMap[key]}').join() ?? '';
+
+    final responseLog =
+        """
 RESPONSE
 <-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-
-Request Url: $requestUrl
+Request Url: $requestUrl${pathSuffix ?? ''}$queryParamatersString
 DateTime: ${DateTime.now().toIso8601String()}
 Response Time: $responseTime milliseconds
 Headers: ${response.requestOptions.headers}
 Response Status Code: ${response.statusCode}
 Response Status Message: ${response.statusMessage ?? "null"}
-Response Data: ${jsonEncode(response.data, toEncodable: (Object? unEncodable) => "Unencodable value of type ->${unEncodable.runtimeType}<-")}
+Response Data: ${jsonEncode(response.data, toEncodable: (unEncodable) => "Unencodable value of type ->${unEncodable.runtimeType}<-")}
 <-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-""";
     CoreLogger.log(responseLog);
   }
 
-  void logErrorResponseInfo({required int? statusCode, required Object error, required String requestUrl}) {
-    final errorResponseLog = '''
+  void logErrorResponseInfo({
+    required int? statusCode,
+    required Object error,
+    required String requestUrl,
+    BaseModel<dynamic>? queryParameters,
+    String? pathSuffix,
+  }) {
+    final queryParamatersMap = queryParameters?.toJson();
+    final queryParamatersString = queryParamatersMap?.keys.map((key) => '&$key=${queryParamatersMap[key]}').join() ?? '';
+
+    final errorResponseLog =
+        '''
 REQUEST ERROR
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 Status Code: $statusCode
-Request Url: $requestUrl
+Request Url: $requestUrl${pathSuffix ?? ''}$queryParamatersString
 Error String: $error
 XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX''';
     CoreLogger.log(errorResponseLog, color: LogColors.red);
