@@ -11,9 +11,18 @@ abstract interface class ICorePermissionManager {
 }
 
 class CorePermissionManager implements ICorePermissionManager {
-  CorePermissionManager({required GlobalKey<NavigatorState> navigatorKey}) : _popupManager = PopupManager(navigatorKey: navigatorKey);
+  CorePermissionManager({required GlobalKey<NavigatorState> navigatorKey})
+      : _navigatorKey = navigatorKey,
+        _popupManager = PopupManager(navigatorKey: navigatorKey);
 
+  final GlobalKey<NavigatorState> _navigatorKey;
   final PopupManager _popupManager;
+
+  BuildContext get _navigatorContext {
+    final state = _navigatorKey.currentState;
+    assert(state != null, 'Navigator with provided key was not found in the widget tree');
+    return state!.context;
+  }
 
   @override
   Future<CorePermissionStatus> getPermissionStatus({required CorePermission permission}) async {
@@ -72,23 +81,38 @@ class CorePermissionManager implements ICorePermissionManager {
     if (context.isNotNull && !context!.mounted) throw Exception('Context is not mounted');
 
     final id = UniqueKey().toString();
-    final result = await _popupManager.showModalBottomSheet<CorePermissionStatus>(
-      context: context,
+    Widget permissionWidget(BuildContext ctx) => _PermissionWidget(
+      popupManager: _popupManager,
+      permission: permission,
       id: id,
-      isScrollControlled: true,
-      enableDrag: false,
-      isDismissible: false,
-      builder: (context) => _PermissionWidget(
-        popupManager: _popupManager,
-        permission: permission,
-        id: id,
-        isPermanentDenied: status == CorePermissionStatus.permanentlyDenied,
-        showAskLaterOption: showAskLaterOption,
-        title: title,
-        message: message,
-        icon: icon,
-      ),
+      isPermanentDenied: status == CorePermissionStatus.permanentlyDenied,
+      showAskLaterOption: showAskLaterOption,
+      title: title,
+      message: message,
+      icon: icon,
     );
+
+    final effectiveContext = context ?? _navigatorContext;
+    final isTablet = MediaQuery.sizeOf(effectiveContext).shortestSide >= 600;
+
+    final CorePermissionStatus? result;
+    if (isTablet) {
+      result = await _popupManager.showDialog<CorePermissionStatus>(
+        context: context,
+        id: id,
+        barrierDismissible: false,
+        builder: permissionWidget,
+      );
+    } else {
+      result = await _popupManager.showModalBottomSheet<CorePermissionStatus>(
+        context: context,
+        id: id,
+        isScrollControlled: true,
+        enableDrag: false,
+        isDismissible: false,
+        builder: permissionWidget,
+      );
+    }
     return result!;
   }
 }
@@ -146,8 +170,14 @@ final class _PermissionWidgetState extends State<_PermissionWidget> {
     super.dispose();
   }
 
+  bool get _isTablet => MediaQuery.of(context).size.shortestSide >= 600;
+
   @override
   Widget build(BuildContext context) {
+    return _isTablet ? _buildDialogLayout(context) : _buildBottomSheetLayout(context);
+  }
+
+  Widget _buildBottomSheetLayout(BuildContext context) {
     return PopScope(
       canPop: false,
       child: Container(
@@ -161,12 +191,8 @@ final class _PermissionWidgetState extends State<_PermissionWidget> {
             children: [
               Column(
                 children: [
-                  const SizedBox(
-                    height: kToolbarHeight,
-                  ),
-                  SizedBox(
-                    height: context.height * 0.1,
-                  ),
+                  const SizedBox(height: kToolbarHeight),
+                  SizedBox(height: context.height * 0.1),
                   CircleAvatar(
                     radius: 64,
                     backgroundColor: context.colorScheme.primary,
@@ -192,96 +218,10 @@ final class _PermissionWidgetState extends State<_PermissionWidget> {
                       ],
                     ),
                   ),
-                  SizedBox(
-                    width: context.width,
-                    child: CoreFilledButton(
-                      borderRadius: BorderRadius.circular(18),
-                      onPressed: () async {
-                        if (widget.isPermanentDenied) {
-                          final alertDialogId = UniqueKey().toString();
-                          final isUserOpenedAppSettings = await widget.popupManager.showDefaultAdaptiveAlertDialog<bool>(
-                            context: context,
-                            id: alertDialogId,
-                            title: const Text('İzin Gerekli'),
-                            content: Text.rich(
-                              TextSpan(
-                                children: [
-                                  const TextSpan(text: 'Ayarlardan '),
-                                  TextSpan(
-                                    text: _title,
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  const TextSpan(text: ' vermeniz gerekmektedir'),
-                                ],
-                              ),
-                            ),
-                            okButtonLabel: 'Ayarları aç',
-                            cancelButtonLabel: 'İptal',
-                            isDestructiveCancelButtonIOS: true,
-                            onOkButtonPressed: () => widget.popupManager.hidePopup<bool>(id: alertDialogId, result: true),
-                          );
-
-                          if (isUserOpenedAppSettings ?? false) {
-                            _completer = Completer<void>();
-                            await openAppSettings();
-                            await _completer!.future;
-                          } else {
-                            widget.popupManager.hidePopup<CorePermissionStatus>(id: widget.id, result: CorePermissionStatus.permanentlyDenied);
-                            return;
-                          }
-
-                          final status = await (await widget.permission.permission()).status;
-                          try {
-                            widget.popupManager.hidePopup<CorePermissionStatus>(id: widget.id, result: CorePermissionStatus.fromPermissionStatus(status));
-                          } catch (e) {
-                            throw Exception('An exception occurred while getting status for permission ${widget.permission}. Error was: $e');
-                          }
-                        } else {
-                          final permission = await widget.permission.permission();
-                          final result = await permission.request();
-                          widget.popupManager.hidePopup<CorePermissionStatus>(id: widget.id, result: CorePermissionStatus.fromPermissionStatus(result));
-                        }
-
-                        // final prefs = await SharedPreferences.getInstance();
-                        // final status = CorePermissionResult(
-                        //   isGranted: result.isGranted,
-                        //   askLaterMilliSeconds: 0,
-                        // );
-                        // await prefs.setString(
-                        //   widget.permission.sharedPrefKey,
-                        //   jsonEncode(
-                        //     status.toJson(),
-                        //   ),
-                        // );
-                      },
-                      minSize: 50,
-                      child: CoreText.titleMedium(
-                        'Devam Et',
-                        textColor: context.colorScheme.onPrimary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                  _buildPrimaryButton(context, fullWidth: true),
                   if (widget.showAskLaterOption && !widget.isPermanentDenied) ...[
                     verticalBox8,
-                    SizedBox(
-                      width: context.width,
-                      child: CoreTextButton(
-                        borderRadius: BorderRadius.circular(18),
-                        onPressed: () async {
-                          final prefs = await SharedPreferences.getInstance();
-                          await prefs.setInt(widget.permission.sharedPrefKey, _postponeMilliseconds);
-
-                          widget.popupManager.hidePopup<CorePermissionStatus>(id: widget.id, result: CorePermissionStatus.postponed);
-                        },
-                        minSize: 50,
-                        child: CoreText.titleMedium(
-                          'Sonra Hatırlat',
-                          textColor: context.colorScheme.onSurface,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                    _buildAskLaterButton(context, fullWidth: true),
                   ],
                   verticalBox24,
                 ],
@@ -291,21 +231,155 @@ final class _PermissionWidgetState extends State<_PermissionWidget> {
                 right: 0,
                 child: Column(
                   children: [
-                    const SizedBox(
-                      height: kToolbarHeight,
-                    ),
-                    CoreIconButton.filled(
-                      onPressed: () => widget.popupManager.hidePopup<CorePermissionStatus>(id: widget.id, result: CorePermissionStatus.neverPrompted),
-                      icon: Icon(
-                        Icons.close,
-                        color: context.colorScheme.onPrimary,
-                      ),
-                    ),
+                    const SizedBox(height: kToolbarHeight),
+                    _buildCloseButton(context),
                   ],
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDialogLayout(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      child: Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        clipBehavior: Clip.antiAlias,
+        child: SizedBox(
+          width: 480,
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: _buildCloseButton(context),
+                ),
+                verticalBox12,
+                CircleAvatar(
+                  radius: 52,
+                  backgroundColor: context.colorScheme.primary,
+                  child: _icon,
+                ),
+                verticalBox24,
+                CoreText.headlineMedium(
+                  _title,
+                  fontWeight: FontWeight.bold,
+                  textAlign: TextAlign.center,
+                  textColor: context.colorScheme.onSurface,
+                ),
+                verticalBox12,
+                CoreText.bodyLarge(
+                  _message,
+                  fontWeight: FontWeight.w500,
+                  textAlign: TextAlign.center,
+                  textColor: context.colorScheme.onSurface,
+                ),
+                const SizedBox(height: 32),
+                _buildPrimaryButton(context, fullWidth: true),
+                if (widget.showAskLaterOption && !widget.isPermanentDenied) ...[
+                  verticalBox8,
+                  _buildAskLaterButton(context, fullWidth: true),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCloseButton(BuildContext context) {
+    return CoreIconButton.filled(
+      onPressed: () => widget.popupManager.hidePopup<CorePermissionStatus>(
+        id: widget.id,
+        result: CorePermissionStatus.neverPrompted,
+      ),
+      icon: Icon(Icons.close, color: context.colorScheme.onPrimary),
+    );
+  }
+
+  Widget _buildPrimaryButton(BuildContext context, {required bool fullWidth}) {
+    return SizedBox(
+      width: fullWidth ? double.infinity : null,
+      child: CoreFilledButton(
+        borderRadius: BorderRadius.circular(18),
+        onPressed: () async {
+          if (widget.isPermanentDenied) {
+            final alertDialogId = UniqueKey().toString();
+            final isUserOpenedAppSettings = await widget.popupManager.showDefaultAdaptiveAlertDialog<bool>(
+              context: context,
+              id: alertDialogId,
+              title: const Text('İzin Gerekli'),
+              content: Text.rich(
+                TextSpan(
+                  children: [
+                    const TextSpan(text: 'Ayarlardan '),
+                    TextSpan(
+                      text: _title,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const TextSpan(text: ' vermeniz gerekmektedir'),
+                  ],
+                ),
+              ),
+              okButtonLabel: 'Ayarları aç',
+              cancelButtonLabel: 'İptal',
+              isDestructiveCancelButtonIOS: true,
+              onOkButtonPressed: () => widget.popupManager.hidePopup<bool>(id: alertDialogId, result: true),
+            );
+
+            if (isUserOpenedAppSettings ?? false) {
+              _completer = Completer<void>();
+              await openAppSettings();
+              await _completer!.future;
+            } else {
+              widget.popupManager.hidePopup<CorePermissionStatus>(id: widget.id, result: CorePermissionStatus.permanentlyDenied);
+              return;
+            }
+
+            final status = await (await widget.permission.permission()).status;
+            try {
+              widget.popupManager.hidePopup<CorePermissionStatus>(id: widget.id, result: CorePermissionStatus.fromPermissionStatus(status));
+            } catch (e) {
+              throw Exception('An exception occurred while getting status for permission ${widget.permission}. Error was: $e');
+            }
+          } else {
+            final permission = await widget.permission.permission();
+            final result = await permission.request();
+            widget.popupManager.hidePopup<CorePermissionStatus>(id: widget.id, result: CorePermissionStatus.fromPermissionStatus(result));
+          }
+        },
+        minSize: 50,
+        child: CoreText.titleMedium(
+          'Devam Et',
+          textColor: context.colorScheme.onPrimary,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAskLaterButton(BuildContext context, {required bool fullWidth}) {
+    return SizedBox(
+      width: fullWidth ? double.infinity : null,
+      child: CoreTextButton(
+        borderRadius: BorderRadius.circular(18),
+        onPressed: () async {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setInt(widget.permission.sharedPrefKey, _postponeMilliseconds);
+          widget.popupManager.hidePopup<CorePermissionStatus>(id: widget.id, result: CorePermissionStatus.postponed);
+        },
+        minSize: 50,
+        child: CoreText.titleMedium(
+          'Sonra Hatırlat',
+          textColor: context.colorScheme.onSurface,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );

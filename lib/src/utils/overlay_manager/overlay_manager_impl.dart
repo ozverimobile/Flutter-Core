@@ -61,6 +61,7 @@ class OverlayManager implements IOverlayManager {
     Duration? animationDuration,
     Duration? reverseAnimationDuration,
     Widget? child,
+    ToastPositionRecord? toastPositionRecord,
   }) {
     _presentToast(
       key: key,
@@ -78,6 +79,7 @@ class OverlayManager implements IOverlayManager {
       messageMaxLines: messageMaxLines,
       shadowColor: shadowColor,
       titleStyle: titleStyle,
+      toastPositionRecord: toastPositionRecord,
     );
   }
 
@@ -100,6 +102,7 @@ class OverlayManager implements IOverlayManager {
     Widget? child,
     Color? backgroundColor,
     Color? shadowColor,
+    ToastPositionRecord? toastPositionRecord,
   }) {
     if (child.isNotNull && (leading.isNotNull || title.isNotNull || message.isNotNull)) {
       throw MisUsageToastError('If child is specified; leading, title and message must be null');
@@ -137,6 +140,7 @@ class OverlayManager implements IOverlayManager {
           shadowColor: shadowColor,
           titleStyle: titleStyle,
           messageStyle: messageStyle,
+          toastPositionRecord: toastPositionRecord,
           child: child,
         );
       },

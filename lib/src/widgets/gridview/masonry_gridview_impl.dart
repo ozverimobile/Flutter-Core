@@ -6,23 +6,18 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_core/flutter_core.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
-enum _CoreListViewType {
+enum _CoreMasonryGridViewType {
   normal,
   builder,
-  separated,
+  count,
+  extent,
 }
 
-/// Signature for callbacks that report the visibility state of
-/// [CoreListView.floatingChild].
-///
-/// [isVisible] is `true` whenever the floating header is currently painted
-/// on screen (fully or partially) and `false` once it has scrolled out
-/// completely.
-typedef FloatingChildVisibilityCallback = void Function(bool isVisible);
-
-class CoreListView extends StatefulWidget {
-  const CoreListView({
+class CoreMasonryGridView extends StatefulWidget {
+  const CoreMasonryGridView({
+    required this.gridDelegate,
     super.key,
     this.scrollDirection = Axis.vertical,
     this.reverse = false,
@@ -31,9 +26,8 @@ class CoreListView extends StatefulWidget {
     this.physics,
     this.shrinkWrap = false,
     this.padding,
-    this.itemExtent,
-    this.itemExtentBuilder,
-    this.prototypeItem,
+    this.mainAxisSpacing = 0,
+    this.crossAxisSpacing = 0,
     this.addAutomaticKeepAlives = true,
     this.addRepaintBoundaries = true,
     this.addSemanticIndexes = true,
@@ -50,13 +44,14 @@ class CoreListView extends StatefulWidget {
     this.floatingChild,
     this.floatingChildVisibilityCallback,
     this.refreshIndicatorStartPosition = .above,
-  }) : _listViewType = _CoreListViewType.normal,
+  }) : _gridViewType = _CoreMasonryGridViewType.normal,
        _itemBuilder = null,
-       _separatorBuilder = null,
-       findChildIndexCallback = null,
-       itemCount = null;
+       itemCount = null,
+       crossAxisCount = null,
+       maxCrossAxisExtent = null;
 
-  const CoreListView.builder({
+  const CoreMasonryGridView.builder({
+    required this.gridDelegate,
     required IndexedWidgetBuilder itemBuilder,
     super.key,
     this.scrollDirection = Axis.vertical,
@@ -66,11 +61,9 @@ class CoreListView extends StatefulWidget {
     this.physics,
     this.shrinkWrap = false,
     this.padding,
-    this.itemExtent,
-    this.itemExtentBuilder,
-    this.prototypeItem,
-    this.findChildIndexCallback,
     this.itemCount,
+    this.mainAxisSpacing = 0,
+    this.crossAxisSpacing = 0,
     this.addAutomaticKeepAlives = true,
     this.addRepaintBoundaries = true,
     this.addSemanticIndexes = true,
@@ -86,15 +79,19 @@ class CoreListView extends StatefulWidget {
     this.floatingChild,
     this.floatingChildVisibilityCallback,
     this.refreshIndicatorStartPosition = .above,
-  }) : _listViewType = _CoreListViewType.builder,
-       _separatorBuilder = null,
+  }) : _gridViewType = _CoreMasonryGridViewType.builder,
        _itemBuilder = itemBuilder,
-       children = null;
+       children = null,
+       crossAxisCount = null,
+       maxCrossAxisExtent = null;
 
-  const CoreListView.separated({
+  const CoreMasonryGridView.count({
+    required this.crossAxisCount,
     required IndexedWidgetBuilder itemBuilder,
-    required IndexedWidgetBuilder separatorBuilder,
     super.key,
+    this.itemCount,
+    this.mainAxisSpacing = 0,
+    this.crossAxisSpacing = 0,
     this.scrollDirection = Axis.vertical,
     this.reverse = false,
     this.controller,
@@ -102,32 +99,64 @@ class CoreListView extends StatefulWidget {
     this.physics,
     this.shrinkWrap = false,
     this.padding,
-    this.itemCount,
     this.addAutomaticKeepAlives = true,
     this.addRepaintBoundaries = true,
     this.addSemanticIndexes = true,
     this.cacheExtent,
+    this.semanticChildCount,
     this.dragStartBehavior = DragStartBehavior.start,
     this.keyboardDismissBehavior = ScrollViewKeyboardDismissBehavior.manual,
     this.restorationId,
     this.clipBehavior = Clip.hardEdge,
-    this.findChildIndexCallback,
-    this.itemExtent,
-    this.itemExtentBuilder,
-    this.prototypeItem,
-    this.semanticChildCount,
     this.onReachedEnd,
     this.onReachedEndPercentage = 0.7,
     this.onRefresh,
     this.floatingChild,
     this.floatingChildVisibilityCallback,
     this.refreshIndicatorStartPosition = .above,
-  }) : _listViewType = _CoreListViewType.separated,
-       _separatorBuilder = separatorBuilder,
+  }) : _gridViewType = _CoreMasonryGridViewType.count,
+       gridDelegate = null,
        _itemBuilder = itemBuilder,
-       children = null;
+       children = null,
+       maxCrossAxisExtent = null;
 
-  final _CoreListViewType _listViewType;
+  const CoreMasonryGridView.extent({
+    required this.maxCrossAxisExtent,
+    required IndexedWidgetBuilder itemBuilder,
+    super.key,
+    this.itemCount,
+    this.mainAxisSpacing = 0,
+    this.crossAxisSpacing = 0,
+    this.scrollDirection = Axis.vertical,
+    this.reverse = false,
+    this.controller,
+    this.primary,
+    this.physics,
+    this.shrinkWrap = false,
+    this.padding,
+    this.addAutomaticKeepAlives = true,
+    this.addRepaintBoundaries = true,
+    this.addSemanticIndexes = true,
+    this.cacheExtent,
+    this.semanticChildCount,
+    this.dragStartBehavior = DragStartBehavior.start,
+    this.keyboardDismissBehavior = ScrollViewKeyboardDismissBehavior.manual,
+    this.restorationId,
+    this.clipBehavior = Clip.hardEdge,
+    this.onReachedEnd,
+    this.onReachedEndPercentage = 0.7,
+    this.onRefresh,
+    this.floatingChild,
+    this.floatingChildVisibilityCallback,
+    this.refreshIndicatorStartPosition = .above,
+  }) : _gridViewType = _CoreMasonryGridViewType.extent,
+       gridDelegate = null,
+       _itemBuilder = itemBuilder,
+       children = null,
+       crossAxisCount = null;
+
+  final _CoreMasonryGridViewType _gridViewType;
+  final SliverSimpleGridDelegate? gridDelegate;
   final Axis scrollDirection;
   final bool reverse;
   final ScrollController? controller;
@@ -135,14 +164,13 @@ class CoreListView extends StatefulWidget {
   final ScrollPhysics? physics;
   final bool shrinkWrap;
   final EdgeInsetsGeometry? padding;
-  final double? itemExtent;
-  final ItemExtentBuilder? itemExtentBuilder;
-  final Widget? prototypeItem;
   final IndexedWidgetBuilder? _itemBuilder;
   final List<Widget>? children;
-  final IndexedWidgetBuilder? _separatorBuilder;
-  final ChildIndexGetter? findChildIndexCallback;
   final int? itemCount;
+  final int? crossAxisCount;
+  final double? maxCrossAxisExtent;
+  final double mainAxisSpacing;
+  final double crossAxisSpacing;
   final bool addAutomaticKeepAlives;
   final bool addRepaintBoundaries;
   final bool addSemanticIndexes;
@@ -156,7 +184,7 @@ class CoreListView extends StatefulWidget {
   final double onReachedEndPercentage;
   final Future<void> Function()? onRefresh;
 
-  /// Optional header-like widget placed at the top of the list.
+  /// Optional header-like widget placed at the top of the grid.
   ///
   /// Behaves like `SliverAppBar(floating: true, snap: true)`:
   /// the widget scrolls out with the content as the user scrolls down and
@@ -174,20 +202,37 @@ class CoreListView extends StatefulWidget {
   final CoreRefreshIndicatorStartPosition refreshIndicatorStartPosition;
 
   @override
-  State<CoreListView> createState() => _CoreListViewState();
+  State<CoreMasonryGridView> createState() => _CoreMasonryGridViewState();
 }
 
-class _CoreListViewState extends State<CoreListView> with TickerProviderStateMixin {
+class _CoreMasonryGridViewState extends State<CoreMasonryGridView> with TickerProviderStateMixin {
   late final ScrollController _scrollController;
   bool _showIndicator = false;
   ScrollController? _primaryScrollController;
   late ScrollPosition _position;
 
-  /// Measured height of [CoreListView.floatingChild].
+  /// Measured height of [CoreMasonryGridView.floatingChild].
   ///
   /// Required because [SliverPersistentHeader] needs a fixed extent.
   double? _floatingChildHeight;
   final GlobalKey _floatingChildMeasureKey = GlobalKey();
+
+  SliverSimpleGridDelegate get _resolvedGridDelegate {
+    switch (widget._gridViewType) {
+      case _CoreMasonryGridViewType.normal:
+      case _CoreMasonryGridViewType.builder:
+        return widget.gridDelegate!;
+      case _CoreMasonryGridViewType.count:
+        return SliverSimpleGridDelegateWithFixedCrossAxisCount(crossAxisCount: widget.crossAxisCount!);
+      case _CoreMasonryGridViewType.extent:
+        return SliverSimpleGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: widget.maxCrossAxisExtent!);
+    }
+  }
+
+  int? get _effectiveItemCount {
+    if (widget.itemCount == null) return null;
+    return _showIndicator ? widget.itemCount! + 1 : widget.itemCount!;
+  }
 
   @override
   void initState() {
@@ -211,16 +256,15 @@ class _CoreListViewState extends State<CoreListView> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     if (widget.floatingChild != null) {
-      /// Schedule a measurement after layout so [_floatingChildHeight] can be
-      /// fed into [SliverPersistentHeader] on the next build.
       WidgetsBinding.instance.addPostFrameCallback((_) => _measureFloatingChild());
       return _buildWithFloatingChild();
     }
 
-    return switch (widget._listViewType) {
-      _CoreListViewType.normal => _listView,
-      _CoreListViewType.builder => _listViewBuilder,
-      _CoreListViewType.separated => _listViewSeparated,
+    return switch (widget._gridViewType) {
+      _CoreMasonryGridViewType.normal => _gridView,
+      _CoreMasonryGridViewType.builder => _gridViewBuilder,
+      _CoreMasonryGridViewType.count => _gridViewCount,
+      _CoreMasonryGridViewType.extent => _gridViewExtent,
     };
   }
 
@@ -250,62 +294,48 @@ class _CoreListViewState extends State<CoreListView> with TickerProviderStateMix
     });
   }
 
-  /// Builds the sliver representing the underlying list. Used only on the
-  /// floating-child code path and on the iOS refresh path.
-  Widget _buildListSliver() {
-    switch (widget._listViewType) {
-      case _CoreListViewType.normal:
-        return SliverList(
+  Widget _buildGridSliver() {
+    switch (widget._gridViewType) {
+      case _CoreMasonryGridViewType.normal:
+        return SliverMasonryGrid(
+          gridDelegate: _resolvedGridDelegate,
+          mainAxisSpacing: widget.mainAxisSpacing,
+          crossAxisSpacing: widget.crossAxisSpacing,
           delegate: SliverChildListDelegate(
             [
               ...widget.children!,
-              if (_showIndicator) const _ListViewAdaptiveIndicator(),
+              if (_showIndicator) const _MasonryGridViewAdaptiveIndicator(),
             ],
           ),
         );
-      case _CoreListViewType.builder:
-        return SliverList.builder(
-          itemBuilder: (context, index) {
-            if (index == widget.itemCount!) return const _ListViewAdaptiveIndicator();
-            return widget._itemBuilder!(context, index);
-          },
-          itemCount: widget.itemCount == null
-              ? 0
-              : _showIndicator
-              ? widget.itemCount! + 1
-              : widget.itemCount!,
-        );
-      case _CoreListViewType.separated:
-        return SliverList.separated(
-          itemBuilder: (context, index) {
-            if (index == widget.itemCount!) return const _ListViewAdaptiveIndicator();
-            return widget._itemBuilder!(context, index);
-          },
-          separatorBuilder: widget._separatorBuilder!,
-          itemCount: widget.itemCount == null
-              ? 0
-              : _showIndicator
-              ? widget.itemCount! + 1
-              : widget.itemCount!,
+      case _CoreMasonryGridViewType.builder:
+      case _CoreMasonryGridViewType.count:
+      case _CoreMasonryGridViewType.extent:
+        return SliverMasonryGrid(
+          gridDelegate: _resolvedGridDelegate,
+          mainAxisSpacing: widget.mainAxisSpacing,
+          crossAxisSpacing: widget.crossAxisSpacing,
+          delegate: SliverChildBuilderDelegate(
+            (context, index) {
+              if (index == widget.itemCount) return const _MasonryGridViewAdaptiveIndicator();
+              return widget._itemBuilder!(context, index);
+            },
+            childCount: widget.itemCount == null ? 0 : _effectiveItemCount,
+            addAutomaticKeepAlives: widget.addAutomaticKeepAlives,
+            addRepaintBoundaries: widget.addRepaintBoundaries,
+            addSemanticIndexes: widget.addSemanticIndexes,
+          ),
         );
     }
   }
 
-  /// Builds the scroll view when [CoreListView.floatingChild] is provided.
-  ///
-  /// Uses a unified [CustomScrollView] path (for both iOS and Android) so that
-  /// the floating [SliverPersistentHeader] has a stable position in the sliver
-  /// tree. The sliver list is intentionally kept the same length across
-  /// rebuilds; otherwise the floating header's internal scroll listener can
-  /// fire while its element is being reparented and crash with
-  /// "Looking up a deactivated widget's ancestor is unsafe".
   Widget _buildWithFloatingChild() {
     final floatingChild = widget.floatingChild!;
     final height = _floatingChildHeight;
 
-    final listSliver = SliverPadding(
+    final gridSliver = SliverPadding(
       padding: widget.padding ?? EdgeInsets.zero,
-      sliver: _buildListSliver(),
+      sliver: _buildGridSliver(),
     );
 
     final customScrollView = CustomScrollView(
@@ -323,11 +353,10 @@ class _CoreListViewState extends State<CoreListView> with TickerProviderStateMix
       clipBehavior: widget.clipBehavior,
       slivers: [
         if (Platform.isIOS && widget.onRefresh != null && widget.refreshIndicatorStartPosition == .above) CupertinoSliverRefreshControl(onRefresh: widget.onRefresh),
-
         SliverPersistentHeader(
-          key: const ValueKey<String>('_core_listview_floating_header'),
+          key: const ValueKey<String>('_core_masonry_gridview_floating_header'),
           floating: true,
-          delegate: _FloatingChildHeaderDelegate(
+          delegate: _MasonryFloatingChildHeaderDelegate(
             height: height ?? 0,
             vsync: this,
             child: floatingChild,
@@ -335,18 +364,21 @@ class _CoreListViewState extends State<CoreListView> with TickerProviderStateMix
           ),
         ),
         if (Platform.isIOS && widget.onRefresh != null && widget.refreshIndicatorStartPosition == .below) CupertinoSliverRefreshControl(onRefresh: widget.onRefresh),
-        listSliver,
+        gridSliver,
       ],
     );
 
-    final scrollable = Platform.isAndroid && widget.onRefresh != null ? RefreshIndicator(edgeOffset: widget.refreshIndicatorStartPosition == .below ? _floatingChildHeight ?? 0 : 0, onRefresh: widget.onRefresh!, child: customScrollView) : customScrollView;
+    final scrollable = Platform.isAndroid && widget.onRefresh != null
+        ? RefreshIndicator(
+            edgeOffset: widget.refreshIndicatorStartPosition == .below ? _floatingChildHeight ?? 0 : 0,
+            onRefresh: widget.onRefresh!,
+            child: customScrollView,
+          )
+        : customScrollView;
 
     return Stack(
       children: [
         Positioned.fill(child: scrollable),
-
-        /// Invisible measurement widget. It participates in layout so we can
-        /// read its intrinsic height, but it is not painted.
         Positioned(
           left: 0,
           right: 0,
@@ -364,8 +396,11 @@ class _CoreListViewState extends State<CoreListView> with TickerProviderStateMix
     );
   }
 
-  Widget get _listView {
-    final listView = ListView(
+  Widget get _gridView {
+    final gridView = MasonryGridView(
+      gridDelegate: _resolvedGridDelegate,
+      mainAxisSpacing: widget.mainAxisSpacing,
+      crossAxisSpacing: widget.crossAxisSpacing,
       scrollDirection: widget.scrollDirection,
       reverse: widget.reverse,
       controller: _scrollController,
@@ -373,9 +408,6 @@ class _CoreListViewState extends State<CoreListView> with TickerProviderStateMix
       physics: widget.physics,
       shrinkWrap: widget.shrinkWrap,
       padding: widget.padding,
-      itemExtent: widget.itemExtent,
-      itemExtentBuilder: widget.itemExtentBuilder,
-      prototypeItem: widget.prototypeItem,
       addAutomaticKeepAlives: widget.addAutomaticKeepAlives,
       addRepaintBoundaries: widget.addRepaintBoundaries,
       addSemanticIndexes: widget.addSemanticIndexes,
@@ -387,27 +419,21 @@ class _CoreListViewState extends State<CoreListView> with TickerProviderStateMix
       clipBehavior: widget.clipBehavior,
       children: [
         ...widget.children!,
-        if (_showIndicator) const _ListViewAdaptiveIndicator(),
+        if (_showIndicator) const _MasonryGridViewAdaptiveIndicator(),
       ],
     );
     return widget.onRefresh.isNull
-        ? listView
+        ? gridView
         : Platform.isAndroid
-        ? RefreshIndicator(onRefresh: widget.onRefresh!, child: listView)
-        : _CustomScrollView(
-            sliver: SliverList(
-              delegate: SliverChildListDelegate(
-                [
-                  ...widget.children!,
-                  if (_showIndicator) const _ListViewAdaptiveIndicator(),
-                ],
-              ),
-            ),
-          );
+        ? RefreshIndicator(onRefresh: widget.onRefresh!, child: gridView)
+        : _MasonryGridCustomScrollView(sliver: _buildGridSliver());
   }
 
-  Widget get _listViewBuilder {
-    final listView = ListView.builder(
+  Widget get _gridViewBuilder {
+    final gridView = MasonryGridView.builder(
+      gridDelegate: _resolvedGridDelegate,
+      mainAxisSpacing: widget.mainAxisSpacing,
+      crossAxisSpacing: widget.crossAxisSpacing,
       scrollDirection: widget.scrollDirection,
       reverse: widget.reverse,
       controller: _scrollController,
@@ -415,19 +441,11 @@ class _CoreListViewState extends State<CoreListView> with TickerProviderStateMix
       physics: widget.physics,
       shrinkWrap: widget.shrinkWrap,
       padding: widget.padding,
-      itemExtent: widget.itemExtent,
-      itemExtentBuilder: widget.itemExtentBuilder,
-      prototypeItem: widget.prototypeItem,
       itemBuilder: (context, index) {
-        if (index == widget.itemCount!) return const _ListViewAdaptiveIndicator();
+        if (index == widget.itemCount) return const _MasonryGridViewAdaptiveIndicator();
         return widget._itemBuilder!(context, index);
       },
-      findChildIndexCallback: widget.findChildIndexCallback,
-      itemCount: widget.itemCount == null
-          ? 0
-          : _showIndicator
-          ? widget.itemCount! + 1
-          : widget.itemCount!,
+      itemCount: widget.itemCount == null ? 0 : _effectiveItemCount,
       addAutomaticKeepAlives: widget.addAutomaticKeepAlives,
       addRepaintBoundaries: widget.addRepaintBoundaries,
       addSemanticIndexes: widget.addSemanticIndexes,
@@ -440,26 +458,17 @@ class _CoreListViewState extends State<CoreListView> with TickerProviderStateMix
     );
 
     return widget.onRefresh.isNull
-        ? listView
+        ? gridView
         : Platform.isAndroid
-        ? RefreshIndicator(onRefresh: widget.onRefresh!, child: listView)
-        : _CustomScrollView(
-            sliver: SliverList.builder(
-              itemBuilder: (context, index) {
-                if (index == widget.itemCount!) return const _ListViewAdaptiveIndicator();
-                return widget._itemBuilder!(context, index);
-              },
-              itemCount: widget.itemCount == null
-                  ? 0
-                  : _showIndicator
-                  ? widget.itemCount! + 1
-                  : widget.itemCount!,
-            ),
-          );
+        ? RefreshIndicator(onRefresh: widget.onRefresh!, child: gridView)
+        : _MasonryGridCustomScrollView(sliver: _buildGridSliver());
   }
 
-  Widget get _listViewSeparated {
-    final listView = ListView.separated(
+  Widget get _gridViewCount {
+    final gridView = MasonryGridView.count(
+      crossAxisCount: widget.crossAxisCount!,
+      mainAxisSpacing: widget.mainAxisSpacing,
+      crossAxisSpacing: widget.crossAxisSpacing,
       scrollDirection: widget.scrollDirection,
       reverse: widget.reverse,
       controller: _scrollController,
@@ -468,20 +477,15 @@ class _CoreListViewState extends State<CoreListView> with TickerProviderStateMix
       shrinkWrap: widget.shrinkWrap,
       padding: widget.padding,
       itemBuilder: (context, index) {
-        if (index == widget.itemCount!) return const _ListViewAdaptiveIndicator();
+        if (index == widget.itemCount) return const _MasonryGridViewAdaptiveIndicator();
         return widget._itemBuilder!(context, index);
       },
-      findChildIndexCallback: widget.findChildIndexCallback,
-      separatorBuilder: widget._separatorBuilder!,
-      itemCount: widget.itemCount == null
-          ? 0
-          : _showIndicator
-          ? widget.itemCount! + 1
-          : widget.itemCount!,
+      itemCount: widget.itemCount == null ? 0 : _effectiveItemCount,
       addAutomaticKeepAlives: widget.addAutomaticKeepAlives,
       addRepaintBoundaries: widget.addRepaintBoundaries,
       addSemanticIndexes: widget.addSemanticIndexes,
       cacheExtent: widget.cacheExtent,
+      semanticChildCount: widget.semanticChildCount,
       dragStartBehavior: widget.dragStartBehavior,
       keyboardDismissBehavior: widget.keyboardDismissBehavior,
       restorationId: widget.restorationId,
@@ -489,29 +493,51 @@ class _CoreListViewState extends State<CoreListView> with TickerProviderStateMix
     );
 
     return widget.onRefresh.isNull
-        ? listView
+        ? gridView
         : Platform.isAndroid
-        ? RefreshIndicator(onRefresh: widget.onRefresh!, child: listView)
-        : _CustomScrollView(
-            sliver: SliverList.separated(
-              itemBuilder: (context, index) {
-                if (index == widget.itemCount!) return const _ListViewAdaptiveIndicator();
-                return widget._itemBuilder!(context, index);
-              },
-              separatorBuilder: widget._separatorBuilder!,
-              itemCount: widget.itemCount == null
-                  ? 0
-                  : _showIndicator
-                  ? widget.itemCount! + 1
-                  : widget.itemCount!,
-            ),
-          );
+        ? RefreshIndicator(onRefresh: widget.onRefresh!, child: gridView)
+        : _MasonryGridCustomScrollView(sliver: _buildGridSliver());
+  }
+
+  Widget get _gridViewExtent {
+    final gridView = MasonryGridView.extent(
+      maxCrossAxisExtent: widget.maxCrossAxisExtent!,
+      mainAxisSpacing: widget.mainAxisSpacing,
+      crossAxisSpacing: widget.crossAxisSpacing,
+      scrollDirection: widget.scrollDirection,
+      reverse: widget.reverse,
+      controller: _scrollController,
+      primary: widget.primary,
+      physics: widget.physics,
+      shrinkWrap: widget.shrinkWrap,
+      padding: widget.padding,
+      itemBuilder: (context, index) {
+        if (index == widget.itemCount) return const _MasonryGridViewAdaptiveIndicator();
+        return widget._itemBuilder!(context, index);
+      },
+      itemCount: widget.itemCount == null ? 0 : _effectiveItemCount,
+      addAutomaticKeepAlives: widget.addAutomaticKeepAlives,
+      addRepaintBoundaries: widget.addRepaintBoundaries,
+      addSemanticIndexes: widget.addSemanticIndexes,
+      cacheExtent: widget.cacheExtent,
+      semanticChildCount: widget.semanticChildCount,
+      dragStartBehavior: widget.dragStartBehavior,
+      keyboardDismissBehavior: widget.keyboardDismissBehavior,
+      restorationId: widget.restorationId,
+      clipBehavior: widget.clipBehavior,
+    );
+
+    return widget.onRefresh.isNull
+        ? gridView
+        : Platform.isAndroid
+        ? RefreshIndicator(onRefresh: widget.onRefresh!, child: gridView)
+        : _MasonryGridCustomScrollView(sliver: _buildGridSliver());
   }
 }
 
 @immutable
-final class _ListViewAdaptiveIndicator extends StatelessWidget {
-  const _ListViewAdaptiveIndicator();
+final class _MasonryGridViewAdaptiveIndicator extends StatelessWidget {
+  const _MasonryGridViewAdaptiveIndicator();
 
   @override
   Widget build(BuildContext context) {
@@ -526,32 +552,27 @@ final class _ListViewAdaptiveIndicator extends StatelessWidget {
 
 /// iOS style custom scroll view with refresh indicator.
 @immutable
-final class _CustomScrollView extends StatefulWidget {
-  const _CustomScrollView({
+final class _MasonryGridCustomScrollView extends StatefulWidget {
+  const _MasonryGridCustomScrollView({
     required this.sliver,
   });
 
   final Widget sliver;
 
   @override
-  State<_CustomScrollView> createState() => _CustomScrollViewState();
+  State<_MasonryGridCustomScrollView> createState() => _MasonryGridCustomScrollViewState();
 }
 
-class _CustomScrollViewState extends State<_CustomScrollView> {
-  /// Whether the scroll view is at the top.
-  ///
-  /// This is used to determine whether to show the refresh indicator.
+class _MasonryGridCustomScrollViewState extends State<_MasonryGridCustomScrollView> {
   var _isAtTop = true;
+
   @override
   Widget build(BuildContext context) {
-    final state = context.findAncestorStateOfType<_CoreListViewState>();
+    final state = context.findAncestorStateOfType<_CoreMasonryGridViewState>();
     if (state.isNull) return emptyBox;
     final widget = state!.widget;
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
-        /// Check if the scroll view is at the top.
-        ///
-        /// True when scroll offset <= 0. False otherwise.
         if (notification is ScrollStartNotification) {
           if (state._scrollController.offset <= 0 && !_isAtTop) {
             scheduleMicrotask(() {
@@ -587,7 +608,6 @@ class _CustomScrollViewState extends State<_CustomScrollView> {
         semanticChildCount: widget.semanticChildCount,
         shrinkWrap: widget.shrinkWrap,
         slivers: [
-          /// Show the refresh indicator only when the scroll view is at the top.
           if (_isAtTop) CupertinoSliverRefreshControl(onRefresh: widget.onRefresh),
           SliverPadding(padding: widget.padding ?? EdgeInsets.zero, sliver: this.widget.sliver),
         ],
@@ -596,8 +616,8 @@ class _CustomScrollViewState extends State<_CustomScrollView> {
   }
 }
 
-class _FloatingChildHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _FloatingChildHeaderDelegate({
+class _MasonryFloatingChildHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _MasonryFloatingChildHeaderDelegate({
     required this.height,
     required this.vsync,
     required this.child,
@@ -608,8 +628,6 @@ class _FloatingChildHeaderDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
   final FloatingChildVisibilityCallback? onVisibilityChanged;
 
-  /// Cached last reported visibility signal, used to de-duplicate callback
-  /// invocations when [build] is called repeatedly with the same argument.
   bool? _lastReportedVisibility;
 
   @override
@@ -623,15 +641,8 @@ class _FloatingChildHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    /// Fades the header in/out in sync with the floating snap animation.
-    ///
-    /// [shrinkOffset] is 0 when fully visible and grows up to [maxExtent]
-    /// as the header scrolls out.
     final progress = maxExtent == 0 ? 1.0 : (1.0 - (shrinkOffset / maxExtent)).clamp(0.0, 1.0);
 
-    /// The header is considered visible as long as it occupies any space on
-    /// screen (progress > 0). Once fully scrolled out, progress is 0 and the
-    /// header is reported as hidden.
     _notifyVisibilityIfChanged(progress > 0);
 
     final opacity = Curves.easeInOut.transform(progress);
@@ -647,8 +658,6 @@ class _FloatingChildHeaderDelegate extends SliverPersistentHeaderDelegate {
     if (_lastReportedVisibility == isVisible) return;
     _lastReportedVisibility = isVisible;
 
-    /// Defer to the next frame to avoid triggering setState during build on
-    /// the listener side.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       callback(isVisible);
     });
@@ -661,7 +670,7 @@ class _FloatingChildHeaderDelegate extends SliverPersistentHeaderDelegate {
   );
 
   @override
-  bool shouldRebuild(covariant _FloatingChildHeaderDelegate oldDelegate) {
+  bool shouldRebuild(covariant _MasonryFloatingChildHeaderDelegate oldDelegate) {
     return oldDelegate.height != height || oldDelegate.child != child || oldDelegate.onVisibilityChanged != onVisibilityChanged;
   }
 }

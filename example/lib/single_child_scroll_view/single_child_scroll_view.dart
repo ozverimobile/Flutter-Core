@@ -32,6 +32,21 @@ class _SingleChildScrollViewExampleState extends State<SingleChildScrollViewExam
           return Scaffold(
             appBar: AppBar(title: const Text('CoreSingleChildScrollView Example')),
             body: CoreSingleChildScrollView(
+              refreshIndicatorStartPosition: CoreRefreshIndicatorStartPosition.below,
+              floatingChild: Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Container(
+                  margin: EdgeInsets.symmetric(horizontal: 26),
+                  height: 60,
+                  width: 400,
+                  decoration: ShapeDecoration(
+                    shape: RoundedSuperellipseBorder(
+                      borderRadius: BorderRadius.circular(26),
+                    ),
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
               controller: ScrollController(),
               onRefresh: _refreshItems,
               child: Padding(
@@ -60,7 +75,7 @@ class _SingleChildScrollViewExampleState extends State<SingleChildScrollViewExam
                         );
                       },
                     ),
-                         const SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Text(
                       key: Key(SingleChildScrollViewKeys.pullUpToGoStart.rawValue),
                       'Pull up to go start!',
