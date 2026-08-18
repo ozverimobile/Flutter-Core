@@ -43,6 +43,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   very_good_analysis: ^10.2.0
   sqflite_common_ffi: ^2.0.1
 

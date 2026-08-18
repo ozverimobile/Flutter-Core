@@ -20,9 +20,26 @@ public class FlutterCorePlugin: NSObject, FlutterPlugin {
     switch call.method {
     case "getPlatformVersion":
       result("iOS " + UIDevice.current.systemVersion)
+    case "getLocalizedCountryNames":
+      result(FlutterCorePlugin.localizedCountryNames(from: call.arguments))
     default:
       result(FlutterMethodNotImplemented)
     }
+  }
+
+  /// Cihazin ICU verisinden, verilen dile gore ulke adlarini dondurur.
+  static func localizedCountryNames(from arguments: Any?) -> [String: String] {
+    let args = arguments as? [String: Any]
+    let languageCode = args?["languageCode"] as? String ?? Locale.current.identifier
+    let isoCodes = args?["isoCodes"] as? [String] ?? []
+    let locale = Locale(identifier: languageCode)
+    var names: [String: String] = [:]
+    for isoCode in isoCodes {
+      // ICU adi bulunamazsa Dart tarafi kendi adini kullansin diye atlanir.
+      guard let name = locale.localizedString(forRegionCode: isoCode), name != isoCode else { continue }
+      names[isoCode] = name
+    }
+    return names
   }
 }
 
