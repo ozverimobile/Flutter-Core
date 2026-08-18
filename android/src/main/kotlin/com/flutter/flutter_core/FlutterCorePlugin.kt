@@ -5,6 +5,7 @@ import android.content.ContentResolver
 import android.content.Context
 import android.provider.Settings
 import android.view.WindowManager
+import java.util.Locale
 import androidx.annotation.NonNull
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -76,6 +77,11 @@ class FlutterCorePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
                 result.error("ERROR_GETTING_ID", "Failed to get Android ID", e.localizedMessage)
             }
         }
+        else if (call.method == "getLocalizedCountryNames") {
+            val languageCode = call.argument<String>("languageCode") ?: Locale.getDefault().language
+            val isoCodes = call.argument<List<String>>("isoCodes") ?: emptyList()
+            result.success(getLocalizedCountryNames(languageCode, isoCodes))
+        }
         else if (call.method == "setSecure") {
             val enabled = call.argument<Boolean>("enabled") ?: false
             setSecure(enabled)
@@ -84,6 +90,21 @@ class FlutterCorePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
         else {
             result.notImplemented()
         }
+    }
+
+    /// Cihazın ICU verisinden, verilen dile gore ulke adlarini dondurur.
+    private fun getLocalizedCountryNames(languageCode: String, isoCodes: List<String>): Map<String, String> {
+        val targetLocale = Locale.forLanguageTag(languageCode.replace('_', '-'))
+        val names = HashMap<String, String>(isoCodes.size)
+        for (isoCode in isoCodes) {
+            val countryLocale = Locale.Builder().setRegion(isoCode).build()
+            val displayName = countryLocale.getDisplayCountry(targetLocale)
+            // ICU adi bulamazsa ISO kodunu doner; bu durumda Dart tarafi kendi adini kullansin.
+            if (displayName.isNotEmpty() && !displayName.equals(isoCode, ignoreCase = true)) {
+                names[isoCode] = displayName
+            }
+        }
+        return names
     }
 
     private fun getAndroidId(): String? {

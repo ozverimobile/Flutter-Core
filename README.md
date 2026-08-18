@@ -43,6 +43,7 @@
     - [Sized Box](#sized-box)
     - [Text](#text)
     - [Text Field](#text-field)
+    - [Ülke Seçimli Telefon Alanı](#ülke-seçimli-telefon-alanı)
 
 <br>
 
@@ -299,4 +300,126 @@ flutter_core:
 
 - `CorePhoneNumberTextField`: Bu sınıf, telefon numarası girmek için bir `TextFormField` widget'ıdır. Telefon numarası formatını (### ### ## ##) otomatik olarak uygulamak için bir maske kullanır ve kullanıcı girdilerini yalnızca sayılarla sınırlar.
 
+- `CorePhoneNumberTextField.withCountryPicker`: Aynı alanın ülke seçimli hâlidir. Ayrıntılar için bkz. [Ülke Seçimli Telefon Alanı](#ülke-seçimli-telefon-alanı).
+
 - `CoreSearchTextField`: Bu sınıf, arama yapmak için bir `TextFormField` widget'ıdır. Kullanıcının metin girdisine göre bir iptal düğmesi gösterir ve bu düğme metni temizlemek için kullanılabilir.
+
+<br>
+
+### Ülke Seçimli Telefon Alanı
+
+`CorePhoneNumberTextField.withCountryPicker`, telefon alanının ülke seçimli hâlidir. Alanın solundaki bayrak + ülke kodu butonuna basıldığında tam sayfa, aranabilir bir ülke seçim sayfası (bottom sheet) açılır. Seçilen ülkeye göre maske otomatik güncellenir.
+
+Varsayılan `CorePhoneNumberTextField` kullanımına **hiç dokunulmamıştır**; mevcut ekranlar aynen çalışmaya devam eder.
+
+Öne çıkanlar:
+
+- Alandaki metin **yalnızca ulusal numarayı** tutar; ülke kodu solda ayrı gösterilir.
+- 223 ülke, her biri kendi maskesiyle (`TR` -> `### ### ## ##`, `DE` -> `#### #######`).
+- Bayraklar asset değildir; ISO kodundan emoji olarak üretilir.
+- Ülke adları cihazın kendi dil verisinden gelir, uygulama dili değişince kendiliğinden güncellenir.
+
+#### Kullanım
+
+```dart
+CorePhoneNumberTextField.withCountryPicker(
+  hintText: 'Telefon',
+  initialCountryIsoCode: 'TR', // varsayılan ülke
+  onCountryChanged: (country) => print(country.isoCode),
+  onPhoneNumberChanged: (phone) {
+    phone.country.isoCode;   // TR
+    phone.number;            // 5551112233
+    phone.completeNumber;    // +905551112233
+    phone.isValid;           // maske tamamen dolduysa true
+  },
+  phoneNumberValidator: (phone) => phone.isValid ? null : 'Geçersiz numara',
+  countryPickerOptions: CoreCountryPickerOptions(
+    title: 'Ülke Seçin',
+    searchHintText: 'Ülke arayın...',
+    favoriteIsoCodes: ['TR', 'DE'], // listenin başına sabitlenir
+  ),
+)
+```
+
+#### `CorePhoneNumberController`
+
+`TextEditingController` yerine kullanılır; ülke ve numarayı tek yerden okumayı/yazmayı sağlar. `controller.text` aynen çalışmaya devam eder. Alana verildiğinde ülke seçimi ile controller birbirini otomatik günceller.
+
+```dart
+final controller = CorePhoneNumberController(isoCode: 'TR');
+
+CorePhoneNumberTextField.withCountryPicker(controller: controller);
+
+controller.text;                    // 555 111 22 33   (maskeli ulusal numara)
+controller.number;                  // 5551112233
+controller.country.isoCode;         // TR
+controller.completeNumber;          // +905551112233   (numara boşsa '')
+controller.formattedCompleteNumber; // +90 555 111 22 33
+controller.isValid;                 // maske doldu mu
+controller.phoneNumber;             // CorePhoneNumber
+
+controller.country = CoreCountry.fromIsoCode('DE')!; // maske otomatik güncellenir
+controller.number = '5551112233';
+controller.clearNumber();           // numarayı temizler, ülkeyi korur
+```
+
+Controller bir `ChangeNotifier` olduğu için `addListener` ile ülke/numara değişimleri dinlenebilir.
+
+#### Ülke adları ve dil
+
+Ülke adları **cihazın kendi dil verisinden** (ICU) alınır; ne pakette ne de projede çeviri tutmak gerekir. iOS, macOS ve Android'de çalışır; diğer platformlarda paket içindeki `tr` / `en` adlarına düşülür.
+
+Kullanıcı uygulama içinden dili değiştirdiğinde **ekstra bir şey yapmanız gerekmez**: ad `Localizations.localeOf(context)` üzerinden çözüldüğü için `MaterialApp.locale` değişimi ülke adlarını ve listenin alfabetik sırasını otomatik günceller. Yeni dilin adları arka planda yüklenir, hazır olduğunda liste kendini yeniler.
+
+Çözümleme sırası:
+
+1. `CoreCountryPickerOptions.nameResolver` (ekrana özel, en öncelikli)
+2. `CoreCountryLocalizations.register(...)` ile elle kaydedilmiş adlar
+3. Cihazdan gelen yerelleştirilmiş ad
+4. Paket içindeki `tr` / `en` adları
+
+Sadece belirli bir adı düzeltmek isterseniz:
+
+```dart
+CoreCountryLocalizations.register('tr', {'MK': 'Kuzey Makedonya'});
+```
+
+Cihazdan ad okumayı tamamen kapatmak için `CoreCountryLocalizations.useSystemNames = false;` yeterlidir.
+
+> Seçim sayfasının başlığı ve arama placeholder'ı sabit metindir; çok dilli uygulamalarda bunları `CoreCountryPickerOptions` üzerinden kendi çevirinizle vermelisiniz.
+
+#### `CoreCountryPickerSheet`
+
+Ülke seçim sayfası alandan bağımsız olarak da kullanılabilir:
+
+```dart
+final country = await CoreCountryPickerSheet.show(
+  context,
+  selected: seciliUlke,
+  options: const CoreCountryPickerOptions(favoriteIsoCodes: ['TR']),
+);
+```
+
+`CoreCountryPickerOptions` başlıca seçenekleri:
+
+| Seçenek | Açıklama |
+| --- | --- |
+| `title`, `searchHintText`, `emptyResultText` | Sayfadaki metinler |
+| `countries` | Listelenecek ülkeler (varsayılan: `kCoreCountries`) |
+| `favoriteIsoCodes` | Listenin başına sabitlenecek ülkeler |
+| `showDialCode`, `showCloseButton`, `showDragHandle` | Görünüm anahtarları |
+| `flagShape` | Bayrak şekli (`circle` / `rounded`) |
+| `borderRadius`, `backgroundColor`, `barrierColor` | Sayfa görünümü |
+| `isDismissible`, `enableDrag`, `useRootNavigator` | Sayfa davranışı |
+| `nameResolver` | Ülke adını özelleştirir |
+| `itemBuilder` | Liste satırını tamamen özelleştirir |
+
+#### `CoreCountry` ve `CoreCountryFlag`
+
+`CoreCountry`; ISO kodu, ülke kodu, ad ve maske bilgisini taşır. `CoreCountry.fromIsoCode('TR')` ve `CoreCountry.fromDialCode('+90')` ile erişilir; tüm liste `kCoreCountries` sabitindedir.
+
+`CoreCountryFlag` bayrağı tek başına çizmek için kullanılır. `CoreCountryFlagShape.circle` (varsayılan) bayrağı daireye sığdırır ve kenarlardan bir miktar kırpar; `CoreCountryFlagShape.rounded` ise bayrağın tamamını kırpmadan gösterir. Alan ve seçim sayfası aynı şekli `CoreCountryPickerOptions.flagShape` üzerinden kullanır.
+
+```dart
+CoreCountryFlag(country: CoreCountry.fromIsoCode('TR')!, size: 28);
+```
