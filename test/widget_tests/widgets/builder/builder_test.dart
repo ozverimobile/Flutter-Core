@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   group('Builder Test', () {
-    testWidgets('Should display and hide CircularProgressIndicator when loading state changes', (WidgetTester tester) async {
+    testWidgets('Should display and hide CircularProgressIndicator when loading state changes', (tester) async {
       await Core.initialize();
       await tester.pumpWidget(
         MaterialApp(
@@ -29,7 +29,7 @@ void main() {
       expect(indicator, findsNothing);
     });
 
-    testWidgets('Should close the keyboard when tapping outside the TextField', (WidgetTester tester) async {
+    testWidgets('Should close the keyboard when tapping outside the TextField', (tester) async {
       final focusNode = FocusNode();
       await Core.initialize();
       await tester.pumpWidget(

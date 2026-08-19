@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_core/flutter_core.dart';
+import 'package:material_ui/material_ui.dart';
 
 class CoreSingleChildScrollView extends StatefulWidget {
   const CoreSingleChildScrollView({
@@ -68,8 +68,6 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> w
     });
   }
 
- 
-
   @override
   void dispose() {
     _primaryScrollController?.detach(_position);
@@ -94,7 +92,6 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> w
     return [
       if (withCupertinoRefresh && widget.refreshIndicatorStartPosition == .above)
         CupertinoSliverRefreshControl(
-       
           onRefresh: widget.onRefresh,
         ),
       if (floatingChild != null)
@@ -110,7 +107,6 @@ class _CoreSingleChildScrollViewState extends State<CoreSingleChildScrollView> w
 
       if (withCupertinoRefresh && widget.refreshIndicatorStartPosition == .below)
         CupertinoSliverRefreshControl(
-          
           onRefresh: widget.onRefresh,
         ),
 

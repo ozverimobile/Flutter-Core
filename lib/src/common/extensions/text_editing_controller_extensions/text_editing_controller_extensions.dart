@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 extension TextEditingControllerExtensions on TextEditingController {
   void setTextForCurrencyFormat(String text, {int fractionDigits = 2}) {

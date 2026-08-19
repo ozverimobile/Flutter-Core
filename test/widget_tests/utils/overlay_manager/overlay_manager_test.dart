@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   late OverlayManager overlayManager;
@@ -10,7 +10,7 @@ void main() {
     overlayManager = OverlayManager(navigatorKey: navigatorKey);
   });
 
-  testWidgets('Toast is displayed and removed after duration', (WidgetTester tester) async {
+  testWidgets('Toast is displayed and removed after duration', (tester) async {
     // Arrange: Test widget'ını oluştur
     await tester.pumpWidget(
       MaterialApp(
@@ -53,7 +53,7 @@ void main() {
     expect(find.text('This is a test message'), findsNothing);
   });
 
-  testWidgets('showOverlay, closeOverlay and isOverlayOpen test', (WidgetTester tester) async {
+  testWidgets('showOverlay, closeOverlay and isOverlayOpen test', (tester) async {
     // Arrange: Test widget'ını oluştur
     await tester.pumpWidget(
       MaterialApp(
@@ -104,7 +104,7 @@ void main() {
     expect(overlayManager.isOverlayOpen(id: 'overlay-1'), false);
   });
 
-  testWidgets('closeAllToasts test', (WidgetTester tester) async {
+  testWidgets('closeAllToasts test', (tester) async {
     // Arrange: Test widget'ını oluştur
     await tester.pumpWidget(
       MaterialApp(
@@ -178,7 +178,7 @@ void main() {
     await tester.pumpAndSettle(3.seconds);
   });
 
-  testWidgets('closeLatestOverlay and closeAllOverlays test', (WidgetTester tester) async {
+  testWidgets('closeLatestOverlay and closeAllOverlays test', (tester) async {
     // Arrange: Test widget'ını oluştur
     await tester.pumpWidget(
       MaterialApp(

@@ -1,9 +1,9 @@
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_core/flutter_core.dart';
 import 'package:flutter_localization/flutter_localization.dart';
+import 'package:material_ui/material_ui.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -363,7 +363,7 @@ class _PopupManagerWidgetState extends State<PopupManagerWidget> {
                     color: Colors.white,
                     child: Center(
                       child: CupertinoButton.filled(
-                        onPressed:()=> popupManager.hidePopup<void>(id: id),
+                        onPressed: () => popupManager.hidePopup<void>(id: id),
                         child: const Text('Close'),
                       ),
                     ),

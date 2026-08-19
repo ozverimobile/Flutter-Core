@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_core/src/widgets/text_field/country/core_country.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Bayrağın çizim şekli.
 enum CoreCountryFlagShape {
@@ -61,10 +61,10 @@ class CoreCountryFlag extends StatelessWidget {
     if (!supportsFlagEmoji) return _FallbackFlag(country: country, size: size, shape: shape);
     return switch (shape) {
       CoreCountryFlagShape.circle => _CircleFlag(
-          country: country,
-          size: size,
-          borderColor: borderColor ?? Theme.of(context).colorScheme.outlineVariant,
-        ),
+        country: country,
+        size: size,
+        borderColor: borderColor ?? Theme.of(context).colorScheme.outlineVariant,
+      ),
       CoreCountryFlagShape.rounded => _RoundedFlag(country: country, size: size),
     };
   }

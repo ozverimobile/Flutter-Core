@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
 import 'package:flutter_core_example/single_child_scroll_view/single_child_scroll_view_keys.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   runApp(const SingleChildScrollViewExample());
@@ -36,7 +36,7 @@ class _SingleChildScrollViewExampleState extends State<SingleChildScrollViewExam
               floatingChild: Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Container(
-                  margin: EdgeInsets.symmetric(horizontal: 26),
+                  margin: const EdgeInsets.symmetric(horizontal: 26),
                   height: 60,
                   width: 400,
                   decoration: ShapeDecoration(

@@ -17,7 +17,7 @@ void main() {
 
     test('Test to localized price with null', () {
       const num? price = null;
-      final localizedPrice = price?.toLocalizedPrice();
+      final localizedPrice = price.toLocalizedPrice();
       expect(localizedPrice, null);
     });
 

@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
+import 'package:material_ui/material_ui.dart';
 
 typedef ToastPositionRecord = ({double? top, double? bottom, double? left, double? right});
 
@@ -102,16 +102,17 @@ class CoreToast extends StatelessWidget {
             child: Material(
               color: Colors.transparent,
               child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: _toastBeginOffset,
-                  end: _toastEndOffset,
-                ).animate(
-                  CurvedAnimation(
-                    parent: slideAnimationController,
-                    curve: _forwardAnimCurve,
-                    reverseCurve: _reverseAnimCurve,
-                  ),
-                ),
+                position:
+                    Tween<Offset>(
+                      begin: _toastBeginOffset,
+                      end: _toastEndOffset,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: slideAnimationController,
+                        curve: _forwardAnimCurve,
+                        reverseCurve: _reverseAnimCurve,
+                      ),
+                    ),
                 child: Container(
                   width: context.width,
                   padding: _toastPadding,
@@ -131,7 +132,8 @@ class CoreToast extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: child ??
+                  child:
+                      child ??
                       Row(
                         children: [
                           if (leading.isNotNull) ...[

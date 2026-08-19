@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter_core/flutter_core.dart';
+import 'package:material_ui/material_ui.dart';
 
 enum SelectableSearchSheetType {
   single,
@@ -31,8 +31,8 @@ class SelectableSearchSheetView<T extends SelectableSearchMixin> extends Statefu
     required this.searchFieldPadding,
     required this.showSelectAllButton,
     super.key,
-  })  : type = SelectableSearchSheetType.single,
-        selectedItems = null;
+  }) : type = SelectableSearchSheetType.single,
+       selectedItems = null;
 
   const SelectableSearchSheetView.multi({
     required this.items,
@@ -55,8 +55,8 @@ class SelectableSearchSheetView<T extends SelectableSearchMixin> extends Statefu
     required this.searchFieldPadding,
     required this.showSelectAllButton,
     super.key,
-  })  : type = SelectableSearchSheetType.multi,
-        selected = null;
+  }) : type = SelectableSearchSheetType.multi,
+       selected = null;
 
   final List<T> items;
   final T? selected;
@@ -229,7 +229,7 @@ class _AppBar extends StatelessWidget {
       valueListenable: viewModel.isPinned,
       builder: (context, isPinned, child) {
         return SliverAppBar(
-          toolbarHeight: (isPinned == false && (viewModel.title.isNullOrEmpty) ? (2 + viewModel.searchFieldPadding.vertical) : kToolbarHeight),
+          toolbarHeight: (!isPinned && (viewModel.title.isNullOrEmpty) ? (2 + viewModel.searchFieldPadding.vertical) : kToolbarHeight),
           backgroundColor: context.theme.appBarTheme.backgroundColor,
           elevation: 0,
           scrolledUnderElevation: 0,
@@ -254,7 +254,7 @@ class _ItemCountText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.getDataProvider<SelectableSearchSheetViewModel>();
-    if (viewModel.showItemCount == false && viewModel.showSelectAllButton == false) {
+    if (!viewModel.showItemCount && !viewModel.showSelectAllButton) {
       return const SliverToBoxAdapter(child: CoreSizedBox.shrink());
     }
     return ValueListenableBuilder(
@@ -270,7 +270,7 @@ class _ItemCountText extends StatelessWidget {
             children: [
               Builder(
                 builder: (context) {
-                  if (viewModel.showItemCount == false) {
+                  if (!viewModel.showItemCount) {
                     return const SizedBox.shrink();
                   }
                   return Padding(
@@ -288,7 +288,7 @@ class _ItemCountText extends StatelessWidget {
               if (viewModel.type == SelectableSearchSheetType.multi)
                 Builder(
                   builder: (context) {
-                    if (viewModel.showSelectAllButton == false) {
+                    if (!viewModel.showSelectAllButton) {
                       return const CoreSizedBox.shrink();
                     }
                     return CoreTextButton(

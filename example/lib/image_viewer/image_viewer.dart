@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
+import 'package:material_ui/material_ui.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 final _imageController = CoreImageController(navigatorKey: navigatorKey);
@@ -46,7 +46,7 @@ class _ImageViewerState extends State<ImageViewer> {
             child: CoreImageViewer.network(
               controller: _imageController,
               isSecure: true,
-              images: ['https://picsum.photos/id/1/200/200', 'https://picsum.photos/id/2/200/200', 'https://picsum.photos/id/3/200/200', 'https://picsum.photos/id/4/200/200'],
+              images: const ['https://picsum.photos/id/1/200/200', 'https://picsum.photos/id/2/200/200', 'https://picsum.photos/id/3/200/200', 'https://picsum.photos/id/4/200/200'],
               errorBuilder: (context, error, stackTrace) {
                 return const Center(
                   child: Text('Error', style: TextStyle(color: Colors.white)),

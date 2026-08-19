@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
 import 'package:flutter_core_example/permission_manager/permission_manager_keys.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   runApp(const PermissionManagerApp());

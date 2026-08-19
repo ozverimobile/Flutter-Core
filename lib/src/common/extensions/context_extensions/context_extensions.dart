@@ -1,7 +1,7 @@
 import 'dart:ui';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:meta/meta.dart';
 
 /// [BuildContext] EXTENSION
@@ -91,7 +91,7 @@ extension ContextExtension on BuildContext {
   Locale? get maybeLocale => Localizations.maybeLocaleOf(this);
 
   /// Checks if keyboard is open
-  bool get isKeyboardOpen => FocusManager.instance.primaryFocus?.hasFocus ?? false || flutterView.viewInsets.bottom > 0.0;
+  bool get isKeyboardOpen => FocusManager.instance.primaryFocus?.hasFocus ?? (flutterView.viewInsets.bottom > 0.0);
 
   /// Top padding of safe area
   double get topSafeAreaPadding => MediaQueryData.fromView(flutterView).padding.top;

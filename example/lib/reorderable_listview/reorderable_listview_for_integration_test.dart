@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
+import 'package:material_ui/material_ui.dart';
 
 final class ReorderableListviewForIntegrationTest extends StatefulWidget {
   const ReorderableListviewForIntegrationTest({

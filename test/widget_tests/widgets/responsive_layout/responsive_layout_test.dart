@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   group('Responsive_Layout Tests', () {
-    testWidgets('CoreResponsiveLayout shows correct layout for phone', (WidgetTester tester) async {
+    testWidgets('CoreResponsiveLayout shows correct layout for phone', (tester) async {
       tester.view.physicalSize = const Size(400, 500);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(
@@ -24,7 +24,7 @@ void main() {
       expect(find.text('Desktop Layout'), findsNothing);
     });
 
-    testWidgets('CoreResponsiveLayout shows correct layout for tablet', (WidgetTester tester) async {
+    testWidgets('CoreResponsiveLayout shows correct layout for tablet', (tester) async {
       tester.view.physicalSize = const Size(800, 1200);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(
@@ -44,7 +44,7 @@ void main() {
       expect(find.text('Desktop Layout'), findsNothing);
     });
 
-    testWidgets('CoreResponsiveLayout shows correct layout for desktop', (WidgetTester tester) async {
+    testWidgets('CoreResponsiveLayout shows correct layout for desktop', (tester) async {
       tester.view.physicalSize = const Size(1400, 1300);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(

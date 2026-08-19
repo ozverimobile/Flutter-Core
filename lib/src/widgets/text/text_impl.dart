@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
+import 'package:material_ui/material_ui.dart';
 
 class CoreText extends StatelessWidget {
   const CoreText(
@@ -18,9 +18,9 @@ class CoreText extends StatelessWidget {
     this.textWidthBasis,
     this.textHeightBehavior,
     this.selectionColor,
-  })  : textColor = null,
-        fontWeight = null,
-        _textTheme = null;
+  }) : textColor = null,
+       fontWeight = null,
+       _textTheme = null;
 
   /// Ekrandaki en büyük metindir;
   ///
@@ -42,8 +42,8 @@ class CoreText extends StatelessWidget {
     this.selectionColor,
     this.textColor,
     this.fontWeight,
-  })  : style = null,
-        _textTheme = CoreTextTheme.displayLarge;
+  }) : style = null,
+       _textTheme = CoreTextTheme.displayLarge;
 
   /// Ekrandaki en büyük metindir;
   ///
@@ -65,8 +65,8 @@ class CoreText extends StatelessWidget {
     this.selectionColor,
     this.textColor,
     this.fontWeight,
-  })  : style = null,
-        _textTheme = CoreTextTheme.displayMedium;
+  }) : style = null,
+       _textTheme = CoreTextTheme.displayMedium;
 
   /// Ekrandaki en büyük metindir;
   ///
@@ -88,8 +88,8 @@ class CoreText extends StatelessWidget {
     this.selectionColor,
     this.textColor,
     this.fontWeight,
-  })  : style = null,
-        _textTheme = CoreTextTheme.displaySmall;
+  }) : style = null,
+       _textTheme = CoreTextTheme.displaySmall;
 
   /// Card veya Dialog'daki başlık metinleri için kullanılır.
   const CoreText.headlineLarge(
@@ -109,8 +109,8 @@ class CoreText extends StatelessWidget {
     this.selectionColor,
     this.textColor,
     this.fontWeight,
-  })  : style = null,
-        _textTheme = CoreTextTheme.headlineLarge;
+  }) : style = null,
+       _textTheme = CoreTextTheme.headlineLarge;
 
   /// Card veya Dialog'daki başlık metinleri için kullanılır.
   const CoreText.headlineMedium(
@@ -130,8 +130,8 @@ class CoreText extends StatelessWidget {
     this.selectionColor,
     this.textColor,
     this.fontWeight,
-  })  : style = null,
-        _textTheme = CoreTextTheme.headlineMedium;
+  }) : style = null,
+       _textTheme = CoreTextTheme.headlineMedium;
 
   /// Card veya Dialog'daki başlık metinleri için kullanılır.
   const CoreText.headlineSmall(
@@ -151,8 +151,8 @@ class CoreText extends StatelessWidget {
     this.selectionColor,
     this.textColor,
     this.fontWeight,
-  })  : style = null,
-        _textTheme = CoreTextTheme.headlineSmall;
+  }) : style = null,
+       _textTheme = CoreTextTheme.headlineSmall;
 
   /// AppBar veya ListTile'daki başlık metinleri için kullanılır.
   const CoreText.titleLarge(
@@ -172,8 +172,8 @@ class CoreText extends StatelessWidget {
     this.selectionColor,
     this.textColor,
     this.fontWeight,
-  })  : style = null,
-        _textTheme = CoreTextTheme.titleLarge;
+  }) : style = null,
+       _textTheme = CoreTextTheme.titleLarge;
 
   /// AppBar veya ListTile'daki başlık metinleri için kullanılır.
   const CoreText.titleMedium(
@@ -193,8 +193,8 @@ class CoreText extends StatelessWidget {
     this.selectionColor,
     this.textColor,
     this.fontWeight,
-  })  : style = null,
-        _textTheme = CoreTextTheme.titleMedium;
+  }) : style = null,
+       _textTheme = CoreTextTheme.titleMedium;
 
   /// AppBar veya ListTile'daki başlık metinleri için kullanılır.
   const CoreText.titleSmall(
@@ -214,8 +214,8 @@ class CoreText extends StatelessWidget {
     this.selectionColor,
     this.textColor,
     this.fontWeight,
-  })  : style = null,
-        _textTheme = CoreTextTheme.titleSmall;
+  }) : style = null,
+       _textTheme = CoreTextTheme.titleSmall;
 
   /// Button veya Chip metinleri için kullanılır.
   const CoreText.labelLarge(
@@ -235,8 +235,8 @@ class CoreText extends StatelessWidget {
     this.selectionColor,
     this.textColor,
     this.fontWeight,
-  })  : style = null,
-        _textTheme = CoreTextTheme.labelLarge;
+  }) : style = null,
+       _textTheme = CoreTextTheme.labelLarge;
 
   /// Button veya Chip metinleri için kullanılır.
   const CoreText.labelMedium(
@@ -256,8 +256,8 @@ class CoreText extends StatelessWidget {
     this.selectionColor,
     this.textColor,
     this.fontWeight,
-  })  : style = null,
-        _textTheme = CoreTextTheme.labelMedium;
+  }) : style = null,
+       _textTheme = CoreTextTheme.labelMedium;
 
   /// Button veya Chip metinleri için kullanılır.
   const CoreText.labelSmall(
@@ -277,8 +277,8 @@ class CoreText extends StatelessWidget {
     this.selectionColor,
     this.textColor,
     this.fontWeight,
-  })  : style = null,
-        _textTheme = CoreTextTheme.labelSmall;
+  }) : style = null,
+       _textTheme = CoreTextTheme.labelSmall;
 
   /// Genel Text metinleri için kullanılır.
   const CoreText.bodyLarge(
@@ -298,8 +298,8 @@ class CoreText extends StatelessWidget {
     this.selectionColor,
     this.textColor,
     this.fontWeight,
-  })  : style = null,
-        _textTheme = CoreTextTheme.bodyLarge;
+  }) : style = null,
+       _textTheme = CoreTextTheme.bodyLarge;
 
   /// Genel Text metinleri için kullanılır.
   const CoreText.bodyMedium(
@@ -319,8 +319,8 @@ class CoreText extends StatelessWidget {
     this.selectionColor,
     this.textColor,
     this.fontWeight,
-  })  : style = null,
-        _textTheme = CoreTextTheme.bodyMedium;
+  }) : style = null,
+       _textTheme = CoreTextTheme.bodyMedium;
 
   /// Genel Text metinleri için kullanılır.
   const CoreText.bodySmall(
@@ -340,8 +340,8 @@ class CoreText extends StatelessWidget {
     this.selectionColor,
     this.textColor,
     this.fontWeight,
-  })  : style = null,
-        _textTheme = CoreTextTheme.bodySmall;
+  }) : style = null,
+       _textTheme = CoreTextTheme.bodySmall;
 
   final String? data;
   final TextStyle? style;
@@ -367,21 +367,21 @@ class CoreText extends StatelessWidget {
     return switch (data) {
       null || '' => emptyBox,
       _ => Text(
-          data!,
-          style: style ?? _textTheme?.toTextStyle(context)?.copyWith(color: textColor, fontWeight: fontWeight),
-          strutStyle: strutStyle,
-          textAlign: textAlign,
-          textDirection: textDirection,
-          locale: locale,
-          softWrap: softWrap,
-          overflow: overflow,
-          textScaler: textScaler,
-          maxLines: maxLines,
-          semanticsLabel: semanticsLabel,
-          textWidthBasis: textWidthBasis,
-          textHeightBehavior: textHeightBehavior,
-          selectionColor: selectionColor,
-        )
+        data!,
+        style: style ?? _textTheme.toTextStyle(context)?.copyWith(color: textColor, fontWeight: fontWeight),
+        strutStyle: strutStyle,
+        textAlign: textAlign,
+        textDirection: textDirection,
+        locale: locale,
+        softWrap: softWrap,
+        overflow: overflow,
+        textScaler: textScaler,
+        maxLines: maxLines,
+        semanticsLabel: semanticsLabel,
+        textWidthBasis: textWidthBasis,
+        textHeightBehavior: textHeightBehavior,
+        selectionColor: selectionColor,
+      ),
     };
   }
 }

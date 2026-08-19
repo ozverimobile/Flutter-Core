@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_core/flutter_core.dart';
+import 'package:material_ui/material_ui.dart';
 
 enum _CoreReorderableListViewType {
   normal,
@@ -30,8 +30,7 @@ class CoreReorderableListView extends StatefulWidget {
     this.footer,
     this.scrollDirection = Axis.vertical,
     this.reverse = false,
-    @Deprecated('Use controller property instead')
-    this.scrollController,
+    @Deprecated('Use controller property instead') this.scrollController,
     this.controller,
     this.primary,
     this.physics,
@@ -46,9 +45,9 @@ class CoreReorderableListView extends StatefulWidget {
     this.onReachedEnd,
     this.onReachedEndPercentage = 0.7,
     this.onRefresh,
-  })  : _listViewType = _CoreReorderableListViewType.normal,
-        itemBuilder = ((BuildContext context, int index) => children[index]),
-        itemCount = children.length;
+  }) : _listViewType = _CoreReorderableListViewType.normal,
+       itemBuilder = ((context, index) => children[index]),
+       itemCount = children.length;
 
   const CoreReorderableListView.builder({
     required this.itemBuilder,
@@ -67,8 +66,7 @@ class CoreReorderableListView extends StatefulWidget {
     this.footer,
     this.scrollDirection = Axis.vertical,
     this.reverse = false,
-    @Deprecated('Use controller property instead')
-    this.scrollController,
+    @Deprecated('Use controller property instead') this.scrollController,
     this.controller,
     this.primary,
     this.physics,
@@ -158,7 +156,7 @@ class _CoreReorderableListViewState extends State<CoreReorderableListView> {
   Widget _proxyDecorator(Widget child, int index, Animation<double> animation) {
     return AnimatedBuilder(
       animation: animation,
-      builder: (BuildContext context, Widget? child) {
+      builder: (context, child) {
         final animValue = Curves.easeInOut.transform(animation.value);
         final elevation = lerpDouble(0, 6, animValue)!;
         return Material(
@@ -219,28 +217,28 @@ class _CoreReorderableListViewState extends State<CoreReorderableListView> {
     return widget.onRefresh.isNull
         ? listView
         : Platform.isAndroid
-            ? RefreshIndicator(onRefresh: widget.onRefresh!, child: listView)
-            : _CustomScrollView(
-                sliver: SliverReorderableList(
-                  itemBuilder: (context, index) {
-                    if (index == widget.itemCount) return _ListViewAdaptiveIndicator();
-                    final item = widget.itemBuilder(context, index);
-                    final Key itemGlobalKey = _ReorderableListViewChildGlobalKey(item.key!, this);
-                    return Material(
-                      color: Colors.transparent,
-                      key: itemGlobalKey,
-                      child: ReorderableDelayedDragStartListener(index: index, child: item),
-                    );
-                  },
-                  itemCount: _showIndicator ? widget.itemCount + 1 : widget.itemCount,
-                  proxyDecorator: widget.proxyDecorator ?? _proxyDecorator,
-                  onReorder: widget.onReorder,
-                  onReorderStart: widget.onReorderStart,
-                  onReorderEnd: widget.onReorderEnd,
-                  itemExtent: widget.itemExtent,
-                  itemExtentBuilder: widget.itemExtentBuilder,
-                ),
-              );
+        ? RefreshIndicator(onRefresh: widget.onRefresh!, child: listView)
+        : _CustomScrollView(
+            sliver: SliverReorderableList(
+              itemBuilder: (context, index) {
+                if (index == widget.itemCount) return _ListViewAdaptiveIndicator();
+                final item = widget.itemBuilder(context, index);
+                final Key itemGlobalKey = _ReorderableListViewChildGlobalKey(item.key!, this);
+                return Material(
+                  color: Colors.transparent,
+                  key: itemGlobalKey,
+                  child: ReorderableDelayedDragStartListener(index: index, child: item),
+                );
+              },
+              itemCount: _showIndicator ? widget.itemCount + 1 : widget.itemCount,
+              proxyDecorator: widget.proxyDecorator ?? _proxyDecorator,
+              onReorder: widget.onReorder,
+              onReorderStart: widget.onReorderStart,
+              onReorderEnd: widget.onReorderEnd,
+              itemExtent: widget.itemExtent,
+              itemExtentBuilder: widget.itemExtentBuilder,
+            ),
+          );
   }
 
   Widget get _reorderableListViewBuilder {
@@ -279,28 +277,28 @@ class _CoreReorderableListViewState extends State<CoreReorderableListView> {
     return widget.onRefresh.isNull
         ? listView
         : Platform.isAndroid
-            ? RefreshIndicator(onRefresh: widget.onRefresh!, child: listView)
-            : _CustomScrollView(
-                sliver: SliverReorderableList(
-                  itemBuilder: (context, index) {
-                    if (index == widget.itemCount) return _ListViewAdaptiveIndicator();
-                    final item = widget.itemBuilder(context, index);
-                    final Key itemGlobalKey = _ReorderableListViewChildGlobalKey(item.key!, this);
-                    return Material(
-                      color: Colors.transparent,
-                      key: itemGlobalKey,
-                      child: ReorderableDelayedDragStartListener(index: index, child: item),
-                    );
-                  },
-                  itemCount: _showIndicator ? widget.itemCount + 1 : widget.itemCount,
-                  proxyDecorator: widget.proxyDecorator ?? _proxyDecorator,
-                  onReorder: widget.onReorder,
-                  onReorderStart: widget.onReorderStart,
-                  onReorderEnd: widget.onReorderEnd,
-                  itemExtent: widget.itemExtent,
-                  itemExtentBuilder: widget.itemExtentBuilder,
-                ),
-              );
+        ? RefreshIndicator(onRefresh: widget.onRefresh!, child: listView)
+        : _CustomScrollView(
+            sliver: SliverReorderableList(
+              itemBuilder: (context, index) {
+                if (index == widget.itemCount) return _ListViewAdaptiveIndicator();
+                final item = widget.itemBuilder(context, index);
+                final Key itemGlobalKey = _ReorderableListViewChildGlobalKey(item.key!, this);
+                return Material(
+                  color: Colors.transparent,
+                  key: itemGlobalKey,
+                  child: ReorderableDelayedDragStartListener(index: index, child: item),
+                );
+              },
+              itemCount: _showIndicator ? widget.itemCount + 1 : widget.itemCount,
+              proxyDecorator: widget.proxyDecorator ?? _proxyDecorator,
+              onReorder: widget.onReorder,
+              onReorderStart: widget.onReorderStart,
+              onReorderEnd: widget.onReorderEnd,
+              itemExtent: widget.itemExtent,
+              itemExtentBuilder: widget.itemExtentBuilder,
+            ),
+          );
   }
 }
 

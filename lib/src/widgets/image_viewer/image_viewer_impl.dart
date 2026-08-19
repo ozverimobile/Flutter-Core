@@ -5,9 +5,9 @@ import 'dart:math';
 import 'package:animations/animations.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_core/flutter_core.dart';
+import 'package:material_ui/material_ui.dart';
 
 enum _ImageType { network, asset, memory, file }
 
@@ -223,7 +223,7 @@ class CoreImageViewer extends StatelessWidget {
   Widget build(BuildContext context) {
     if (_images.isEmpty) return child;
     return _AnimationWrapper<int>(
-      openBuilder: (_, __) {
+      openBuilder: (_, _) {
         final isSecureIOSNetworkImage = isSecure && context.theme.platform == TargetPlatform.iOS && _imageType == _ImageType.network && _images.every((element) => element is String);
 
         if (isSecureIOSNetworkImage) {
@@ -265,7 +265,7 @@ class CoreImageViewer extends StatelessWidget {
           width: width,
         );
       },
-      closedBuilder: (BuildContext _, VoidCallback openContainer) {
+      closedBuilder: (_, openContainer) {
         controller?._init(openContainer, isSecure: isSecure);
         return GestureDetector(
           onTap: openContainer,
@@ -774,7 +774,7 @@ class CupertinoSecureImageViewer extends StatelessWidget {
       layoutDirection: TextDirection.ltr,
       creationParams: {'imageUrls': _imageUrls, 'headers': headers},
       creationParamsCodec: const StandardMessageCodec(),
-      onPlatformViewCreated: (int id) {
+      onPlatformViewCreated: (id) {
         // Kanalı dinlemeye başla
         MethodChannel('com.cwa.ssprotector/view_$id').setMethodCallHandler((call) async {
           if (call.method == 'onClose') onClose?.call();

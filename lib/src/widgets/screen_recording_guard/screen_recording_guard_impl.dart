@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Ekran kaydına/görüntüsüne karşı içeriği koruyan platform-bağımsız
 /// sarmalayıcı widget.

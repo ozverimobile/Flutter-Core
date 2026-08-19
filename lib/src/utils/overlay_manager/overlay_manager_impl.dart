@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
+import 'package:material_ui/material_ui.dart';
 
 abstract interface class IOverlayManager {
   void showToast({Key? key, String? title, String? message, TextStyle? titleStyle, TextStyle? messageStyle, int? messageMaxLines, ToastPosition toastPosition = ToastPosition.bottom, Color? backgroundColor, Color? shadowColor, DismissDirection? dismissDirection, Widget? leading, Duration? toastDuration, Duration? animationDuration, Duration? reverseAnimationDuration, Widget? child});

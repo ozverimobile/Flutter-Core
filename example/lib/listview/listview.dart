@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
 import 'package:flutter_core_example/listview/listview_for_integration_text.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   runApp(const ListViewExample());
@@ -84,11 +84,11 @@ class _ListViewExampleState extends State<ListViewExample> {
                             floatingChildVisibilityCallback: (isVisible) {
                               print('isVisible: $isVisible');
                             },
-                            floatingChild: TextField(),
+                            floatingChild: const TextField(),
                             padding: const EdgeInsets.all(24),
                             onReachedEnd: () => 5.seconds.delay<void>(),
                             onRefresh: () {
-                              return Future.delayed(Duration(seconds: 2), () {
+                              return Future.delayed(const Duration(seconds: 2), () {
                                 setState(() {
                                   items.clear();
                                   items.addAll(List.generate(40, (index) => 'Item $index'));

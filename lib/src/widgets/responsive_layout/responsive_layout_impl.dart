@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
+import 'package:material_ui/material_ui.dart';
 
 class CoreResponsiveLayout extends StatelessWidget {
   CoreResponsiveLayout({
@@ -7,9 +7,9 @@ class CoreResponsiveLayout extends StatelessWidget {
     this.tablet,
     this.desktop,
     super.key,
-  })  : assert(!(DeviceType.isPhone() && phone == null), 'Phone layout is required'),
-        assert(!(DeviceType.isTablet() && tablet == null), 'Tablet layout is required'),
-        assert(!(DeviceType.isDesktop() && desktop == null), 'Desktop layout is required');
+  }) : assert(!(DeviceType.isPhone() && phone == null), 'Phone layout is required'),
+       assert(!(DeviceType.isTablet() && tablet == null), 'Tablet layout is required'),
+       assert(!(DeviceType.isDesktop() && desktop == null), 'Desktop layout is required');
 
   final WidgetBuilder? phone;
   final WidgetBuilder? tablet;

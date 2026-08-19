@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   runApp(const ScreenRecordingDetectorApp());
@@ -9,12 +9,10 @@ class ScreenRecordingDetectorApp extends StatefulWidget {
   const ScreenRecordingDetectorApp({super.key});
 
   @override
-  State<ScreenRecordingDetectorApp> createState() =>
-      _ScreenRecordingDetectorAppState();
+  State<ScreenRecordingDetectorApp> createState() => _ScreenRecordingDetectorAppState();
 }
 
-class _ScreenRecordingDetectorAppState
-    extends State<ScreenRecordingDetectorApp> {
+class _ScreenRecordingDetectorAppState extends State<ScreenRecordingDetectorApp> {
   // Tek yapman gereken: bu bayrağı aç/kapat. Dialog/gizleme işini paket yapar.
   bool _guardEnabled = true;
 

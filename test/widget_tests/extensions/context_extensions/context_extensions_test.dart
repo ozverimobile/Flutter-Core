@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   group('ContextExtension Tests', () {
-    testWidgets('mediaQuerySize returns correct size', (WidgetTester tester) async {
+    testWidgets('mediaQuerySize returns correct size', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Builder(
@@ -17,7 +17,7 @@ void main() {
       );
     });
 
-    testWidgets('height and width return correct values', (WidgetTester tester) async {
+    testWidgets('height and width return correct values', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Builder(
@@ -31,7 +31,7 @@ void main() {
       );
     });
 
-    testWidgets('safeAreaHeight calculates correctly', (WidgetTester tester) async {
+    testWidgets('safeAreaHeight calculates correctly', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Builder(
@@ -44,7 +44,7 @@ void main() {
       );
     });
 
-    testWidgets('isDarkMode work correctly', (WidgetTester tester) async {
+    testWidgets('isDarkMode work correctly', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData.light(),
@@ -59,7 +59,7 @@ void main() {
       );
     });
 
-    testWidgets('isLightMode work correctly', (WidgetTester tester) async {
+    testWidgets('isLightMode work correctly', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData.light(),
@@ -74,7 +74,7 @@ void main() {
       );
     });
 
-    testWidgets('mediaQueryPadding,mediaQuery,viewPadding,viewInsets,orientation ', (WidgetTester tester) async {
+    testWidgets('mediaQueryPadding,mediaQuery,viewPadding,viewInsets,orientation ', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Builder(
@@ -91,7 +91,7 @@ void main() {
       );
     });
 
-    testWidgets('orientation checks work correctly', (WidgetTester tester) async {
+    testWidgets('orientation checks work correctly', (tester) async {
       tester.view.physicalSize = const Size(800, 600);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(
@@ -120,7 +120,7 @@ void main() {
       );
     });
 
-    testWidgets('locale and maybeLocale work correctly', (WidgetTester tester) async {
+    testWidgets('locale and maybeLocale work correctly', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           locale: const Locale('en', 'US'),
@@ -135,7 +135,7 @@ void main() {
       );
     });
 
-    testWidgets('isPhone, isTablet, and isDesktop classifications are correct', (WidgetTester tester) async {
+    testWidgets('isPhone, isTablet, and isDesktop classifications are correct', (tester) async {
       tester.view.physicalSize = const Size(400, 500);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(
@@ -182,7 +182,7 @@ void main() {
       );
     });
 
-    testWidgets('isKeyboardOpen is open', (WidgetTester tester) async {
+    testWidgets('isKeyboardOpen is open', (tester) async {
       tester.view.viewInsets = const FakeViewPadding(bottom: 100);
       await tester.pumpWidget(
         MaterialApp(
@@ -196,7 +196,7 @@ void main() {
       );
     });
 
-    testWidgets('isKeyboardOpen is close', (WidgetTester tester) async {
+    testWidgets('isKeyboardOpen is close', (tester) async {
       tester.view.viewInsets = FakeViewPadding.zero;
       await tester.pumpWidget(
         MaterialApp(
@@ -211,7 +211,7 @@ void main() {
     });
   });
 
-  testWidgets('flutterView returns correct view', (WidgetTester tester) async {
+  testWidgets('flutterView returns correct view', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Builder(
@@ -224,7 +224,7 @@ void main() {
     );
   });
 
-  testWidgets('devicePixelRatio returns correct value', (WidgetTester tester) async {
+  testWidgets('devicePixelRatio returns correct value', (tester) async {
     tester.view.devicePixelRatio = 2.0;
     await tester.pumpWidget(
       MaterialApp(
@@ -238,7 +238,7 @@ void main() {
     );
   });
 
-  testWidgets('textScaler returns correct value', (WidgetTester tester) async {
+  testWidgets('textScaler returns correct value', (tester) async {
     await tester.pumpWidget(
       MediaQuery(
         data: const MediaQueryData(textScaler: TextScaler.linear(5)),
@@ -254,7 +254,7 @@ void main() {
     );
   });
 
-  testWidgets('directionality returns correct value', (WidgetTester tester) async {
+  testWidgets('directionality returns correct value', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Directionality(
@@ -284,7 +284,7 @@ void main() {
     );
   });
 
-  testWidgets('defaultTextStyle returns correct value', (WidgetTester tester) async {
+  testWidgets('defaultTextStyle returns correct value', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Builder(
@@ -297,7 +297,7 @@ void main() {
     );
   });
 
-  testWidgets('usingBoldText returns correct value', (WidgetTester tester) async {
+  testWidgets('usingBoldText returns correct value', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Builder(
@@ -310,7 +310,7 @@ void main() {
     );
   });
 
-  testWidgets('topSafeAreaPadding returns correct value', (WidgetTester tester) async {
+  testWidgets('topSafeAreaPadding returns correct value', (tester) async {
     tester.view.physicalSize = const Size(800, 600);
     tester.view.devicePixelRatio = 1.0;
     tester.view.padding = const FakeViewPadding(top: 24);
@@ -326,7 +326,7 @@ void main() {
     );
   });
 
-  testWidgets('bottomSafeAreaPadding returns correct value', (WidgetTester tester) async {
+  testWidgets('bottomSafeAreaPadding returns correct value', (tester) async {
     tester.view.physicalSize = const Size(800, 600);
     tester.view.devicePixelRatio = 1.0;
     tester.view.padding = const FakeViewPadding(bottom: 16);
@@ -342,7 +342,7 @@ void main() {
     );
   });
 
-  testWidgets('rebuildWidget triggers rebuild', (WidgetTester tester) async {
+  testWidgets('rebuildWidget triggers rebuild', (tester) async {
     var rebuildCount = 0;
     await tester.pumpWidget(
       MaterialApp(

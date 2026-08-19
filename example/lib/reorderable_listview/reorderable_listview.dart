@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
 import 'package:flutter_core_example/reorderable_listview/reorderable_listview_for_integration_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   runApp(

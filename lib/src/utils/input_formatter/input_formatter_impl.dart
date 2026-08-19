@@ -28,7 +28,12 @@ class CoreInputFormatter implements TextInputFormatter {
     updateMask(
       mask: mask,
       filter: filter ?? {'#': RegExp('[0-9]'), 'A': RegExp('[^0-9]')},
-      newValue: initialText == null ? null : TextEditingValue(text: initialText, selection: TextSelection.collapsed(offset: initialText.length)),
+      newValue: initialText == null
+          ? null
+          : TextEditingValue(
+              text: initialText,
+              selection: TextSelection.collapsed(offset: initialText.length),
+            ),
     );
   }
 
@@ -38,11 +43,11 @@ class CoreInputFormatter implements TextInputFormatter {
     Map<String, RegExp>? filter,
     String? initialText,
   }) : this(
-          mask: mask,
-          filter: filter,
-          initialText: initialText,
-          type: MaskAutoCompletionType.eager,
-        );
+         mask: mask,
+         filter: filter,
+         initialText: initialText,
+         type: MaskAutoCompletionType.eager,
+       );
 
   MaskAutoCompletionType _type;
   MaskAutoCompletionType get type => _type;
@@ -68,7 +73,10 @@ class CoreInputFormatter implements TextInputFormatter {
     var targetValue = newValue;
     if (targetValue == null) {
       final unmaskedText = getUnmaskedText();
-      targetValue = TextEditingValue(text: unmaskedText, selection: TextSelection.collapsed(offset: unmaskedText.length));
+      targetValue = TextEditingValue(
+        text: unmaskedText,
+        selection: TextSelection.collapsed(offset: unmaskedText.length),
+      );
     }
     clear();
     return formatEditUpdate(TextEditingValue.empty, targetValue);
@@ -115,7 +123,7 @@ class CoreInputFormatter implements TextInputFormatter {
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
     final mask = _mask;
 
-    if (mask == null || mask.isEmpty == true) {
+    if (mask == null || mask.isEmpty) {
       _resultTextMasked = newValue.text;
       _resultTextArray.set(newValue.text);
       return newValue;
@@ -133,8 +141,8 @@ class CoreInputFormatter implements TextInputFormatter {
 
     var beforeSelectionStart = afterSelection.isValid
         ? beforeSelection.isValid
-            ? beforeSelection.start
-            : 0
+              ? beforeSelection.start
+              : 0
         : 0;
 
     for (var i = 0; i < beforeSelectionStart && i < beforeText.length && i < afterText.length; i++) {
@@ -146,8 +154,8 @@ class CoreInputFormatter implements TextInputFormatter {
 
     final beforeSelectionLength = afterSelection.isValid
         ? beforeSelection.isValid
-            ? beforeSelection.end - beforeSelectionStart
-            : 0
+              ? beforeSelection.end - beforeSelectionStart
+              : 0
         : oldValue.text.length;
 
     final lengthDifference = afterText.length - (beforeText.length - beforeSelectionLength);

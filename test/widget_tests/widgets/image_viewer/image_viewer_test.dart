@@ -1,7 +1,7 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   const image1 = 'assets/test_image_1.jpeg';
@@ -9,7 +9,7 @@ void main() {
   const image3 = 'assets/test_image_3.jpeg';
   final images = <String>[image1, image2, image3];
   group('Core Image Viewer', () {
-    testWidgets('Opens image viewer when icon is tapped', (WidgetTester tester) async {
+    testWidgets('Opens image viewer when icon is tapped', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CoreImageViewer.asset(
@@ -25,7 +25,7 @@ void main() {
       expect(find.byType(PageView), findsOneWidget);
     });
 
-    testWidgets('Closes image viewer when clear icon is tapped', (WidgetTester tester) async {
+    testWidgets('Closes image viewer when clear icon is tapped', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CoreImageViewer.asset(
@@ -43,7 +43,7 @@ void main() {
       expect(find.byType(PageView), findsNothing);
     });
 
-    testWidgets('Scrolls horizontally through images in PageView', (WidgetTester tester) async {
+    testWidgets('Scrolls horizontally through images in PageView', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CoreImageViewer.asset(
@@ -67,7 +67,7 @@ void main() {
       expect(find.byKey(const Key('image_2')), findsOneWidget);
     });
 
-    testWidgets('Opens image viewer at initialIndex position', (WidgetTester tester) async {
+    testWidgets('Opens image viewer at initialIndex position', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CoreImageViewer.asset(
@@ -83,7 +83,7 @@ void main() {
       expect(find.byKey(const Key('image_1')), findsOneWidget);
     });
 
-    testWidgets('Closes image viewer by swiping down', (WidgetTester tester) async {
+    testWidgets('Closes image viewer by swiping down', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: CoreImageViewer.asset(
@@ -99,7 +99,7 @@ void main() {
       expect(find.byType(PageView), findsNothing);
     });
 
-    testWidgets('Restricts scrolling while zoom is active', (WidgetTester tester) async {
+    testWidgets('Restricts scrolling while zoom is active', (tester) async {
       const imageKey = 'image_0';
       await tester.pumpWidget(
         MaterialApp(
@@ -120,7 +120,7 @@ void main() {
     });
   });
 
-  testWidgets('Opens image viewer programmatically using controller', (WidgetTester tester) async {
+  testWidgets('Opens image viewer programmatically using controller', (tester) async {
     final controller = CoreImageController();
 
     await tester.pumpWidget(
@@ -144,7 +144,7 @@ void main() {
     expect(find.byType(PageView), findsOneWidget);
   });
 
-  testWidgets('Displays error message and navigates to next image on swipe', (WidgetTester tester) async {
+  testWidgets('Displays error message and navigates to next image on swipe', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: CoreImageViewer.asset(

@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   group('Core Credit Card Expiration TextField', () {
@@ -217,7 +217,7 @@ void main() {
   });
 
   group('Core Password TextField', () {
-    testWidgets('Should toggle obscureText and update the icon correctly', (WidgetTester tester) async {
+    testWidgets('Should toggle obscureText and update the icon correctly', (tester) async {
       final textController = TextEditingController();
 
       // Widget'ı oluşturun
@@ -306,7 +306,7 @@ void main() {
   });
 
   group('Search TextField', () {
-    testWidgets('Should show and hide the cancel button based on the text content', (WidgetTester tester) async {
+    testWidgets('Should show and hide the cancel button based on the text content', (tester) async {
       final textController = TextEditingController();
 
       await tester.pumpWidget(
@@ -334,7 +334,7 @@ void main() {
       expect(find.byIcon(Icons.cancel), findsNothing);
     });
 
-    testWidgets('Should trigger onChanged callback when text changes', (WidgetTester tester) async {
+    testWidgets('Should trigger onChanged callback when text changes', (tester) async {
       String? changedText;
 
       await tester.pumpWidget(

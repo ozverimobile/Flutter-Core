@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_core/src/widgets/text_field/country/core_country.dart';
 import 'package:flutter_core/src/widgets/text_field/country/core_country_flag.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Ülke seçim sayfasının görünüm ve metin ayarları.
 @immutable
@@ -490,8 +490,8 @@ class _EmptyResult extends StatelessWidget {
           text,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ),
     );

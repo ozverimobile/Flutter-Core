@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   group('CoreSizedBox Tests', () {
-    testWidgets('CoreSizedBox shrink and expand test', (WidgetTester tester) async {
+    testWidgets('CoreSizedBox shrink and expand test', (tester) async {
       const shrinkBox = CoreSizedBox.shrink();
       const expandBox = CoreSizedBox.expand();
 
@@ -28,7 +28,7 @@ void main() {
       expect(expandBoxSize.width, greaterThan(0));
       expect(expandBoxSize.height, greaterThan(0));
     });
-    testWidgets('CoreSizedBox addition and subtraction test', (WidgetTester tester) async {
+    testWidgets('CoreSizedBox addition and subtraction test', (tester) async {
       const testSizedBox1 = CoreSizedBox(width: 50, height: 100);
       const testSizedBox2 = CoreSizedBox(width: 30, height: 70);
 

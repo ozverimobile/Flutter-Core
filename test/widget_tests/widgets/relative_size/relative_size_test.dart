@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
-  testWidgets('CoreRelativeHeight should calculate height based on percentage', (WidgetTester tester) async {
+  testWidgets('CoreRelativeHeight should calculate height based on percentage', (tester) async {
     const percentage = 0.5;
 
     await tester.pumpWidget(
@@ -26,7 +26,7 @@ void main() {
     expect(sizedBox.height, equals(expectedHeight));
   });
 
-  testWidgets('CoreRelativeWidth should calculate width based on percentage', (WidgetTester tester) async {
+  testWidgets('CoreRelativeWidth should calculate width based on percentage', (tester) async {
     const percentage = 0.3;
 
     await tester.pumpWidget(

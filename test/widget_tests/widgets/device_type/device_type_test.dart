@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 void main() {
   group('DeviceType Widget Test', () {
-    testWidgets('DeviceType detects phone', (WidgetTester tester) async {
+    testWidgets('DeviceType detects phone', (tester) async {
       tester.view.physicalSize = const Size(400, 500);
       tester.view.devicePixelRatio = 1.0;
 
@@ -20,7 +20,7 @@ void main() {
       );
     });
 
-    testWidgets('DeviceType detects tablet', (WidgetTester tester) async {
+    testWidgets('DeviceType detects tablet', (tester) async {
       tester.view.physicalSize = const Size(800, 1200);
       tester.view.devicePixelRatio = 1.0;
 
@@ -36,7 +36,7 @@ void main() {
       );
     });
 
-    testWidgets('DeviceType detects desktop', (WidgetTester tester) async {
+    testWidgets('DeviceType detects desktop', (tester) async {
       tester.view.physicalSize = const Size(1400, 1300);
       tester.view.devicePixelRatio = 1.0;
 

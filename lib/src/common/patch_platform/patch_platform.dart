@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
+import 'package:material_ui/material_ui.dart';
 
 @immutable
 final class PatchPlatform with BaseModel<PatchPlatform> {
@@ -23,9 +23,9 @@ final class PatchPlatform with BaseModel<PatchPlatform> {
 
   @override
   Map<String, Object?> toJson() => {
-        'version': version,
-        'patches': patches?.map((e) => e.toJson()).toList(),
-      };
+    'version': version,
+    'patches': patches?.map((e) => e.toJson()).toList(),
+  };
 
   @override
   String toString() {
@@ -58,10 +58,10 @@ final class Patch with BaseModel<Patch> {
 
   @override
   Map<String, Object?> toJson() => {
-        'patchNumber': patchNumber,
-        'forceUpdate': forceUpdate,
-        'showInfoBottomSheet': showInfoBottomSheet,
-      };
+    'patchNumber': patchNumber,
+    'forceUpdate': forceUpdate,
+    'showInfoBottomSheet': showInfoBottomSheet,
+  };
 
   @override
   String toString() {

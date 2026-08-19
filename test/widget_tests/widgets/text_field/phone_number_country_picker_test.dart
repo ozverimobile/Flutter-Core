@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_core/flutter_core.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 Widget _app(Widget child) => MaterialApp(home: Scaffold(body: child));
 
@@ -13,7 +12,7 @@ void _mockSystemCountryNames(Map<String, Map<String, String>> namesByLanguage) {
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(_coreChannel, (call) async {
     if (call.method != 'getLocalizedCountryNames') return null;
     final arguments = (call.arguments as Map).cast<String, Object?>();
-    final languageCode = arguments['languageCode'] as String;
+    final languageCode = arguments['languageCode']! as String;
     return namesByLanguage[languageCode] ?? <String, String>{};
   });
 }

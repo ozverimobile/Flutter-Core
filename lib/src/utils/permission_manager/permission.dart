@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 const _permissionKeyPrefix = 'CorePermissionSharedPreferencesPrefix/';
@@ -23,11 +23,12 @@ enum CorePermission {
     return switch (this) {
       CorePermission.notification => Permission.notification,
       CorePermission.camera => Permission.camera,
-      CorePermission.photos => Platform.isAndroid
-          ? (await CoreDeviceInfo.instance.androidInfo).sdkInt <= 32
-              ? Permission.storage
-              : Permission.photos
-          : Permission.photos,
+      CorePermission.photos =>
+        Platform.isAndroid
+            ? (await CoreDeviceInfo.instance.androidInfo).sdkInt <= 32
+                  ? Permission.storage
+                  : Permission.photos
+            : Permission.photos,
       CorePermission.microphone => Permission.microphone,
       CorePermission.speech => Permission.speech,
       CorePermission.contact => Permission.contacts,
@@ -63,35 +64,35 @@ enum CorePermission {
   Widget icon(BuildContext context) {
     return switch (this) {
       CorePermission.notification => Icon(
-          Icons.notifications,
-          size: 50,
-          color: context.colorScheme.onPrimary,
-        ),
+        Icons.notifications,
+        size: 50,
+        color: context.colorScheme.onPrimary,
+      ),
       CorePermission.camera => Icon(
-          Icons.camera_alt,
-          size: 50,
-          color: context.colorScheme.onPrimary,
-        ),
+        Icons.camera_alt,
+        size: 50,
+        color: context.colorScheme.onPrimary,
+      ),
       CorePermission.photos => Icon(
-          Icons.photo,
-          size: 50,
-          color: context.colorScheme.onPrimary,
-        ),
+        Icons.photo,
+        size: 50,
+        color: context.colorScheme.onPrimary,
+      ),
       CorePermission.microphone || CorePermission.speech => Icon(
-          Icons.mic,
-          size: 50,
-          color: context.colorScheme.onPrimary,
-        ),
+        Icons.mic,
+        size: 50,
+        color: context.colorScheme.onPrimary,
+      ),
       CorePermission.contact => Icon(
-          Icons.contact_phone,
-          size: 50,
-          color: context.colorScheme.onPrimary,
-        ),
+        Icons.contact_phone,
+        size: 50,
+        color: context.colorScheme.onPrimary,
+      ),
       CorePermission.location => Icon(
-          Icons.location_on,
-          size: 50,
-          color: context.colorScheme.onPrimary,
-        ),
+        Icons.location_on,
+        size: 50,
+        color: context.colorScheme.onPrimary,
+      ),
     };
   }
 }

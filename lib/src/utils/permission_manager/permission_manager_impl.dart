@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -11,9 +11,7 @@ abstract interface class ICorePermissionManager {
 }
 
 class CorePermissionManager implements ICorePermissionManager {
-  CorePermissionManager({required GlobalKey<NavigatorState> navigatorKey})
-      : _navigatorKey = navigatorKey,
-        _popupManager = PopupManager(navigatorKey: navigatorKey);
+  CorePermissionManager({required GlobalKey<NavigatorState> navigatorKey}) : _navigatorKey = navigatorKey, _popupManager = PopupManager(navigatorKey: navigatorKey);
 
   final GlobalKey<NavigatorState> _navigatorKey;
   final PopupManager _popupManager;

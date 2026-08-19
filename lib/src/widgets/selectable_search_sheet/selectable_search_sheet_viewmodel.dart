@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
+import 'package:material_ui/material_ui.dart';
 
 class SelectableSearchSheetViewModel<T extends SelectableSearchMixin> {
   SelectableSearchSheetViewModel({
@@ -58,7 +58,7 @@ class SelectableSearchSheetViewModel<T extends SelectableSearchMixin> {
 
   void init() {
     draggableScrollableController.addListener(_onDrag);
-    items?.removeWhere((e) => e.active == false);
+    items?.removeWhere((e) => !e.active);
     itemsNotifier.value = List.from(items ?? []);
     if (type == SelectableSearchSheetType.single && selected != null) {
       selectedItemsNotifier.value = [selected!];
