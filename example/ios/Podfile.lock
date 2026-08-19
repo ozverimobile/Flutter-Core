@@ -1,12 +1,8 @@
 PODS:
   - CocoaAsyncSocket (7.6.5)
   - Flutter (1.0.0)
-  - flutter_core (0.0.1):
-    - Flutter
-    - Kingfisher
   - flutter_localization (0.0.1):
     - Flutter
-  - Kingfisher (8.8.1)
   - patrol (0.0.1):
     - CocoaAsyncSocket (~> 7.6)
     - Flutter
@@ -16,7 +12,6 @@ PODS:
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - flutter_core (from `.symlinks/plugins/flutter_core/ios`)
   - flutter_localization (from `.symlinks/plugins/flutter_localization/ios`)
   - patrol (from `.symlinks/plugins/patrol/darwin`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
@@ -24,13 +19,10 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - CocoaAsyncSocket
-    - Kingfisher
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
-  flutter_core:
-    :path: ".symlinks/plugins/flutter_core/ios"
   flutter_localization:
     :path: ".symlinks/plugins/flutter_localization/ios"
   patrol:
@@ -40,10 +32,8 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
-  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  flutter_core: 33a41c0bdf6b999d27f674f41879124e69d5d7cb
+  Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
   flutter_localization: 72299fb6cb4e51cae587bd953ed0b958040b71e6
-  Kingfisher: b6c16059112dd6bdadf3d7ae01472ea1ef01a6b8
   patrol: 5df5d241d7f95f0df12a6906bbf45acb43a1e537
   permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
 

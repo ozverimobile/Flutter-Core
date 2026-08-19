@@ -14,3 +14,10 @@ analyzer:
     - "**.g.dart"
     - "**.gr.dart"
     - "**/generated_plugin_registrant.dart"
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
