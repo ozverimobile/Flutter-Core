@@ -20,6 +20,7 @@
     - [Device Info](#device-info)
     - [Input Formatter](#input-formatter)
     - [Jwt Decoder](#jwt-decoder)
+    - [Maintenance Manager](#maintenance-manager)
     - [Network Manager](#network-manager)
     - [Overlay Manager](#overlay-manager)
     - [Package Info](#package-info)
@@ -149,6 +150,72 @@ flutter_core:
 ### Jwt Decoder
 
 - Token içeriğini decode etmek için eklendi.
+
+<br>
+
+### Maintenance Manager
+
+- Firebase Remote Config üzerinden bakım modu kontrolü yapmak için eklenmiştir. `Core.initialize`'dan tamamen bağımsızdır; `CoreMaintenanceManager.instance.checkMaintenanceMode` çağrılmadığı sürece hiçbir etkisi yoktur. Aynı şekilde Firebase kurulu değilse, remote config instance'ı hazır değilse veya fetch başarısız olursa fonksiyon sessizce hiçbir şey yapmadan geri döner.
+- Remote Config'te `remoteConfigInstance` projenin kendisi tarafından oluşturulup parametre olarak verilir (fetch interval, default değerler vb. tamamen projenin kontrolündedir).
+- `maintenance_mode` adında bir Remote Config key'i beklenir. Değeri aşağıdaki alanları içeren bir JSON string olmalıdır:
+
+  ```json
+  {
+    "isMaintenanceModeActive": true,
+    "title": "Bakım Çalışması",
+    "content": "Uygulamamız kısa süreliğine bakımdadır.",
+    "maintenanceIcon": "https://example.com/maintenance.png",
+    "userIds": ["12345", "67890"],
+    "url": "https://example.com/status"
+  }
+  ```
+
+  - `isMaintenanceModeActive`: `true` değilse (null veya false) hiçbir şey gösterilmez.
+  - `title` / `content`: `null` bırakılırsa paket varsayılan bir metin gösterir.
+  - `maintenanceIcon`: `null` bırakılırsa varsayılan bir bakım ikonu gösterilir.
+  - `userIds`: doluysa yalnızca `checkMaintenanceMode`'a verilen `currentUserId` bu listede varsa ekran gösterilir; `null`/boşsa herkese gösterilir.
+  - `url`: doluysa varsayılan ekranda birincil aksiyon "Daha Fazla Bilgi" olur ve basılınca `CoreUrlLauncher` ile bu url açılır; altında ikincil bir "Tekrar Dene" metin butonu belirir (yalnızca `onRetry` verildiyse). `url` boşsa birincil aksiyon doğrudan "Tekrar Dene" olur.
+
+- Ekran tam sayfa, kapatılamayan (`PopScope(canPop: false)`) bir dialog olarak açılır; kullanıcı sistem geri tuşuyla veya barrier'a dokunarak kapatamaz. Basılan "Tekrar Dene" remote config'i yeniden fetch eder: bakım modu hâlâ aktifse ekran açık kalır, aktif değilse otomatik kapanır. Varsayılan tasarım yeterli değilse `builder` parametresiyle projeye özgü bir tasarım verilebilir; builder'a da aynı retry callback'i (ve `info.url` üzerinden) aynı veriler geçilir.
+
+  ```dart
+  await CoreMaintenanceManager.instance.checkMaintenanceMode(
+    context: context,
+    remoteConfigInstance: myRemoteConfig,
+    currentUserId: currentUser?.id,
+    // builder: (context, info, onRetry) => MyCustomMaintenanceView(info: info, onRetry: onRetry),
+  );
+  ```
+
+- Ekranı gören kullanıcıları loglamak için `onShown` callback'i verilebilir; ekran her açıldığında (fetch başarılı ve bakım aktifse) bir kez çağrılır. Paket herhangi bir analytics/logging aracını kendi sahiplenmez — hangi araç kullanılıyorsa (Firebase Analytics, kendi backend'iniz, vb.) çağrısı burada yapılır:
+
+  ```dart
+  await CoreMaintenanceManager.instance.checkMaintenanceMode(
+    context: context,
+    remoteConfigInstance: myRemoteConfig,
+    currentUserId: currentUser?.id,
+    onShown: (info) => FirebaseAnalytics.instance.logEvent(
+      name: 'maintenance_mode_shown',
+      parameters: {'title': info.title ?? ''},
+    ),
+  );
+  ```
+
+- Varsayılan görünümdeki illüstrasyon, pakete `assets/maintenance/maintenance_illustration.png` yolunda gömülüdür (bulunamazsa varsayılan bir ikona düşer). `maintenanceIcon` remote config'te verilirse onun yerine gösterilir.
+
+- Varsayılan tasarımın renkleri projenin kendi `Theme`'inden gelir (ekstra parametre gerekmez): arka plan projenin `scaffoldBackgroundColor`'ı (düz renk), metinler `onSurface`/`onSurfaceVariant`, butonlar `primary`/`onPrimary` kullanır — böylece hangi tema verilirse verilsin kontrast Material'ın kendi "on" renkleriyle garanti altına alınmış olur, ayrıca metin/buton rengi için ayrı parametre geçmeye gerek kalmaz. Dekoratif renk lekeleri `colorScheme.secondary`/`colorScheme.tertiary`'den türetilir. Bir projeye göre renk uymuyorsa, o projenin `ColorScheme`'ini/`ThemeData`'sını güncellemek yeterlidir.
+
+- İçerik ekranın altına yaslıdır; başlık/içerik metni uzayıp ekrana sığmazsa otomatik olarak scroll olur, kısa olduğunda ise alt kısımda sabit durur.
+
+- Remote Config'e gitmeden, elde hazır bir `MaintenanceModeInfo` ile ekranı doğrudan göstermek için (test/QA amaçlı, örneğin) `showMaintenanceMode` kullanılabilir:
+
+  ```dart
+  await CoreMaintenanceManager.instance.showMaintenanceMode(
+    context: context,
+    info: const MaintenanceModeInfo(isMaintenanceModeActive: true),
+    // onRetry veriliyorsa varsayılan görünümde "Tekrar Dene" butonu belirir.
+  );
+  ```
 
 <br>
 

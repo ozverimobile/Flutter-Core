@@ -5,5 +5,6 @@ export 'empty_object/empty_object.dart';
 export 'enums/enums.dart';
 export 'extensions/extensions.dart';
 export 'logger/logger.dart';
+export 'maintenance_mode_info/maintenance_mode_info.dart';
 export 'patch_platform/patch_platform.dart';
 export 'retriable/retriable.dart';

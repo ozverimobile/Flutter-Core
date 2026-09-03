@@ -4,6 +4,7 @@ export 'code_push/code_push.dart';
 export 'device_info/device_info.dart';
 export 'input_formatter/input_formatter.dart';
 export 'jwt_decoder/jwt_decoder.dart';
+export 'maintenance/maintenance.dart';
 export 'network_manager/network_manager.dart';
 export 'overlay_manager/overlay_manager.dart';
 export 'package_info/package_info.dart';
