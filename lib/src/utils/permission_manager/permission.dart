@@ -60,38 +60,22 @@ enum CorePermission {
     };
   }
 
-  Widget icon(BuildContext context) {
+  IconData get iconData {
     return switch (this) {
-      CorePermission.notification => Icon(
-          Icons.notifications,
-          size: 50,
-          color: context.colorScheme.onPrimary,
-        ),
-      CorePermission.camera => Icon(
-          Icons.camera_alt,
-          size: 50,
-          color: context.colorScheme.onPrimary,
-        ),
-      CorePermission.photos => Icon(
-          Icons.photo,
-          size: 50,
-          color: context.colorScheme.onPrimary,
-        ),
-      CorePermission.microphone || CorePermission.speech => Icon(
-          Icons.mic,
-          size: 50,
-          color: context.colorScheme.onPrimary,
-        ),
-      CorePermission.contact => Icon(
-          Icons.contact_phone,
-          size: 50,
-          color: context.colorScheme.onPrimary,
-        ),
-      CorePermission.location => Icon(
-          Icons.location_on,
-          size: 50,
-          color: context.colorScheme.onPrimary,
-        ),
+      CorePermission.notification => Icons.notifications,
+      CorePermission.camera => Icons.camera_alt,
+      CorePermission.photos => Icons.photo,
+      CorePermission.microphone || CorePermission.speech => Icons.mic,
+      CorePermission.contact => Icons.contact_phone,
+      CorePermission.location => Icons.location_on,
     };
+  }
+
+  Widget icon(BuildContext context) {
+    return Icon(
+      iconData,
+      size: 50,
+      color: context.colorScheme.onPrimary,
+    );
   }
 }
