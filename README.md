@@ -247,6 +247,49 @@ flutter_core:
 
 - Proje izin yönetimini standardize etmek için yazılmıştır.
 
+#### Çoklu İzin İsteme
+
+- Kullanıcıdan aynı anda birden fazla izin istenmesi gerektiğinde `requestMultiplePermissions` kullanılır. İzinler tek bir sheet'te (tablette dialog) listelenir ve sırayla istenir.
+
+  ```dart
+  final statuses = await permissionManager.requestMultiplePermissions(
+    context: context,
+    title: 'Gerekli İzinler',
+    message: 'Uygulamayı kullanmaya başlamak için aşağıdaki izinlere ihtiyacımız var.',
+    permissions: const [
+      CorePermission.camera,
+      CorePermission.microphone,
+      CorePermission.photos,
+      CorePermission.location,
+    ],
+    forcedPermissions: const {CorePermission.camera, CorePermission.microphone},
+  );
+
+  if (statuses[CorePermission.camera]!.isGranted) { ... }
+  ```
+
+- Listedeki tüm izinler zaten verilmişse sheet hiç açılmaz, durumlar doğrudan döner.
+
+- Akış:
+  - Sheet açıldığında izinler kendi ikonlarıyla listelenir ve alttaki buton "İzin Ver" olur. Önceden verilmiş izinler baştan yeşil tik ile gösterilir.
+  - "İzin Ver"e basılınca verilmemiş izinler sırayla, otomatik olarak istenir. Her satır sonuca göre yeşil tik veya kırmızı çarpı olarak güncellenir.
+  - Reddedilen izin varsa (zorunlu olsun olmasın) "Devam Et"in üstünde ikinci bir buton çıkar: kalıcı olarak reddedilmiş izin varsa "Ayarlara Git", sadece tekrar istenebilir izin varsa (Android) "Tekrar Dene". Kullanıcı ayarlardan uygulamaya döndüğünde izin durumları otomatik yenilenir.
+
+- `forcedPermissions` (varsayılan boş): "Devam Et"in aktif olması için verilmesi gereken izinler. `permissions`'ın alt kümesi olmalıdır.
+  - Boş: İstekler tamamlandıktan sonra, reddedilen izin olsa bile "Devam Et" aktiftir.
+  - Tüm izinler: Hepsi verilene kadar "Devam Et" sönük kalır.
+  - Bir kısmı: Sadece zorunlu izinlerin hepsi verildiğinde "Devam Et" aktif olur, isteğe bağlı izinlerin reddedilmesi engellemez. Bu durumda zorunlu satırların altında küçük bir "Zorunlu" yazısı gösterilir (`forcedLabel` ile değiştirilebilir).
+
+- Diğer parametreler:
+  - `icon`: Üstteki varsayılan kalkan ikonunun yerine gösterilecek widget.
+  - `permissionLabels`: Satırlarda gösterilecek metinler (`Map<CorePermission, String>`). Verilmeyen izinler için `CorePermission.title()` kullanılır.
+  - `requestButtonLabel`, `continueButtonLabel`, `settingsButtonLabel`, `retryButtonLabel`: Buton metinleri.
+  - `showCloseButton` (varsayılan `true`): Sağ üstteki kapatma butonu. Kapatıldığında o anki durumlar döner.
+
+- Dönüş değeri, istenen her iznin son durumunu içeren `Map<CorePermission, CorePermissionStatus>`'tür.
+
+- Not: Bu akış tekli `requestPermission`'daki "Sonra Hatırlat" (postpone) mantığını kullanmaz, durumları doğrudan sistemden okur.
+
 <br>
 
 ### Popup Manager

@@ -32,6 +32,8 @@
 	<string>$(PRODUCT_NAME) requests permission for us to use your location information.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>$(PRODUCT_NAME) requests permission for us to use your location information.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>$(PRODUCT_NAME) requires access to the microphone to record audio.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>$(PRODUCT_NAME) requires access to the photo library to save images.</string>
 	<key>UIApplicationSceneManifest</key>

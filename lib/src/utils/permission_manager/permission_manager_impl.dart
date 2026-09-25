@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_core/flutter_core.dart';
+import 'package:flutter_core/src/utils/permission_manager/multiple_permission_sheet.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 abstract interface class ICorePermissionManager {
   Future<CorePermissionStatus> getPermissionStatus({required CorePermission permission});
   Future<CorePermissionStatus> requestPermission({required CorePermission permission, BuildContext? context, String? title, String? message, Widget? icon, bool showAskLaterOption = false, bool requestWhenPostponed = false});
+  Future<Map<CorePermission, CorePermissionStatus>> requestMultiplePermissions({required List<CorePermission> permissions, BuildContext? context, String? title, String? message, Widget? icon, Map<CorePermission, String>? permissionLabels, Set<CorePermission> forcedPermissions = const {}, bool showCloseButton = true, String? requestButtonLabel, String? continueButtonLabel, String? settingsButtonLabel, String? retryButtonLabel, String? forcedLabel});
 }
 
 class CorePermissionManager implements ICorePermissionManager {
@@ -114,6 +116,95 @@ class CorePermissionManager implements ICorePermissionManager {
       );
     }
     return result!;
+  }
+
+  /// Shows a sheet (dialog on tablets) listing [permissions] and requests them sequentially.
+  ///
+  /// If every permission is already granted, the sheet is not shown and the statuses are returned directly.
+  ///
+  /// Initially the primary button is shown as "İzin Ver". When tapped, permissions are
+  /// requested one by one and each row is updated with the result. If any permission is
+  /// denied, a "Tekrar Dene" (requestable again) or "Ayarlara Git" (permanently denied)
+  /// button is shown. Statuses are refreshed when the user returns from the app settings.
+  ///
+  /// Returns the latest status of every requested permission.
+  @override
+  Future<Map<CorePermission, CorePermissionStatus>> requestMultiplePermissions({
+    required List<CorePermission> permissions,
+    BuildContext? context,
+    String? title,
+    String? message,
+
+    /// Replaces the header icon.
+    Widget? icon,
+
+    /// Custom row labels. [CorePermission.title] is used for missing entries.
+    Map<CorePermission, String>? permissionLabels,
+
+    /// Permissions that must be granted before the continue button is enabled.
+    ///
+    /// Other permissions are optional: the user can continue even if they are denied.
+    /// Pass every permission to force all of them, leave empty to force none.
+    Set<CorePermission> forcedPermissions = const {},
+    bool showCloseButton = true,
+    String? requestButtonLabel,
+    String? continueButtonLabel,
+    String? settingsButtonLabel,
+    String? retryButtonLabel,
+
+    /// Caption shown under forced rows when the list has both forced and optional permissions.
+    String? forcedLabel,
+  }) async {
+    assert(permissions.isNotEmpty, 'permissions must not be empty');
+    assert(forcedPermissions.every(permissions.contains), 'forcedPermissions must be a subset of permissions');
+    final uniquePermissions = permissions.toSet().toList();
+
+    final statuses = {for (final p in uniquePermissions) p: await getPermissionStatus(permission: p)};
+    if (statuses.values.every((s) => s.isGranted)) return statuses;
+
+    if (context.isNotNull && !context!.mounted) throw Exception('Context is not mounted');
+
+    final id = UniqueKey().toString();
+    Widget sheet(BuildContext ctx) => MultiplePermissionSheet(
+      popupManager: _popupManager,
+      id: id,
+      permissions: uniquePermissions,
+      showCloseButton: showCloseButton,
+      forcedPermissions: forcedPermissions,
+      title: title,
+      message: message,
+      icon: icon,
+      permissionLabels: permissionLabels,
+      requestButtonLabel: requestButtonLabel,
+      continueButtonLabel: continueButtonLabel,
+      settingsButtonLabel: settingsButtonLabel,
+      retryButtonLabel: retryButtonLabel,
+      forcedLabel: forcedLabel,
+    );
+
+    final effectiveContext = context ?? _navigatorContext;
+    final isTablet = MediaQuery.sizeOf(effectiveContext).shortestSide >= 600;
+
+    final Map<CorePermission, CorePermissionStatus>? result;
+    if (isTablet) {
+      result = await _popupManager.showDialog<Map<CorePermission, CorePermissionStatus>>(
+        context: context,
+        id: id,
+        barrierDismissible: false,
+        builder: sheet,
+      );
+    } else {
+      result = await _popupManager.showModalBottomSheet<Map<CorePermission, CorePermissionStatus>>(
+        context: context,
+        id: id,
+        isScrollControlled: true,
+        enableDrag: false,
+        isDismissible: false,
+        backgroundColor: Colors.transparent,
+        builder: sheet,
+      );
+    }
+    return result ?? {for (final p in uniquePermissions) p: await getPermissionStatus(permission: p)};
   }
 }
 
