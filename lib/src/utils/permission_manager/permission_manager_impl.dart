@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 abstract interface class ICorePermissionManager {
   Future<CorePermissionStatus> getPermissionStatus({required CorePermission permission});
+  Future<CorePermissionStatus> requestSystemPermission({required CorePermission permission});
   Future<CorePermissionStatus> requestPermission({required CorePermission permission, BuildContext? context, String? title, String? message, Widget? icon, bool showAskLaterOption = false, bool requestWhenPostponed = false});
   Future<Map<CorePermission, CorePermissionStatus>> requestMultiplePermissions({required List<CorePermission> permissions, BuildContext? context, String? title, String? message, Widget? icon, Map<CorePermission, String>? permissionLabels, Set<CorePermission> forcedPermissions = const {}, bool showCloseButton = true, String? requestButtonLabel, String? continueButtonLabel, String? settingsButtonLabel, String? retryButtonLabel, String? forcedLabel});
 }
@@ -51,6 +52,23 @@ class CorePermissionManager implements ICorePermissionManager {
       }
     } catch (e) {
       throw Exception('An exception occurred while getting status for permission $permission. Error was: $e');
+    }
+  }
+
+  /// Izni yalnizca isletim sisteminin kendi penceresiyle ister; core'un
+  /// aciklama sheet'i / diyalogu GOSTERILMEZ.
+  ///
+  /// Izin akisini (aciklama ekrani, ayarlara yonlendirme) kendisi kuran
+  /// cagiranlar icindir. Izin zaten verilmisse pencere acilmaz; kalici
+  /// reddedilmisse isletim sistemi pencere gostermez ve
+  /// [CorePermissionStatus.permanentlyDenied] doner.
+  @override
+  Future<CorePermissionStatus> requestSystemPermission({required CorePermission permission}) async {
+    try {
+      final status = await (await permission.permission()).request();
+      return CorePermissionStatus.fromPermissionStatus(status);
+    } catch (e) {
+      throw Exception('An exception occurred while requesting permission $permission. Error was: $e');
     }
   }
 

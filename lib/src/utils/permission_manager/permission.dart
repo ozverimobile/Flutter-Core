@@ -13,7 +13,15 @@ enum CorePermission {
   microphone(sharedPrefKey: '${_permissionKeyPrefix}Microphone'),
   speech(sharedPrefKey: '${_permissionKeyPrefix}Speech'),
   location(sharedPrefKey: '${_permissionKeyPrefix}Location'),
-  contact(sharedPrefKey: '${_permissionKeyPrefix}Contact');
+  contact(sharedPrefKey: '${_permissionKeyPrefix}Contact'),
+
+  /// Yakindaki Bluetooth cihazlarini tarama. Android 12+ `BLUETOOTH_SCAN`;
+  /// iOS'ta tek Bluetooth izni oldugu icin [bluetoothConnect] ile ayni izindir.
+  bluetoothScan(sharedPrefKey: '${_permissionKeyPrefix}BluetoothScan'),
+
+  /// Eslesmis Bluetooth cihazina baglanma. Android 12+ `BLUETOOTH_CONNECT`;
+  /// iOS'ta [bluetoothScan] ile ayni izindir.
+  bluetoothConnect(sharedPrefKey: '${_permissionKeyPrefix}BluetoothConnect');
 
   const CorePermission({required this.sharedPrefKey});
 
@@ -32,6 +40,8 @@ enum CorePermission {
       CorePermission.speech => Permission.speech,
       CorePermission.contact => Permission.contacts,
       CorePermission.location => Permission.location,
+      CorePermission.bluetoothScan => Platform.isIOS ? Permission.bluetooth : Permission.bluetoothScan,
+      CorePermission.bluetoothConnect => Platform.isIOS ? Permission.bluetooth : Permission.bluetoothConnect,
     };
   }
 
@@ -44,6 +54,8 @@ enum CorePermission {
       CorePermission.speech => 'Konuşma İzni',
       CorePermission.contact => 'Rehber İzni',
       CorePermission.location => 'Konum İzni',
+      CorePermission.bluetoothScan => 'Bluetooth Tarama İzni',
+      CorePermission.bluetoothConnect => 'Bluetooth Bağlantı İzni',
     };
   }
 
@@ -57,6 +69,8 @@ enum CorePermission {
       CorePermission.speech => '$appName konuşma tanıma yapabilmeniz için izin istiyor',
       CorePermission.contact => '$appName rehberi kullanabilmeniz için izin istiyor',
       CorePermission.location => '$appName konum bilgilerinizi kullanabilmemiz için izin istiyor',
+      CorePermission.bluetoothScan => '$appName yakındaki Bluetooth cihazlarını bulabilmeniz için izin istiyor',
+      CorePermission.bluetoothConnect => '$appName Bluetooth cihazlarına bağlanabilmeniz için izin istiyor',
     };
   }
 
@@ -68,6 +82,8 @@ enum CorePermission {
       CorePermission.microphone || CorePermission.speech => Icons.mic,
       CorePermission.contact => Icons.contact_phone,
       CorePermission.location => Icons.location_on,
+      CorePermission.bluetoothScan => Icons.bluetooth_searching,
+      CorePermission.bluetoothConnect => Icons.bluetooth_connected,
     };
   }
 
