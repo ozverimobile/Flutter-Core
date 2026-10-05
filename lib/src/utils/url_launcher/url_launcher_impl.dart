@@ -4,7 +4,9 @@ import 'package:flutter_core/flutter_core.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 abstract interface class ICoreUrlLauncher {
-  Future<bool> launchWebUrl({required String url});
+  /// [openExternally] `true` ise sayfa uygulama ici tarayici yerine
+  /// cihazin varsayilan tarayicisinda acilir.
+  Future<bool> launchWebUrl({required String url, bool openExternally = false});
   Future<bool> launchEmail({required String email, String? subject});
   Future<bool> launchPhone({required String phoneNumber});
   Future<bool> launchSms({required String phoneNumber, String? body});
@@ -17,12 +19,18 @@ class CoreUrlLauncher implements ICoreUrlLauncher {
   static final instance = CoreUrlLauncher._();
 
   @override
-  Future<bool> launchWebUrl({required String url}) async {
-    final params = Uri.parse(url);
-    if (await canLaunchUrl(params)) {
-      return launchUrl(params);
+  Future<bool> launchWebUrl({required String url, bool openExternally = false}) async {
+    // `canLaunchUrl` burada sorulmaz: Android 11+'da manifest'te https icin
+    // `<queries>` yoksa her zaman `false` doner ve link hic acilmaz.
+    // `launchUrl` acamadiginda zaten `false` doner / hata atar.
+    try {
+      return await launchUrl(
+        Uri.parse(url),
+        mode: openExternally ? LaunchMode.externalApplication : LaunchMode.platformDefault,
+      );
+    } catch (_) {
+      return false;
     }
-    return false;
   }
 
   @override
