@@ -27,6 +27,7 @@
     - [Path Provider](#path-provider)
     - [Permission Manager](#permission-manager)
     - [Popup Manager](#popup-manager)
+    - [Cloud Notification](#cloud-notification)
     - [Share](#share)
     - [Shared Preferences Manager](#shared-preferences-manager)
     - [Sqflite Manager](#sqflite-manager)
@@ -295,6 +296,92 @@ flutter_core:
 ### Popup Manager
 
 - Projelerde gösterilecek `Loader`, `Dialog` ve `Bottom Sheet`'leri aynı yapıda kullanabilmek için eklenmiştir. `AdaptiveInfoDialog`, `DefaultAdaptiveAlertDialog`, `AdaptiveDatePicker`, `AdaptivePicker`, `UpdateAvailableDialog` ve `AdaptiveInputDialog` gibi işletim sistemi uyumlu dialog'lar eklenmiştir. Bu popup'ların hepsine id verilerek istenilen sırayla kapatılabilmesi mümkündür.
+
+<br>
+
+### Cloud Notification
+
+- Şirket içi push backend'inin istemcisi; **OneSignal SDK'sının yerine geçer**. API, OneSignal Flutter SDK v5 ile aynı yapıdadır: `OneSignal` yerine `CoreCloudNotification` (`.Notifications`, `.User`, `.Debug`). Gönderim APNs ve FCM üzerinden backend tarafından yapılır.
+
+- OneSignal ile aynı davranışlar:
+  - Uygulama bildirime dokunularak açıldıysa tıklama, click listener sonradan eklense de teslim edilir.
+  - Ön planda gelen bildirim, listener'lardan biri `preventDefault()` çağırmadıkça gösterilir; sonradan `notification.display()` ile gösterilebilir.
+  - `login`, `addTags`, `setLanguage` çağrıları cihaz kaydından önce yapılsa da kaybolmaz; ağ hatasında sonraki açılışta tekrar gönderilir.
+  - Login'de başka kullanıcıdan geçiliyorsa ve logout'ta önceki kullanıcının tag'leri silinir.
+  - iOS'ta uygulama açılınca badge sıfırlanır (`Info.plist` → `CoreCloudNotificationDisableBadgeClearing = YES` ile kapatılır).
+  - Bildirimdeki http(s) `url` dokunulunca tarayıcıda açılır (`initialize(..., openLaunchUrls: false)` ile kapatılır). Deep link şemaları uygulamaya bırakılır, `notification.launchUrl`'den okunur.
+
+- Ek olarak desteklenenler:
+  - Aksiyon butonları: `notification.buttons`, basılan buton `event.result.actionId` (iOS kategorisi ve Android aksiyonları SDK tarafından oluşturulur).
+  - `User.addEmail` / `removeEmail`, `User.addAlias(es)` / `removeAlias(es)` / `getAliases`.
+  - iOS badge artırma (`_badgeIncrement`) Notification Service Extension'da uygulanır; uygulama açılınca sıfırlanır.
+  - Android'de bildirim backend'den data-only gelir ve SDK tarafından çizilir: kanal (`_channelName` ile yoksa oluşturulur), ikon, ses, renk, görsel. Bu sayede "ulaştı" arka planda da sayılır.
+  - Backend `429` döndürürse `Retry-After` kadar beklenip tekrar denenir.
+
+- Farklar:
+  - Bildirim izni yokken cihaz backend'e kaydedilmez; izin verilince kaydolur.
+  - `logout` cihaz kaydını silmez (OneSignal ile aynı): kullanıcı, e-posta, alias ve tag'ler temizlenir, cihaz anonim bildirimleri almaya devam eder. Hiç bildirim istenmiyorsa `User.pushSubscription.optOut()`.
+  - `User.addSms` backend'de karşılığı olmadığı için şimdilik hiçbir şey yapmaz.
+
+#### Kullanım
+
+```dart
+await CoreCloudNotification.initialize(appId); // runApp'ten önce; baseUrl verilmezse CoreCloudNotification.defaultBaseUrl
+CoreCloudNotification.Notifications.addClickListener((event) {
+  final data = event.notification.additionalData; // iç içe nesneler Map<String, dynamic>
+});
+CoreCloudNotification.Notifications.addForegroundWillDisplayListener((event) {
+  if (isChatOpen) event.preventDefault(); // senkron çağrılmalı
+});
+await CoreCloudNotification.Notifications.requestPermission(true); // true: kalıcı reddedildiyse ayarlara gönder
+await CoreCloudNotification.login(user.id);
+await CoreCloudNotification.User.addTags({'departmentId': 12});
+await CoreCloudNotification.logout();
+CoreCloudNotification.User.pushSubscription.id; // panelde hedef seçilen cihaz id'si
+```
+
+#### Kurulum
+
+- **Android**: Ek kurulum gerekmez. FCM servisi, `POST_NOTIFICATIONS` izni ve varsayılan `genel` kanalı paketten gelir. Uygulamadaki `google-services.json` (FlutterFire) kullanılır; bu Firebase projesinin service account JSON'u panelde uygulamanın Ayarlar sayfasına yüklenmelidir. Varsayılan bildirim ikonu `ic_stat_core_notification`'dır; uygulama `android/app/src/main/res/drawable/ic_stat_core_notification.png` koyarak değiştirir. Test sunucusu `http://` olduğu sürece uygulamada cleartext izni gerekir.
+- **iOS**: Xcode'da *Push Notifications* ve *Background Modes > Remote notifications* açılır. Uygulama kapalıyken "ulaştı" event'i ve bildirim görseli için bir **Notification Service Extension** gerekir:
+  1. Extension target'ı ekleyin (OneSignal'dan geçen projelerde mevcut `OneSignalNotificationServiceExtension` target'ı kullanılır), `NotificationService.swift`:
+     ```swift
+     import flutter_core_notification_extension
+     class NotificationService: CoreCloudNotificationService {}
+     ```
+  2. Podfile:
+     ```ruby
+     target 'OneSignalNotificationServiceExtension' do
+       use_frameworks!
+       pod 'flutter_core_notification_extension', :path => '.symlinks/plugins/flutter_core/ios'
+     end
+     ```
+  3. Uygulama ve extension aynı App Group'a sahip olmalı. Varsayılan ad OneSignal'ınkiyle aynıdır: `group.<bundle id>.onesignal`; farklıysa iki target'ın `Info.plist`'ine `CoreCloudNotificationAppGroup` yazılır.
+  4. Test sunucusu `http://` olduğu sürece iki target'ın `Info.plist`'inde ATS istisnası gerekir.
+
+#### OneSignal'dan geçiş
+
+1. `pubspec.yaml`'dan `onesignal_flutter` kaldırılır; `import 'package:onesignal_flutter/onesignal_flutter.dart';` satırları silinir (`flutter_core` zaten import ediliyorsa başka import gerekmez).
+2. İsimler değiştirilir:
+
+| OneSignal | CoreCloudNotification |
+| --- | --- |
+| `OneSignal.initialize(appId)` | `CoreCloudNotification.initialize(appId)` (panelden alınan `APP_ID`) |
+| `OneSignal.login` / `logout` | `CoreCloudNotification.login` / `logout` |
+| `OneSignal.Notifications.*`, `OneSignal.User.*`, `OneSignal.Debug.*` | `CoreCloudNotification.Notifications.*`, `.User.*`, `.Debug.*` (metot adları aynı) |
+| `OSNotification` | `CoreNotification` |
+| `OSNotificationClickEvent` / `OSNotificationClickResult` | `CoreNotificationClickEvent` / `CoreNotificationClickResult` |
+| `OSNotificationWillDisplayEvent` | `CoreNotificationWillDisplayEvent` |
+| `OSPushSubscriptionState` / `OSPushSubscriptionChangedState` | `CorePushSubscriptionState` / `CorePushSubscriptionChangedState` |
+| `OSLogLevel` | `CoreCloudNotificationLogLevel` |
+| v3: `OneSignal.shared.setAppId` | `CoreCloudNotification.initialize` |
+| v3: `setNotificationOpenedHandler((result) {...})` | `Notifications.addClickListener((event) {...})` |
+| v3: `setNotificationWillShowInForegroundHandler` + `event.complete(null)` | `Notifications.addForegroundWillDisplayListener` + `event.preventDefault()` |
+| v3: `setExternalUserId` / `removeExternalUserId` | `login` / `logout` |
+| v3: `promptUserForPushNotificationPermission()` | `Notifications.requestPermission(false)` |
+
+3. iOS: Podfile'da extension target'ındaki `OneSignalXCFramework` yerine `flutter_core_notification_extension`; `NotificationService.swift` yukarıdaki tek satıra indirilir.
+4. Android: `ic_stat_onesignal_default` ikonu varsa `ic_stat_core_notification` olarak yeniden adlandırılır.
 
 <br>
 

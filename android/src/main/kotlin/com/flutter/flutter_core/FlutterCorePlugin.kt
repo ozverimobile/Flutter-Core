@@ -14,6 +14,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
+import com.flutter.flutter_core.cloudnotification.CoreCloudNotificationPluginDelegate
 // Huawei importunuzu buraya eklemeyi unutmayın
 // import com.huawei.hms.api.HuaweiApiAvailability 
 
@@ -23,6 +24,7 @@ class FlutterCorePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     private var activity: Activity? = null // Aktivite referansını tutmak için değişken
     private lateinit var channel : MethodChannel
     private lateinit var contentResolver: ContentResolver
+    private var push: CoreCloudNotificationPluginDelegate? = null
 
     // --- FlutterPlugin Metotları ---
 
@@ -31,10 +33,13 @@ class FlutterCorePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "flutter_core")
         channel.setMethodCallHandler(this)
         mContext = flutterPluginBinding.applicationContext
+        push = CoreCloudNotificationPluginDelegate(flutterPluginBinding.applicationContext, flutterPluginBinding.binaryMessenger)
     }
 
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
+        push?.dispose()
+        push = null
         mContext = null
     }
 
@@ -43,18 +48,22 @@ class FlutterCorePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         activity = binding.activity
+        push?.attach(binding)
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
         activity = null
+        push?.detach()
     }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
         activity = binding.activity
+        push?.attach(binding)
     }
 
     override fun onDetachedFromActivity() {
         activity = null
+        push?.detach()
     }
 
     // --- MethodCallHandler ---
