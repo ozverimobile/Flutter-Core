@@ -97,7 +97,9 @@ public final class CoreCloudNotificationStore {
           let appId = appId?.trimmingCharacters(in: .whitespacesAndNewlines), !appId.isEmpty
     else { return nil }
     while base.hasSuffix("/") { base.removeLast() }
-    guard let url = URL(string: "\(base)/api/v1/apps/\(appId)"),
+    // baseUrl `https://host` veya `https://host/api/apps` olabilir; yol iki kez eklenmez.
+    if !base.hasSuffix("/api/apps") { base += "/api/apps" }
+    guard let url = URL(string: "\(base)/\(appId)"),
           url.scheme == "http" || url.scheme == "https"
     else { return nil }
     return url
@@ -150,6 +152,9 @@ public struct CoreCloudNotificationAPI {
     if let body {
       request.setValue("application/json", forHTTPHeaderField: "Content-Type")
       request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+    } else if method != "GET" {
+      // Gövdesiz POST'ta (session) `Content-Length: 0` gitsin; sunucu yoksa 411 dönüyor.
+      request.httpBody = Data()
     }
     CoreCloudNotificationLog.v("HTTP → \(method) \(request.url?.absoluteString ?? path) \(request.httpBody.flatMap { String(data: $0, encoding: .utf8) } ?? "")")
     let start = Date()

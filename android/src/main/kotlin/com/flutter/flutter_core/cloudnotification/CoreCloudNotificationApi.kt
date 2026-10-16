@@ -9,7 +9,7 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 /**
- * Push backend'inin mobil uç noktaları; hepsi `{baseUrl}/api/v1/apps/{appId}` altında ve
+ * Push backend'inin mobil uç noktaları; hepsi `{baseUrl}/{appId}` altında (`baseUrl` = `https://host/api/apps`) ve
  * kimlik doğrulama istemez. PATCH gerektiği için HttpURLConnection yerine OkHttp kullanılır.
  * Çağrılar bloklayıcıdır, [CoreCloudNotification]'un seri iş kuyruğundan yapılır.
  */
@@ -59,7 +59,9 @@ internal class CoreCloudNotificationApi(val endpoint: String) {
             if (baseUrl.isNullOrBlank() || appId.isNullOrBlank()) return null
             val base = baseUrl.trim().trimEnd('/')
             if (!base.startsWith("http://") && !base.startsWith("https://")) return null
-            return "$base/api/v1/apps/${appId.trim()}"
+            // baseUrl `https://host` veya `https://host/api/apps` olabilir; yol iki kez eklenmez.
+            val apps = if (base.endsWith("/api/apps")) base else "$base/api/apps"
+            return "$apps/${appId.trim()}"
         }
     }
 }

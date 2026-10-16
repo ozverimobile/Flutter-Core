@@ -31,8 +31,9 @@ import 'package:flutter_core/src/utils/cloud_notification/core_cloud_notificatio
 ///
 /// Android ve iOS dışındaki platformlarda (ve testlerde) tüm çağrılar sessizce hiçbir şey yapmaz.
 abstract final class CoreCloudNotification {
-  /// Test sunucusu. Canlı adres backend'den gelince güncellenecek.
-  static const defaultBaseUrl = 'http://10.16.25.98:5080';
+  /// Push backend'i. Cihaz kaydı `POST {baseUrl}/{appId}/devices` olarak gider. `/api/apps` olmadan
+  /// verilen adrese (`https://host`) SDK kendisi ekler.
+  static const defaultBaseUrl = 'https://push.corewishasset.com.tr/api/apps';
 
   static const _channel = MethodChannel('flutter_core/cloud_notification');
   static bool _handlerInstalled = false;
