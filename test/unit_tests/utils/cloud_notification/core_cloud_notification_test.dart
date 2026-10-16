@@ -171,6 +171,19 @@ void main() {
     });
   });
 
+  test('initialize native hatasını PlatformException olarak fırlatır', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, (call) async {
+      calls.add(call);
+      if (call.method == 'initialize') throw PlatformException(code: 'INVALID_BASE_URL', message: 'baseUrl http(s) ile başlamalı');
+      return null;
+    });
+    await expectLater(
+      CoreCloudNotification.initialize('app-1', baseUrl: 'ftp://x'),
+      throwsA(isA<PlatformException>().having((e) => e.code, 'code', 'INVALID_BASE_URL')),
+    );
+    expect(calls.map((c) => c.method), ['initialize']);
+  });
+
   test('desteklenmeyen platformda çağrılar no-op', () async {
     CoreCloudNotification.debugIsSupported = false;
     await CoreCloudNotification.initialize('app-1');

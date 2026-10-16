@@ -6,6 +6,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_core/src/common/logger/logger_impl.dart';
 import 'package:flutter_core/src/utils/cloud_notification/core_cloud_notification_models.dart';
 
 /// Şirket içi push backend'inin istemcisi; OneSignal SDK'sının yerine geçer.
@@ -43,18 +44,38 @@ abstract final class CoreCloudNotification {
   @visibleForTesting
   static bool? debugIsSupported;
 
-  static bool get isSupported =>
-      debugIsSupported ?? (!kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS));
+  static bool get isSupported => debugIsSupported ?? (!kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS));
 
   /// SDK'yı kurar. Uygulama açılışında bir kez çağrılır; tekrar çağrılması zararsızdır.
   ///
   /// [openLaunchUrls]: bildirimde http(s) `url` varsa dokunulunca tarayıcıda açılsın mı
   /// (OneSignal varsayılanı). Diğer şemalar (deep link) her zaman uygulamaya bırakılır.
+  ///
+  /// Kurulum başarısız olursa sonuç loglanır ve hata yeniden fırlatılır; native hatalar
+  /// [PlatformException] olarak gelir (`code`: `INVALID_APP_ID`, `INVALID_BASE_URL`,
+  /// `FIREBASE_NOT_CONFIGURED` (Android), `INITIALIZE_FAILED`).
+  ///
+  /// ```dart
+  /// try {
+  ///   await CoreCloudNotification.initialize(appId);
+  /// } on PlatformException catch (e) {
+  ///   // e.code, e.message
+  /// }
+  /// ```
   static Future<void> initialize(String appId, {String baseUrl = defaultBaseUrl, bool openLaunchUrls = true}) async {
     if (!isSupported) return;
     _ensureHandler();
-    await _invoke<void>('initialize', <String, Object?>{'appId': appId, 'baseUrl': baseUrl, 'openLaunchUrls': openLaunchUrls});
-    await Future.wait([Notifications._refreshPermission(), User.pushSubscription._refresh()]);
+    try {
+      await _invoke<void>('initialize', <String, Object?>{'appId': appId, 'baseUrl': baseUrl, 'openLaunchUrls': openLaunchUrls});
+      await Future.wait([Notifications._refreshPermission(), User.pushSubscription._refresh()]);
+      CoreLogger.log('CoreCloudNotification.initialize başarılı (appId: $appId, baseUrl: $baseUrl)');
+    } on PlatformException catch (e) {
+      CoreLogger.log('CoreCloudNotification.initialize başarısız [${e.code}]: ${e.message}', color: LogColors.red);
+      rethrow;
+    } catch (e) {
+      CoreLogger.log('CoreCloudNotification.initialize başarısız: $e', color: LogColors.red);
+      rethrow;
+    }
   }
 
   /// Cihazı kullanıcıyla eşler (`externalUserId`). Backend bu id ile hedefli gönderim yapar.
@@ -162,8 +183,7 @@ final class CoreCloudNotificationNotifications {
   }
 
   /// `preventDefault()` ile engellenmiş bildirimi gösterir.
-  Future<void> displayNotification(String notificationId) =>
-      CoreCloudNotification._invoke<void>('displayNotification', <String, Object?>{'notificationId': notificationId});
+  Future<void> displayNotification(String notificationId) => CoreCloudNotification._invoke<void>('displayNotification', <String, Object?>{'notificationId': notificationId});
 
   /// Bildirim merkezindeki tüm bildirimleri siler; iOS'ta badge'i sıfırlar.
   Future<void> clearAll() => CoreCloudNotification._invoke<void>('clearAll');
@@ -221,8 +241,7 @@ final class CoreCloudNotificationUser {
   Future<void> removeTags(List<String> keys) => CoreCloudNotification._invoke<void>('removeTags', <String, Object?>{'keys': keys});
 
   /// Cihazdaki son bilinen tag'ler.
-  Future<Map<String, String>> getTags() async =>
-      (await CoreCloudNotification._invoke<Map<Object?, Object?>>('getTags'))?.map((key, value) => MapEntry('$key', '$value')) ?? <String, String>{};
+  Future<Map<String, String>> getTags() async => (await CoreCloudNotification._invoke<Map<Object?, Object?>>('getTags'))?.map((key, value) => MapEntry('$key', '$value')) ?? <String, String>{};
 
   /// Bildirim dilini cihaz dili yerine bununla belirler (iki harfli kod, ör. `tr`, `en`).
   Future<void> setLanguage(String language) => CoreCloudNotification._invoke<void>('setLanguage', <String, Object?>{'language': language});
@@ -247,18 +266,14 @@ final class CoreCloudNotificationUser {
   /// Cihaz başına en fazla 20 alias.
   Future<void> addAlias(String label, String id) => addAliases(<String, String>{label: id});
 
-  Future<void> addAliases(Map<String, String> aliases) =>
-      CoreCloudNotification._invoke<void>('addAliases', <String, Object?>{'aliases': aliases});
+  Future<void> addAliases(Map<String, String> aliases) => CoreCloudNotification._invoke<void>('addAliases', <String, Object?>{'aliases': aliases});
 
   Future<void> removeAlias(String label) => removeAliases(<String>[label]);
 
-  Future<void> removeAliases(List<String> labels) =>
-      CoreCloudNotification._invoke<void>('removeAliases', <String, Object?>{'labels': labels});
+  Future<void> removeAliases(List<String> labels) => CoreCloudNotification._invoke<void>('removeAliases', <String, Object?>{'labels': labels});
 
   /// Cihazdaki son bilinen alias'lar.
-  Future<Map<String, String>> getAliases() async =>
-      (await CoreCloudNotification._invoke<Map<Object?, Object?>>('getAliases'))?.map((key, value) => MapEntry('$key', '$value')) ??
-      <String, String>{};
+  Future<Map<String, String>> getAliases() async => (await CoreCloudNotification._invoke<Map<Object?, Object?>>('getAliases'))?.map((key, value) => MapEntry('$key', '$value')) ?? <String, String>{};
 
   void _unsupported(String method) => debugPrint('CoreCloudNotification.User.$method: backend desteklemiyor, çağrı yok sayıldı');
 }

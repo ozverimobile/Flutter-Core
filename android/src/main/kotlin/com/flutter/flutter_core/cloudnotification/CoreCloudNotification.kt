@@ -122,7 +122,18 @@ internal object CoreCloudNotification {
 
     // region Yapılandırma
 
+    /**
+     * Yapılandırma geçersizse veya Firebase kurulamıyorsa [CoreCloudNotificationInitException] fırlatır;
+     * bu durumda hiçbir ayar kaydedilmez.
+     */
     fun initialize(appId: String, baseUrl: String, openLaunchUrls: Boolean) {
+        if (appId.isBlank()) throw CoreCloudNotificationInitException("INVALID_APP_ID", "appId boş olamaz")
+        if (CoreCloudNotificationApi.endpoint(baseUrl, appId) == null) {
+            throw CoreCloudNotificationInitException("INVALID_BASE_URL", "baseUrl http(s) ile başlamalı: '$baseUrl'")
+        }
+        if (messaging() == null) {
+            throw CoreCloudNotificationInitException("FIREBASE_NOT_CONFIGURED", "Firebase başlatılamadı: android/app/google-services.json eksik veya hatalı")
+        }
         prefs.edit()
             .putString(K_APP_ID, appId)
             .putString(K_BASE_URL, baseUrl)
@@ -649,3 +660,6 @@ internal object CoreCloudNotification {
     private fun appVersion(): String =
         runCatching { app.packageManager.getPackageInfo(app.packageName, 0).versionName }.getOrNull().orEmpty()
 }
+
+/** [CoreCloudNotification.initialize] hatası; [code] Dart'a `PlatformException.code` olarak gider. */
+internal class CoreCloudNotificationInitException(val code: String, message: String) : Exception(message)

@@ -59,14 +59,30 @@ final class CoreCloudNotificationBridge: NSObject, FlutterPlugin {
 
   // MARK: - Dart → native
 
+  /// Geçersiz yapılandırmada Dart'a `PlatformException` olarak dönecek hata; geçerliyse `nil`.
+  private static func validateConfig(appId: String, baseUrl: String) -> FlutterError? {
+    if appId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+      return FlutterError(code: "INVALID_APP_ID", message: "appId boş olamaz", details: nil)
+    }
+    if CoreCloudNotificationStore.endpoint(baseUrl: baseUrl, appId: appId) == nil {
+      return FlutterError(code: "INVALID_BASE_URL", message: "baseUrl http(s) ile başlamalı: '\(baseUrl)'", details: nil)
+    }
+    return nil
+  }
+
   func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     let args = call.arguments as? [String: Any] ?? [:]
     switch call.method {
     case "initialize":
+      let appId = args["appId"] as? String ?? ""
+      let baseUrl = args["baseUrl"] as? String ?? ""
+      if let error = Self.validateConfig(appId: appId, baseUrl: baseUrl) {
+        CoreCloudNotificationLog.e("initialize başarısız: \(error.message ?? "")")
+        result(error)
+        return
+      }
       installNotificationCenterDelegate()
-      manager.initialize(appId: args["appId"] as? String ?? "",
-                         baseUrl: args["baseUrl"] as? String ?? "",
-                         openLaunchUrls: args["openLaunchUrls"] as? Bool ?? true)
+      manager.initialize(appId: appId, baseUrl: baseUrl, openLaunchUrls: args["openLaunchUrls"] as? Bool ?? true)
       clearBadgeIfNeeded()
       CoreCloudNotificationManager.isAuthorized { granted in DispatchQueue.main.async { self.lastPermission = granted } }
       result(nil)

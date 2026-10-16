@@ -70,13 +70,19 @@ internal class CoreCloudNotificationPluginDelegate(context: Context, messenger: 
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
-            "initialize" -> {
+            "initialize" -> try {
                 CoreCloudNotification.initialize(
                     appId = call.argument<String>("appId").orEmpty(),
                     baseUrl = call.argument<String>("baseUrl").orEmpty(),
                     openLaunchUrls = call.argument<Boolean>("openLaunchUrls") ?: true,
                 )
                 result.success(null)
+            } catch (e: CoreCloudNotificationInitException) {
+                CoreCloudNotificationLog.e("initialize başarısız: ${e.message}")
+                result.error(e.code, e.message, null)
+            } catch (e: Exception) {
+                CoreCloudNotificationLog.e("initialize başarısız", e)
+                result.error("INITIALIZE_FAILED", e.message ?: e.toString(), e.stackTraceToString())
             }
             "setLogLevel" -> {
                 CoreCloudNotification.setLogLevel(call.argument<Int>("level") ?: 3)
