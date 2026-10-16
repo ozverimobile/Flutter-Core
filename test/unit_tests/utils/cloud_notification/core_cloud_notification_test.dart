@@ -184,6 +184,35 @@ void main() {
     expect(calls.map((c) => c.method), ['initialize']);
   });
 
+  test('enableLogs native log seviyesini initialize öncesi ayarlar, verilmezse dokunmaz', () async {
+    await CoreCloudNotification.initialize('app-1', enableLogs: true);
+    expect(calls.first.method, 'setLogLevel');
+    expect(calls.first.arguments, {'level': CoreCloudNotificationLogLevel.verbose.index});
+    expect(calls[1].method, 'initialize');
+    expect(CoreCloudNotification.logsEnabled, isTrue);
+
+    await CoreCloudNotification.setLogsEnabled(false);
+    expect(calls.last.arguments, {'level': CoreCloudNotificationLogLevel.warn.index});
+    expect(CoreCloudNotification.logsEnabled, isFalse);
+
+    calls.clear();
+    await CoreCloudNotification.initialize('app-1');
+    expect(calls.where((c) => c.method == 'setLogLevel'), isEmpty);
+  });
+
+  test('initialize native hatasını PlatformException olarak fırlatır', () async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(channel, (call) async {
+      calls.add(call);
+      if (call.method == 'initialize') throw PlatformException(code: 'INVALID_BASE_URL', message: 'baseUrl http(s) ile başlamalı');
+      return null;
+    });
+    await expectLater(
+      CoreCloudNotification.initialize('app-1', baseUrl: 'ftp://x'),
+      throwsA(isA<PlatformException>().having((e) => e.code, 'code', 'INVALID_BASE_URL')),
+    );
+    expect(calls.map((c) => c.method), ['initialize']);
+  });
+
   test('desteklenmeyen platformda çağrılar no-op', () async {
     CoreCloudNotification.debugIsSupported = false;
     await CoreCloudNotification.initialize('app-1');

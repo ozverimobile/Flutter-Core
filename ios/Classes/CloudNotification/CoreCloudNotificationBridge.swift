@@ -36,6 +36,7 @@ final class CoreCloudNotificationBridge: NSObject, FlutterPlugin {
     installNotificationCenterDelegate()
 
     manager.onSubscriptionChanged = { [weak self] state in
+      CoreCloudNotificationLog.d("native → Dart: onSubscriptionChanged \(state)")
       self?.channel.invokeMethod("onSubscriptionChanged", arguments: state)
     }
     NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground),
@@ -72,6 +73,7 @@ final class CoreCloudNotificationBridge: NSObject, FlutterPlugin {
 
   func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     let args = call.arguments as? [String: Any] ?? [:]
+    CoreCloudNotificationLog.v("Dart → native: \(call.method) \(call.arguments ?? "")")
     switch call.method {
     case "initialize":
       let appId = args["appId"] as? String ?? ""
@@ -88,6 +90,7 @@ final class CoreCloudNotificationBridge: NSObject, FlutterPlugin {
       result(nil)
     case "setLogLevel":
       CoreCloudNotificationLog.level = args["level"] as? Int ?? 3
+      CoreCloudNotificationLog.d("Log seviyesi: \(CoreCloudNotificationLog.level)")
       result(nil)
     case "login":
       manager.login(args["externalId"] as? String ?? "")
@@ -149,6 +152,7 @@ final class CoreCloudNotificationBridge: NSObject, FlutterPlugin {
       display(notificationId: args["notificationId"] as? String ?? "")
       result(nil)
     case "clearAll":
+      CoreCloudNotificationLog.d("Tüm bildirimler siliniyor")
       UNUserNotificationCenter.current().removeAllDeliveredNotifications()
       setBadge(0)
       result(nil)
@@ -172,6 +176,7 @@ final class CoreCloudNotificationBridge: NSObject, FlutterPlugin {
                    didReceiveRemoteNotification userInfo: [AnyHashable: Any],
                    fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) -> Bool {
     guard let nid = userInfo["_nid"] as? String else { return false }
+    CoreCloudNotificationLog.d("Remote notification (arka plan) alındı: \(nid)")
     let aps = userInfo["aps"] as? [String: Any]
     if aps?["alert"] == nil {
       manager.track(nid, "received")
@@ -188,10 +193,12 @@ final class CoreCloudNotificationBridge: NSObject, FlutterPlugin {
     let content = notification.request.content
     guard let payload = CoreCloudNotificationPayload(content: content) else { return }
     if content.userInfo[CoreCloudNotificationBridge.redisplayKey] != nil {
+      CoreCloudNotificationLog.d("Engellenen bildirim tekrar gösteriliyor: \(payload.notificationId)")
       completionHandler(CoreCloudNotificationBridge.presentationOptions)
       return
     }
     CoreCloudNotificationLog.i("Bildirim geldi (ön planda): \(payload.notificationId)")
+    CoreCloudNotificationLog.v("Bildirim içeriği: \(payload.toMap())")
     manager.track(payload.notificationId, "received")
     if !payload.buttons.isEmpty {
       DispatchQueue.global(qos: .userInitiated).async {
@@ -209,6 +216,7 @@ final class CoreCloudNotificationBridge: NSObject, FlutterPlugin {
                                  content: UNNotificationContent,
                                  completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
     guard hasWillDisplayListener else {
+      CoreCloudNotificationLog.d("willDisplay listener yok, bildirim gösteriliyor: \(payload.notificationId)")
       completionHandler(CoreCloudNotificationBridge.presentationOptions)
       return
     }
@@ -216,6 +224,7 @@ final class CoreCloudNotificationBridge: NSObject, FlutterPlugin {
     let complete: (Bool) -> Void = { [weak self] display in
       guard !completed else { return }
       completed = true
+      CoreCloudNotificationLog.d("foregroundWillDisplay cevabı: göster=\(display)")
       if display {
         completionHandler(CoreCloudNotificationBridge.presentationOptions)
       } else {
@@ -224,6 +233,7 @@ final class CoreCloudNotificationBridge: NSObject, FlutterPlugin {
         completionHandler([])
       }
     }
+    CoreCloudNotificationLog.d("native → Dart: onWillDisplay \(payload.notificationId)")
     channel.invokeMethod("onWillDisplay", arguments: payload.toMap()) { result in
       complete((result as? Bool) != false)
     }
@@ -238,7 +248,10 @@ final class CoreCloudNotificationBridge: NSObject, FlutterPlugin {
                               withCompletionHandler completionHandler: @escaping () -> Void) {
     guard let payload = CoreCloudNotificationPayload(content: response.notification.request.content) else { return }
     defer { completionHandler() }
-    if response.actionIdentifier == UNNotificationDismissActionIdentifier { return }
+    if response.actionIdentifier == UNNotificationDismissActionIdentifier {
+      CoreCloudNotificationLog.d("Bildirim kapatıldı (dismiss): \(payload.notificationId)")
+      return
+    }
     let actionId = response.actionIdentifier == UNNotificationDefaultActionIdentifier ? nil : response.actionIdentifier
     onClick(payload, actionId: actionId)
   }
@@ -250,7 +263,10 @@ final class CoreCloudNotificationBridge: NSObject, FlutterPlugin {
   // MARK: - Tıklama
 
   private func onClick(_ payload: CoreCloudNotificationPayload, actionId: String?) {
-    if let last = lastClick, last.id == payload.notificationId, Date().timeIntervalSince(last.time) < 2 { return }
+    if let last = lastClick, last.id == payload.notificationId, Date().timeIntervalSince(last.time) < 2 {
+      CoreCloudNotificationLog.d("Tekrarlanan tıklama yok sayıldı: \(payload.notificationId)")
+      return
+    }
     lastClick = (payload.notificationId, Date())
 
     CoreCloudNotificationLog.i("Bildirime dokunuldu: \(payload.notificationId) actionId=\(actionId ?? "-")")
@@ -264,24 +280,33 @@ final class CoreCloudNotificationBridge: NSObject, FlutterPlugin {
     result["url"] = url
     let event: [String: Any] = ["notification": payload.toMap(), "result": result]
     if hasClickListener {
+      CoreCloudNotificationLog.d("native → Dart: onClick \(result)")
       channel.invokeMethod("onClick", arguments: event)
     } else {
       // Soğuk açılış: Dart listener'ı henüz eklemedi; ilk eklendiğinde teslim edilir.
       pendingClicks.append(event)
+      CoreCloudNotificationLog.d("Click listener yok, tıklama bekletiliyor (bekleyen \(pendingClicks.count))")
     }
   }
 
   private func flushPendingClicks() {
     let events = pendingClicks
     pendingClicks.removeAll()
+    if !events.isEmpty { CoreCloudNotificationLog.d("Bekleyen \(events.count) tıklama Dart'a teslim ediliyor") }
     events.forEach { channel.invokeMethod("onClick", arguments: $0) }
   }
 
   /// OneSignal gibi: http(s) launch URL'leri tarayıcıda açılır, diğer şemalar uygulamaya bırakılır.
   private func openLaunchUrl(_ string: String) {
-    guard manager.openLaunchUrls, let url = URL(string: string),
-          url.scheme == "http" || url.scheme == "https"
-    else { return }
+    guard manager.openLaunchUrls else {
+      CoreCloudNotificationLog.d("launchUrl açılmadı (openLaunchUrls=false): \(string)")
+      return
+    }
+    guard let url = URL(string: string), url.scheme == "http" || url.scheme == "https" else {
+      CoreCloudNotificationLog.d("launchUrl http(s) değil, uygulamaya bırakıldı: \(string)")
+      return
+    }
+    CoreCloudNotificationLog.d("launchUrl tarayıcıda açılıyor: \(string)")
     UIApplication.shared.open(url)
   }
 
@@ -291,6 +316,7 @@ final class CoreCloudNotificationBridge: NSObject, FlutterPlugin {
       CoreCloudNotificationLog.w("Gösterilecek bildirim bulunamadı: \(notificationId)")
       return
     }
+    CoreCloudNotificationLog.d("Engellenen bildirim gösteriliyor: \(notificationId)")
     var userInfo = content.userInfo
     userInfo[CoreCloudNotificationBridge.redisplayKey] = true
     content.userInfo = userInfo
@@ -310,9 +336,12 @@ final class CoreCloudNotificationBridge: NSObject, FlutterPlugin {
   private func requestPermission(fallbackToSettings: Bool, result: @escaping FlutterResult) {
     let center = UNUserNotificationCenter.current()
     center.getNotificationSettings { settings in
+      CoreCloudNotificationLog.d("requestPermission: mevcut durum=\(settings.authorizationStatus.rawValue) (0=sorulmadı, 1=reddedildi, 2=izinli, 3=provisional)")
       switch settings.authorizationStatus {
       case .notDetermined:
+        CoreCloudNotificationLog.d("requestPermission: sistem izin penceresi açılıyor")
         center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+          CoreCloudNotificationLog.d("requestPermission sonucu: granted=\(granted)")
           if let error { CoreCloudNotificationLog.w("Bildirim izni hatası: \(error.localizedDescription)") }
           DispatchQueue.main.async {
             self.checkPermissionChange()
@@ -320,6 +349,7 @@ final class CoreCloudNotificationBridge: NSObject, FlutterPlugin {
           }
         }
       case .denied:
+        CoreCloudNotificationLog.d("requestPermission: daha önce reddedilmiş, ayarlara yönlendirme=\(fallbackToSettings)")
         DispatchQueue.main.async {
           if fallbackToSettings { self.openNotificationSettings() }
           result(false)
@@ -344,6 +374,7 @@ final class CoreCloudNotificationBridge: NSObject, FlutterPlugin {
         self.lastPermission = granted
         guard previous != granted else { return }
         CoreCloudNotificationLog.i("Bildirim izni değişti: \(granted)")
+        CoreCloudNotificationLog.d("native → Dart: onPermissionChanged \(granted)")
         self.channel.invokeMethod("onPermissionChanged", arguments: granted)
         if granted { self.manager.permissionGranted() }
       }

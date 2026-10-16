@@ -23,13 +23,17 @@ final class CoreCloudNotificationManager {
   // MARK: - Yapılandırma
 
   func initialize(appId: String, baseUrl: String, openLaunchUrls: Bool) {
+    CoreCloudNotificationLog.d("initialize [1/4] ayarlar kaydediliyor: appId=\(appId) baseUrl=\(baseUrl) openLaunchUrls=\(openLaunchUrls)")
     defaults.set(appId, forKey: Key.appId)
     defaults.set(baseUrl, forKey: Key.baseUrl)
     defaults.set(openLaunchUrls, forKey: Key.openLaunchUrls)
     started = true
     CoreCloudNotificationLog.i("initialize appId=\(appId) baseUrl=\(baseUrl) environment=\(CoreCloudNotificationManager.apnsEnvironment) appGroup=\(store.appGroup) shared=\(store.isSharedWithExtension)")
+    CoreCloudNotificationLog.d("initialize [2/4] durum: token=\(defaults.string(forKey: Key.token) != nil) deviceId=\(store.deviceId ?? "yok") externalUserId=\(externalId ?? "yok") subscribed=\(defaults.object(forKey: Key.subscribed) as? Bool ?? true)")
     // Token izinden bağımsız alınır; backend'e kayıt ise izin verilince yapılır.
+    CoreCloudNotificationLog.d("initialize [3/4] APNs kaydı isteniyor")
     DispatchQueue.main.async { UIApplication.shared.registerForRemoteNotifications() }
+    CoreCloudNotificationLog.d("initialize [4/4] senkronizasyon, session ve event gönderimi kuyruğa alındı")
     queue.async {
       self.syncLocked()
       self.sessionLocked()
@@ -42,6 +46,7 @@ final class CoreCloudNotificationManager {
   func setToken(_ deviceToken: Data) {
     let token = deviceToken.map { String(format: "%02x", $0) }.joined()
     guard defaults.string(forKey: Key.token) != token else {
+      CoreCloudNotificationLog.d("APNs token değişmedi")
       queue.async { self.syncLocked() }
       return
     }
@@ -56,6 +61,7 @@ final class CoreCloudNotificationManager {
 
   func onForeground() {
     guard started else { return }
+    CoreCloudNotificationLog.d("Uygulama ön plana geldi: sync, session, events")
     queue.async {
       self.syncLocked()
       self.sessionLocked()
@@ -65,6 +71,7 @@ final class CoreCloudNotificationManager {
 
   /// İzin ayarlardan geri verildiyse rehbere göre `POST /devices` tekrar yapılır.
   func permissionGranted() {
+    CoreCloudNotificationLog.d("İzin verildi: cihaz yeniden kaydedilecek")
     defaults.set(true, forKey: Key.needsRegister)
     DispatchQueue.main.async { UIApplication.shared.registerForRemoteNotifications() }
     sync()
@@ -77,7 +84,11 @@ final class CoreCloudNotificationManager {
   /// taşınır; başka bir kullanıcıdan geçiliyorsa öncekinin bilgileri silinir.
   func login(_ externalId: String) {
     let current = defaults.string(forKey: Key.externalUserId) ?? ""
-    guard current != externalId else { return }
+    guard current != externalId else {
+      CoreCloudNotificationLog.d("login: zaten '\(externalId)' ile giriş yapılmış")
+      return
+    }
+    CoreCloudNotificationLog.d("login: '\(current)' → '\(externalId)'\(current.isEmpty ? "" : " (önceki kullanıcının tag/alias/e-postası siliniyor)")")
     defaults.set(externalId, forKey: Key.externalUserId)
     if !current.isEmpty { clearUserData() }
     sync()
@@ -87,6 +98,7 @@ final class CoreCloudNotificationManager {
   /// tag'leri silinir, cihaz anonim bildirimleri almaya devam eder. Kayıt silinmez
   /// (`DELETE /devices` kullanılmaz); hiç bildirim istenmiyorsa `optOut`.
   func logout() {
+    CoreCloudNotificationLog.d("logout: externalUserId=\(externalId ?? "yok") temizleniyor")
     defaults.set("", forKey: Key.externalUserId)
     clearUserData()
     sync()
@@ -117,21 +129,27 @@ final class CoreCloudNotificationManager {
 
   /// Backend e-postayı küçük harfle saklıyor; gereksiz PATCH olmasın diye burada da küçültülür.
   func setEmail(_ email: String) {
+    CoreCloudNotificationLog.d("email: '\(email)'")
     defaults.set(email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(), forKey: Key.email)
     sync()
   }
 
   func removeEmail(_ email: String) {
-    guard defaults.string(forKey: Key.email) == email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() else { return }
+    guard defaults.string(forKey: Key.email) == email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() else {
+      CoreCloudNotificationLog.d("removeEmail: kayıttaki e-posta farklı, yok sayıldı")
+      return
+    }
     setEmail("")
   }
 
   func setLanguage(_ language: String) {
+    CoreCloudNotificationLog.d("language: \(language)")
     defaults.set(language, forKey: Key.language)
     sync()
   }
 
   func setSubscribed(_ subscribed: Bool) {
+    CoreCloudNotificationLog.d("subscribed: \(subscribed)")
     defaults.set(subscribed, forKey: Key.subscribed)
     notifySubscription()
     sync()
@@ -156,6 +174,7 @@ final class CoreCloudNotificationManager {
     var value = map(key)
     change(&value)
     defaults.set(value, forKey: key)
+    CoreCloudNotificationLog.d("\(key): \(value)")
     sync()
   }
 
@@ -194,7 +213,14 @@ final class CoreCloudNotificationManager {
   }
 
   private func syncLocked(retryOn404: Bool = true) {
-    guard let api = CoreCloudNotificationAPI(store: store), let token = defaults.string(forKey: Key.token) else { return }
+    guard let api = CoreCloudNotificationAPI(store: store) else {
+      CoreCloudNotificationLog.d("sync: atlandı, initialize çağrılmamış (appId/baseUrl yok)")
+      return
+    }
+    guard let token = defaults.string(forKey: Key.token) else {
+      CoreCloudNotificationLog.d("sync: atlandı, APNs token henüz yok")
+      return
+    }
     guard CoreCloudNotificationManager.isAuthorizedSync() else {
       CoreCloudNotificationLog.d("Bildirim izni yok, cihaz kaydı bekletiliyor")
       return
@@ -207,6 +233,7 @@ final class CoreCloudNotificationManager {
       defaults.string(forKey: Key.registeredEndpoint) != api.endpoint.absoluteString ||
       defaults.bool(forKey: Key.needsRegister)
     if needsRegister {
+      CoreCloudNotificationLog.d("sync: cihaz kaydı gerekiyor (deviceId=\(deviceId ?? "yok") tokenDeğişti=\(defaults.string(forKey: Key.registeredToken) != token) endpointDeğişti=\(defaults.string(forKey: Key.registeredEndpoint) != api.endpoint.absoluteString) needsRegister=\(defaults.bool(forKey: Key.needsRegister)))")
       guard let id = register(api: api, token: token, desired: desired) else { return }
       deviceId = id
     }
@@ -214,7 +241,11 @@ final class CoreCloudNotificationManager {
 
     let synced = defaults.dictionary(forKey: Key.synced) ?? [:]
     let patch = CoreCloudNotificationManager.diff(desired: desired, synced: synced)
-    guard !patch.isEmpty else { return }
+    guard !patch.isEmpty else {
+      CoreCloudNotificationLog.d("sync: cihaz güncel, PATCH gerekmiyor")
+      return
+    }
+    CoreCloudNotificationLog.d("sync: PATCH gönderiliyor: \(patch)")
     let result = api.sendSync("PATCH", "devices/\(deviceId)", patch)
     switch result {
     case .ok:
@@ -249,6 +280,7 @@ final class CoreCloudNotificationManager {
     if let tags = desired["tags"] as? [String: String], !tags.isEmpty { body["tags"] = tags }
     if let aliases = desired["aliases"] as? [String: String], !aliases.isEmpty { body["aliases"] = aliases }
 
+    CoreCloudNotificationLog.d("register: POST /devices gönderiliyor")
     switch api.sendSync("POST", "devices", body) {
     case let .ok(status, data):
       guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -318,8 +350,13 @@ final class CoreCloudNotificationManager {
   }
 
   private func sessionLocked() {
-    guard let api = CoreCloudNotificationAPI(store: store), let deviceId = store.deviceId else { return }
+    guard let api = CoreCloudNotificationAPI(store: store) else { return }
+    guard let deviceId = store.deviceId else {
+      CoreCloudNotificationLog.d("session: atlandı, cihaz henüz kayıtlı değil")
+      return
+    }
     let result = api.sendSync("POST", "devices/\(deviceId)/session", nil)
+    if case .ok = result { CoreCloudNotificationLog.d("session gönderildi") }
     if case let .fail(status, message) = result {
       CoreCloudNotificationLog.w("Session gönderilemedi: \(message)")
       if status == 404 {

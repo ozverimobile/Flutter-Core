@@ -17,6 +17,8 @@ public enum CoreCloudNotificationLog {
   public static func w(_ message: @autoclosure () -> String) { write(3, "W", message()) }
   public static func i(_ message: @autoclosure () -> String) { write(4, "I", message()) }
   public static func d(_ message: @autoclosure () -> String) { write(5, "D", message()) }
+  /// İstek/yanıt gövdeleri ve kanal argümanları gibi en ayrıntılı loglar.
+  public static func v(_ message: @autoclosure () -> String) { write(6, "V", message()) }
 
   private static func write(_ required: Int, _ tag: String, _ message: String) {
     guard level >= required else { return }
@@ -149,13 +151,18 @@ public struct CoreCloudNotificationAPI {
       request.setValue("application/json", forHTTPHeaderField: "Content-Type")
       request.httpBody = try? JSONSerialization.data(withJSONObject: body)
     }
+    CoreCloudNotificationLog.v("HTTP → \(method) \(request.url?.absoluteString ?? path) \(request.httpBody.flatMap { String(data: $0, encoding: .utf8) } ?? "")")
+    let start = Date()
     URLSession.shared.dataTask(with: request) { data, response, error in
+      let elapsed = Int(Date().timeIntervalSince(start) * 1000)
       if let error {
+        CoreCloudNotificationLog.v("HTTP ✕ \(method) \(path) (\(elapsed) ms): \(error.localizedDescription)")
         completion(.fail(nil, "\(method) \(path): \(error.localizedDescription)"))
         return
       }
       let status = (response as? HTTPURLResponse)?.statusCode ?? 0
       let data = data ?? Data()
+      CoreCloudNotificationLog.v("HTTP ← \(status) \(method) \(path) (\(elapsed) ms) \(String(data: data, encoding: .utf8) ?? "")")
       if (200 ..< 300).contains(status) {
         completion(.ok(status, data))
       } else {
@@ -204,6 +211,7 @@ public enum CoreCloudNotificationEvents {
     if pending.count > maxPending { pending.removeFirst(pending.count - maxPending) }
     CoreCloudNotificationStore.shared.defaults.set(pending, forKey: CoreCloudNotificationStore.Key.pendingEvents)
     lock.unlock()
+    CoreCloudNotificationLog.d("Event kuyruğa eklendi: \(type) \(notificationId) (bekleyen \(pending.count))")
     flushSync()
   }
 
@@ -212,11 +220,17 @@ public enum CoreCloudNotificationEvents {
     lock.lock()
     defer { lock.unlock() }
     let store = CoreCloudNotificationStore.shared
-    guard let api = CoreCloudNotificationAPI(store: store), let deviceId = store.deviceId else { return }
+    let pending = pendingEvents()
+    guard !pending.isEmpty, let api = CoreCloudNotificationAPI(store: store) else { return }
+    guard let deviceId = store.deviceId else {
+      CoreCloudNotificationLog.d("events: \(pending.count) event bekliyor, cihaz kaydı yok")
+      return
+    }
+    CoreCloudNotificationLog.d("events: \(pending.count) event gönderiliyor")
     var remaining: [[String: String]] = []
     var stop = false
     lastFlushStatus = nil
-    for event in pendingEvents() {
+    for event in pending {
       guard !stop, let nid = event["nid"], let type = event["type"] else {
         remaining.append(event)
         continue

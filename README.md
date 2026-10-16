@@ -326,7 +326,13 @@ flutter_core:
 #### Kullanım
 
 ```dart
-await CoreCloudNotification.initialize(appId); // runApp'ten önce; baseUrl verilmezse CoreCloudNotification.defaultBaseUrl
+try {
+  // runApp'ten önce; baseUrl verilmezse CoreCloudNotification.defaultBaseUrl
+  // enableLogs: adım adım Dart + native loglar (HTTP istek/yanıtları dahil); sonradan setLogsEnabled(bool)
+  await CoreCloudNotification.initialize(appId, enableLogs: kDebugMode);
+} on PlatformException catch (e) {
+  // e.code: INVALID_APP_ID, INVALID_BASE_URL, FIREBASE_NOT_CONFIGURED (Android), INITIALIZE_FAILED
+}
 CoreCloudNotification.Notifications.addClickListener((event) {
   final data = event.notification.additionalData; // iç içe nesneler Map<String, dynamic>
 });

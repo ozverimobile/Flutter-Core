@@ -29,9 +29,12 @@ internal class CoreCloudNotificationApi(val endpoint: String) {
             .url("$endpoint/$path")
             .method(method, (body?.toString() ?: "").toRequestBody(JSON))
             .build()
+        CoreCloudNotificationLog.v("HTTP → $method $endpoint/$path ${body ?: ""}")
+        val start = System.currentTimeMillis()
         return try {
             http.newCall(request).execute().use { response ->
                 val text = response.body?.string().orEmpty()
+                CoreCloudNotificationLog.v("HTTP ← ${response.code} $method $path (${System.currentTimeMillis() - start} ms) $text")
                 if (response.isSuccessful) {
                     Result.Ok(response.code, text)
                 } else {
@@ -39,6 +42,7 @@ internal class CoreCloudNotificationApi(val endpoint: String) {
                 }
             }
         } catch (e: IOException) {
+            CoreCloudNotificationLog.v("HTTP ✕ $method $path (${System.currentTimeMillis() - start} ms): $e")
             Result.Fail(null, "$method $path: $e")
         }
     }

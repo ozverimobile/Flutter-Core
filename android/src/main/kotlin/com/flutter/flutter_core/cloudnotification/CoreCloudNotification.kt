@@ -117,6 +117,7 @@ internal object CoreCloudNotification {
             CoreCloudNotificationRenderer.ensureDefaultChannel(app)
             (app as? Application)?.registerActivityLifecycleCallbacks(lifecycle)
             initialized = true
+            CoreCloudNotificationLog.d("ensureInit: logLevel=${CoreCloudNotificationLog.level} deviceId=${prefs.getString(K_DEVICE_ID, null)}")
         }
     }
 
@@ -127,13 +128,16 @@ internal object CoreCloudNotification {
      * bu durumda hiçbir ayar kaydedilmez.
      */
     fun initialize(appId: String, baseUrl: String, openLaunchUrls: Boolean) {
+        CoreCloudNotificationLog.d("initialize [1/5] yapılandırma doğrulanıyor: appId=$appId baseUrl=$baseUrl openLaunchUrls=$openLaunchUrls")
         if (appId.isBlank()) throw CoreCloudNotificationInitException("INVALID_APP_ID", "appId boş olamaz")
         if (CoreCloudNotificationApi.endpoint(baseUrl, appId) == null) {
             throw CoreCloudNotificationInitException("INVALID_BASE_URL", "baseUrl http(s) ile başlamalı: '$baseUrl'")
         }
+        CoreCloudNotificationLog.d("initialize [2/5] Firebase kontrol ediliyor")
         if (messaging() == null) {
             throw CoreCloudNotificationInitException("FIREBASE_NOT_CONFIGURED", "Firebase başlatılamadı: android/app/google-services.json eksik veya hatalı")
         }
+        CoreCloudNotificationLog.d("initialize [3/5] ayarlar kaydediliyor")
         prefs.edit()
             .putString(K_APP_ID, appId)
             .putString(K_BASE_URL, baseUrl)
@@ -142,7 +146,13 @@ internal object CoreCloudNotification {
         started = true
         lastPermission = notificationsEnabled()
         CoreCloudNotificationLog.i("initialize appId=$appId baseUrl=$baseUrl")
+        CoreCloudNotificationLog.d(
+            "initialize durum: izin=$lastPermission token=${prefs.getString(K_TOKEN, null) != null} " +
+                "deviceId=${prefs.getString(K_DEVICE_ID, null)} externalUserId=${externalId()} subscribed=${prefs.getBoolean(K_SUBSCRIBED, true)}",
+        )
+        CoreCloudNotificationLog.d("initialize [4/5] FCM token isteniyor")
         fetchToken()
+        CoreCloudNotificationLog.d("initialize [5/5] senkronizasyon, session ve event gönderimi kuyruğa alındı")
         queue.execute {
             syncLocked()
             sessionLocked()
@@ -153,6 +163,7 @@ internal object CoreCloudNotification {
     fun setLogLevel(level: Int) {
         CoreCloudNotificationLog.level = level
         prefs.edit().putInt(K_LOG_LEVEL, level).apply()
+        CoreCloudNotificationLog.d("Log seviyesi: $level")
     }
 
     private fun api(): CoreCloudNotificationApi? =
@@ -181,7 +192,10 @@ internal object CoreCloudNotification {
     }
 
     fun onNewToken(token: String) {
-        if (prefs.getString(K_TOKEN, null) == token) return
+        if (prefs.getString(K_TOKEN, null) == token) {
+            CoreCloudNotificationLog.d("FCM token değişmedi")
+            return
+        }
         CoreCloudNotificationLog.i("FCM token: $token")
         prefs.edit().putString(K_TOKEN, token).apply()
         notifySubscription()
@@ -201,7 +215,11 @@ internal object CoreCloudNotification {
      */
     fun login(externalId: String) {
         val current = prefs.getString(K_EXTERNAL_ID, "").orEmpty()
-        if (current == externalId) return
+        if (current == externalId) {
+            CoreCloudNotificationLog.d("login: zaten '$externalId' ile giriş yapılmış")
+            return
+        }
+        CoreCloudNotificationLog.d("login: '$current' → '$externalId'" + if (current.isNotEmpty()) " (önceki kullanıcının tag/alias/e-postası siliniyor)" else "")
         val edit = prefs.edit().putString(K_EXTERNAL_ID, externalId)
         if (current.isNotEmpty()) clearUserData(edit)
         edit.apply()
@@ -214,6 +232,7 @@ internal object CoreCloudNotification {
      * (`DELETE /devices` kullanılmaz); hiç bildirim istenmiyorsa `optOut`.
      */
     fun logout() {
+        CoreCloudNotificationLog.d("logout: externalUserId=${externalId()} temizleniyor")
         val edit = prefs.edit().putString(K_EXTERNAL_ID, "")
         clearUserData(edit)
         edit.apply()
@@ -240,21 +259,27 @@ internal object CoreCloudNotification {
 
     /** Backend e-postayı küçük harfle saklıyor; gereksiz PATCH olmasın diye burada da küçültülür. */
     fun setEmail(email: String) {
+        CoreCloudNotificationLog.d("email: '$email'")
         prefs.edit().putString(K_EMAIL, email.trim().lowercase(Locale.ROOT)).apply()
         sync()
     }
 
     fun removeEmail(email: String) {
-        if (prefs.getString(K_EMAIL, "") != email.trim().lowercase(Locale.ROOT)) return
+        if (prefs.getString(K_EMAIL, "") != email.trim().lowercase(Locale.ROOT)) {
+            CoreCloudNotificationLog.d("removeEmail: kayıttaki e-posta farklı, yok sayıldı")
+            return
+        }
         setEmail("")
     }
 
     fun setLanguage(language: String) {
+        CoreCloudNotificationLog.d("language: $language")
         prefs.edit().putString(K_LANGUAGE, language).apply()
         sync()
     }
 
     fun setSubscribed(subscribed: Boolean) {
+        CoreCloudNotificationLog.d("subscribed: $subscribed")
         prefs.edit().putBoolean(K_SUBSCRIBED, subscribed).apply()
         notifySubscription()
         sync()
@@ -277,6 +302,7 @@ internal object CoreCloudNotification {
         val json = json(key)
         block(json)
         prefs.edit().putString(key, json.toString()).apply()
+        CoreCloudNotificationLog.d("$key: $json")
         sync()
     }
 
@@ -304,8 +330,14 @@ internal object CoreCloudNotification {
         .put("subscribed", prefs.getBoolean(K_SUBSCRIBED, true))
 
     private fun syncLocked(retryOn404: Boolean = true) {
-        val api = api() ?: return
-        val token = prefs.getString(K_TOKEN, null) ?: return
+        val api = api() ?: run {
+            CoreCloudNotificationLog.d("sync: atlandı, initialize çağrılmamış (appId/baseUrl yok)")
+            return
+        }
+        val token = prefs.getString(K_TOKEN, null) ?: run {
+            CoreCloudNotificationLog.d("sync: atlandı, FCM token henüz yok")
+            return
+        }
         if (!notificationsEnabled()) {
             CoreCloudNotificationLog.d("Bildirim izni yok, cihaz kaydı bekletiliyor")
             return
@@ -318,12 +350,20 @@ internal object CoreCloudNotification {
             prefs.getString(K_REG_ENDPOINT, null) != api.endpoint ||
             prefs.getBoolean(K_NEEDS_REGISTER, false)
         if (needsRegister) {
+            CoreCloudNotificationLog.d(
+                "sync: cihaz kaydı gerekiyor (deviceId=${deviceId ?: "yok"} tokenDeğişti=${prefs.getString(K_REG_TOKEN, null) != token} " +
+                    "endpointDeğişti=${prefs.getString(K_REG_ENDPOINT, null) != api.endpoint} needsRegister=${prefs.getBoolean(K_NEEDS_REGISTER, false)})",
+            )
             deviceId = register(api, token, desired) ?: return
         }
 
         val synced = JSONObject(prefs.getString(K_SYNCED, "{}") ?: "{}")
         val patch = diff(desired, synced)
-        if (patch.length() == 0) return
+        if (patch.length() == 0) {
+            CoreCloudNotificationLog.d("sync: cihaz güncel, PATCH gerekmiyor")
+            return
+        }
+        CoreCloudNotificationLog.d("sync: PATCH gönderiliyor: $patch")
         when (val result = api.send("PATCH", "devices/$deviceId", patch)) {
             is CoreCloudNotificationApi.Result.Ok -> {
                 prefs.edit().putString(K_SYNCED, desired.toString()).apply()
@@ -359,6 +399,7 @@ internal object CoreCloudNotification {
         desired.getJSONObject("tags").takeIf { it.length() > 0 }?.let { body.put("tags", it) }
         desired.getJSONObject("aliases").takeIf { it.length() > 0 }?.let { body.put("aliases", it) }
 
+        CoreCloudNotificationLog.d("register: POST /devices gönderiliyor")
         return when (val result = api.send("POST", "devices", body)) {
             is CoreCloudNotificationApi.Result.Ok -> {
                 val id = runCatching { JSONObject(result.body).getString("id") }.getOrNull()
@@ -415,8 +456,12 @@ internal object CoreCloudNotification {
 
     private fun sessionLocked() {
         val api = api() ?: return
-        val deviceId = prefs.getString(K_DEVICE_ID, null) ?: return
+        val deviceId = prefs.getString(K_DEVICE_ID, null) ?: run {
+            CoreCloudNotificationLog.d("session: atlandı, cihaz henüz kayıtlı değil")
+            return
+        }
         val result = api.send("POST", "devices/$deviceId/session", null)
+        if (result is CoreCloudNotificationApi.Result.Ok) CoreCloudNotificationLog.d("session gönderildi")
         if (result is CoreCloudNotificationApi.Result.Fail) {
             CoreCloudNotificationLog.w("Session gönderilemedi: ${result.message}")
             if (result.code == 404) {
@@ -449,14 +494,20 @@ internal object CoreCloudNotification {
             pending.put(event)
             while (pending.length() > MAX_PENDING_EVENTS) pending.remove(0)
             prefs.edit().putString(K_PENDING_EVENTS, pending.toString()).apply()
+            CoreCloudNotificationLog.d("Event kuyruğa eklendi: $event (bekleyen ${pending.length()})")
             flushEventsLocked()
         }
     }
 
     private fun flushEventsLocked() {
         val api = api() ?: return
-        val deviceId = prefs.getString(K_DEVICE_ID, null) ?: return
         val pending = pendingEvents()
+        if (pending.length() == 0) return
+        val deviceId = prefs.getString(K_DEVICE_ID, null) ?: run {
+            CoreCloudNotificationLog.d("events: ${pending.length()} event bekliyor, cihaz kaydı yok")
+            return
+        }
+        CoreCloudNotificationLog.d("events: ${pending.length()} event gönderiliyor")
         val remaining = JSONArray()
         var stop = false
         for (i in 0 until pending.length()) {
@@ -495,12 +546,17 @@ internal object CoreCloudNotification {
             return
         }
         CoreCloudNotificationLog.i("Bildirim geldi: ${payload.notificationId}")
+        CoreCloudNotificationLog.v("Bildirim içeriği: ${payload.toMap()}")
         track(payload.notificationId, "received")
 
         val visible = payload.hasNotificationBlock || payload.title != null || payload.body != null
-        if (!visible) return // sessiz (data-only, metinsiz) push
+        if (!visible) {
+            CoreCloudNotificationLog.d("Sessiz push (metinsiz), gösterilmiyor: ${payload.notificationId}")
+            return
+        }
 
         val bridge = bridge
+        CoreCloudNotificationLog.d("Gösterim kararı: önPlanda=$isInForeground dart=${bridge != null} willDisplayListener=$hasWillDisplayListener")
         if (isInForeground && bridge != null && hasWillDisplayListener && !askDartToDisplay(bridge, payload)) {
             synchronized(prevented) {
                 prevented[payload.notificationId] = payload
@@ -509,6 +565,7 @@ internal object CoreCloudNotification {
             CoreCloudNotificationLog.i("Bildirim gösterimi engellendi (preventDefault): ${payload.notificationId}")
             return
         }
+        CoreCloudNotificationLog.d("Bildirim gösteriliyor: ${payload.notificationId}")
         CoreCloudNotificationRenderer.show(app, payload)
     }
 
@@ -527,6 +584,7 @@ internal object CoreCloudNotification {
             CoreCloudNotificationLog.w("foregroundWillDisplay cevabı gelmedi, bildirim gösteriliyor")
             return true
         }
+        CoreCloudNotificationLog.d("foregroundWillDisplay cevabı: göster=${display.get()}")
         return display.get()
     }
 
@@ -536,10 +594,12 @@ internal object CoreCloudNotification {
             CoreCloudNotificationLog.w("Gösterilecek bildirim bulunamadı: $notificationId")
             return
         }
+        CoreCloudNotificationLog.d("Engellenen bildirim gösteriliyor: $notificationId")
         renderQueue.execute { CoreCloudNotificationRenderer.show(app, payload) }
     }
 
     fun clearAll() {
+        CoreCloudNotificationLog.d("Tüm bildirimler siliniyor")
         CoreCloudNotificationRenderer.cancelAll(app)
     }
 
@@ -565,7 +625,10 @@ internal object CoreCloudNotification {
     private fun onClick(payload: CoreCloudNotificationPayload, actionId: String?) {
         val now = SystemClock.elapsedRealtime()
         val last = lastClick
-        if (last != null && last.first == payload.notificationId && now - last.second < 2_000) return
+        if (last != null && last.first == payload.notificationId && now - last.second < 2_000) {
+            CoreCloudNotificationLog.d("Tekrarlanan tıklama yok sayıldı: ${payload.notificationId}")
+            return
+        }
         lastClick = payload.notificationId to now
 
         CoreCloudNotificationLog.i("Bildirime dokunuldu: ${payload.notificationId} actionId=$actionId")
@@ -579,13 +642,25 @@ internal object CoreCloudNotification {
             "result" to mapOf("actionId" to actionId, "url" to url),
         )
         val bridge = bridge
-        if (hasClickListener && bridge != null) bridge.click(event) else pendingClicks.add(event)
+        if (hasClickListener && bridge != null) {
+            bridge.click(event)
+        } else {
+            pendingClicks.add(event)
+            CoreCloudNotificationLog.d("Click listener yok, tıklama bekletiliyor (bekleyen ${pendingClicks.size})")
+        }
     }
 
     /** OneSignal gibi: http(s) launch URL'leri tarayıcıda açılır, diğer şemalar uygulamaya bırakılır. */
     private fun openLaunchUrl(url: String) {
-        if (!prefs.getBoolean(K_OPEN_URLS, true)) return
-        if (!url.startsWith("http://") && !url.startsWith("https://")) return
+        if (!prefs.getBoolean(K_OPEN_URLS, true)) {
+            CoreCloudNotificationLog.d("launchUrl açılmadı (openLaunchUrls=false): $url")
+            return
+        }
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            CoreCloudNotificationLog.d("launchUrl http(s) değil, uygulamaya bırakıldı: $url")
+            return
+        }
+        CoreCloudNotificationLog.d("launchUrl tarayıcıda açılıyor: $url")
         runCatching {
             app.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         }.onFailure { CoreCloudNotificationLog.w("launchUrl açılamadı: $url ($it)") }
@@ -598,6 +673,7 @@ internal object CoreCloudNotification {
         if (!active) return
         val events = pendingClicks.toList()
         pendingClicks.clear()
+        if (events.isNotEmpty()) CoreCloudNotificationLog.d("Bekleyen ${events.size} tıklama Dart'a teslim ediliyor")
         events.forEach(bridge::click)
     }
 
@@ -624,6 +700,7 @@ internal object CoreCloudNotification {
 
     private fun onForeground() {
         if (!started) return
+        CoreCloudNotificationLog.d("Uygulama ön plana geldi: izin kontrolü, sync, session, events")
         checkPermissionChange()
         queue.execute {
             syncLocked()

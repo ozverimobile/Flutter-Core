@@ -36,6 +36,7 @@ abstract final class CoreCloudNotification {
 
   static const _channel = MethodChannel('flutter_core/cloud_notification');
   static bool _handlerInstalled = false;
+  static bool _logsEnabled = false;
 
   static final CoreCloudNotificationNotifications Notifications = CoreCloudNotificationNotifications._();
   static final CoreCloudNotificationUser User = CoreCloudNotificationUser._();
@@ -55,28 +56,56 @@ abstract final class CoreCloudNotification {
   /// [PlatformException] olarak gelir (`code`: `INVALID_APP_ID`, `INVALID_BASE_URL`,
   /// `FIREBASE_NOT_CONFIGURED` (Android), `INITIALIZE_FAILED`).
   ///
+  /// [enableLogs]: adım adım ayrıntılı logları açar/kapatır (bkz. [setLogsEnabled]). Verilmezse
+  /// mevcut ayar korunur; böylece önceden çağrılmış `Debug.setLogLevel` ezilmez.
+  ///
   /// ```dart
   /// try {
-  ///   await CoreCloudNotification.initialize(appId);
+  ///   await CoreCloudNotification.initialize(appId, enableLogs: kDebugMode);
   /// } on PlatformException catch (e) {
   ///   // e.code, e.message
   /// }
   /// ```
-  static Future<void> initialize(String appId, {String baseUrl = defaultBaseUrl, bool openLaunchUrls = true}) async {
+  static Future<void> initialize(String appId, {String baseUrl = defaultBaseUrl, bool openLaunchUrls = true, bool? enableLogs}) async {
     if (!isSupported) return;
     _ensureHandler();
     try {
+      if (enableLogs != null) await setLogsEnabled(enableLogs);
+      _log('initialize [1/3] native kurulum: appId=$appId baseUrl=$baseUrl openLaunchUrls=$openLaunchUrls');
       await _invoke<void>('initialize', <String, Object?>{'appId': appId, 'baseUrl': baseUrl, 'openLaunchUrls': openLaunchUrls});
+      _log('initialize [2/3] izin ve abonelik durumu okunuyor');
       await Future.wait([Notifications._refreshPermission(), User.pushSubscription._refresh()]);
+      final subscription = User.pushSubscription;
+      _log(
+        'initialize [3/3] durum: izin=${Notifications.permission} deviceId=${subscription.id ?? 'yok (henüz kayıtlı değil)'} '
+        'token=${subscription.token != null ? 'var' : 'yok'} optedIn=${subscription.optedIn}',
+      );
       CoreLogger.log('CoreCloudNotification.initialize başarılı (appId: $appId, baseUrl: $baseUrl)');
     } on PlatformException catch (e) {
-      CoreLogger.log('CoreCloudNotification.initialize başarısız [${e.code}]: ${e.message}', color: LogColors.red);
+      _logError('initialize başarısız [${e.code}]: ${e.message}');
       rethrow;
     } catch (e) {
-      CoreLogger.log('CoreCloudNotification.initialize başarısız: $e', color: LogColors.red);
+      _logError('initialize başarısız: $e');
       rethrow;
     }
   }
+
+  /// Ayrıntılı logları açar/kapatır: Dart tarafında her çağrı, native'den gelen her event ve
+  /// listener dağıtımı loglanır; native log seviyesi `verbose` olur (Android logcat
+  /// `CoreCloudNotification`, iOS konsol `[CoreCloudNotification]`; HTTP istek/yanıtları dahil).
+  ///
+  /// Kapatınca native seviye `warn`'a döner. Hatalar her durumda loglanır. Loglar sadece debug ve
+  /// profile modda yazılır (`CoreLogger`); native taraftaki bilgiler (token, e-posta) loga düşer.
+  static Future<void> setLogsEnabled(bool enabled) => Debug.setLogLevel(enabled ? CoreCloudNotificationLogLevel.verbose : CoreCloudNotificationLogLevel.warn);
+
+  /// Ayrıntılı loglar açık mı.
+  static bool get logsEnabled => _logsEnabled;
+
+  static void _log(String message) {
+    if (_logsEnabled) CoreLogger.log('[CoreCloudNotification] $message', color: LogColors.cyan);
+  }
+
+  static void _logError(String message) => CoreLogger.log('[CoreCloudNotification] $message', color: LogColors.red);
 
   /// Cihazı kullanıcıyla eşler (`externalUserId`). Backend bu id ile hedefli gönderim yapar.
   ///
@@ -97,6 +126,7 @@ abstract final class CoreCloudNotification {
 
   static Future<Object?> _handleNativeCall(MethodCall call) async {
     final args = call.arguments;
+    _log('native → Dart: ${call.method} $args');
     switch (call.method) {
       case 'onWillDisplay':
         return Notifications._dispatchWillDisplay(CoreNotification.fromMap(args as Map<Object?, Object?>));
@@ -113,16 +143,25 @@ abstract final class CoreCloudNotification {
   static Future<T?> _invoke<T>(String method, [Map<String, Object?>? arguments]) async {
     if (!isSupported) return null;
     _ensureHandler();
+    _log('→ $method${arguments == null ? '' : ' $arguments'}');
+    final stopwatch = Stopwatch()..start();
     try {
-      return await _channel.invokeMethod<T>(method, arguments);
+      final result = await _channel.invokeMethod<T>(method, arguments);
+      _log('← $method (${stopwatch.elapsedMilliseconds} ms)${result == null ? '' : ': $result'}');
+      return result;
     } on MissingPluginException {
+      _logError('$method: native plugin bulunamadı (MissingPluginException), çağrı yok sayıldı');
       return null;
+    } on PlatformException catch (e) {
+      _logError('$method hata [${e.code}]: ${e.message}');
+      rethrow;
     }
   }
 
   @visibleForTesting
   static void debugReset() {
     _handlerInstalled = false;
+    _logsEnabled = false;
     Notifications._reset();
     User.pushSubscription._current = const CorePushSubscriptionState();
     User.pushSubscription._observers.clear();
@@ -150,35 +189,49 @@ final class CoreCloudNotificationNotifications {
   /// İzin ister. İzin zaten varsa pencere açılmadan `true` döner. [fallbackToSettings] `true` ise
   /// izin daha önce kalıcı olarak reddedildiyse uygulamanın bildirim ayarları açılır.
   Future<bool> requestPermission(bool fallbackToSettings) async {
+    CoreCloudNotification._log('requestPermission: mevcut izin=$_permission, ayarlara yönlendirme=$fallbackToSettings');
     final granted = await CoreCloudNotification._invoke<bool>('requestPermission', <String, Object?>{'fallbackToSettings': fallbackToSettings}) ?? false;
+    CoreCloudNotification._log('requestPermission sonucu: ${granted ? 'izin verildi' : 'izin yok'}');
     if (granted != _permission) _dispatchPermission(granted);
     return granted;
   }
 
-  void addPermissionObserver(void Function(bool permission) observer) => _permissionObservers.add(observer);
+  void addPermissionObserver(void Function(bool permission) observer) {
+    _permissionObservers.add(observer);
+    CoreCloudNotification._log('permission observer eklendi (toplam ${_permissionObservers.length})');
+  }
 
-  void removePermissionObserver(void Function(bool permission) observer) => _permissionObservers.remove(observer);
+  void removePermissionObserver(void Function(bool permission) observer) {
+    _permissionObservers.remove(observer);
+    CoreCloudNotification._log('permission observer kaldırıldı (toplam ${_permissionObservers.length})');
+  }
 
   /// Bildirime dokunulunca. Uygulama bildirimle soğuk açıldıysa, ilk listener eklendiği anda o
   /// tıklama da teslim edilir.
   void addClickListener(void Function(CoreNotificationClickEvent event) listener) {
     _clickListeners.add(listener);
+    CoreCloudNotification._log('click listener eklendi (toplam ${_clickListeners.length})');
     if (_clickListeners.length == 1) unawaited(CoreCloudNotification._invoke<void>('setClickListener', <String, Object?>{'active': true}));
   }
 
   void removeClickListener(void Function(CoreNotificationClickEvent event) listener) {
-    if (!_clickListeners.remove(listener) || _clickListeners.isNotEmpty) return;
+    if (!_clickListeners.remove(listener)) return;
+    CoreCloudNotification._log('click listener kaldırıldı (toplam ${_clickListeners.length})');
+    if (_clickListeners.isNotEmpty) return;
     unawaited(CoreCloudNotification._invoke<void>('setClickListener', <String, Object?>{'active': false}));
   }
 
   /// Uygulama ön plandayken bildirim gelince, gösterilmeden önce.
   void addForegroundWillDisplayListener(void Function(CoreNotificationWillDisplayEvent event) listener) {
     _willDisplayListeners.add(listener);
+    CoreCloudNotification._log('foregroundWillDisplay listener eklendi (toplam ${_willDisplayListeners.length})');
     if (_willDisplayListeners.length == 1) unawaited(CoreCloudNotification._invoke<void>('setWillDisplayListener', <String, Object?>{'active': true}));
   }
 
   void removeForegroundWillDisplayListener(void Function(CoreNotificationWillDisplayEvent event) listener) {
-    if (!_willDisplayListeners.remove(listener) || _willDisplayListeners.isNotEmpty) return;
+    if (!_willDisplayListeners.remove(listener)) return;
+    CoreCloudNotification._log('foregroundWillDisplay listener kaldırıldı (toplam ${_willDisplayListeners.length})');
+    if (_willDisplayListeners.isNotEmpty) return;
     unawaited(CoreCloudNotification._invoke<void>('setWillDisplayListener', <String, Object?>{'active': false}));
   }
 
@@ -195,19 +248,26 @@ final class CoreCloudNotificationNotifications {
 
   bool _dispatchWillDisplay(CoreNotification notification) {
     final event = CoreNotificationWillDisplayEvent(notification);
+    CoreCloudNotification._log('foregroundWillDisplay: ${notification.notificationId} "${notification.title ?? ''}" → ${_willDisplayListeners.length} listener');
     for (final listener in List.of(_willDisplayListeners)) {
       _guard(() => listener(event));
     }
+    CoreCloudNotification._log('foregroundWillDisplay kararı: ${event.isPrevented ? 'engellendi (preventDefault)' : 'gösterilecek'}');
     return !event.isPrevented;
   }
 
   void _dispatchClick(CoreNotificationClickEvent event) {
+    CoreCloudNotification._log(
+      'click: ${event.notification.notificationId} actionId=${event.result.actionId} url=${event.result.url} '
+      'additionalData=${event.notification.additionalData} → ${_clickListeners.length} listener',
+    );
     for (final listener in List.of(_clickListeners)) {
       _guard(() => listener(event));
     }
   }
 
   void _dispatchPermission(bool granted) {
+    CoreCloudNotification._log('izin değişti: $_permission → $granted (${_permissionObservers.length} observer)');
     _permission = granted;
     for (final observer in List.of(_permissionObservers)) {
       _guard(() => observer(granted));
@@ -298,9 +358,15 @@ final class CoreCloudNotificationPushSubscription {
   /// Uygulama içi bildirim aboneliğini kapatır (`subscribed: false`); izin olsa da bildirim gelmez.
   Future<void> optOut() => CoreCloudNotification._invoke<void>('optOut');
 
-  void addObserver(void Function(CorePushSubscriptionChangedState state) observer) => _observers.add(observer);
+  void addObserver(void Function(CorePushSubscriptionChangedState state) observer) {
+    _observers.add(observer);
+    CoreCloudNotification._log('pushSubscription observer eklendi (toplam ${_observers.length})');
+  }
 
-  void removeObserver(void Function(CorePushSubscriptionChangedState state) observer) => _observers.remove(observer);
+  void removeObserver(void Function(CorePushSubscriptionChangedState state) observer) {
+    _observers.remove(observer);
+    CoreCloudNotification._log('pushSubscription observer kaldırıldı (toplam ${_observers.length})');
+  }
 
   Future<CorePushSubscriptionState> _refresh() async {
     final map = await CoreCloudNotification._invoke<Map<Object?, Object?>>('getSubscription');
@@ -310,6 +376,10 @@ final class CoreCloudNotificationPushSubscription {
 
   void _update(CorePushSubscriptionState state) {
     if (state == _current) return;
+    CoreCloudNotification._log(
+      'abonelik değişti: id ${_current.id} → ${state.id}, optedIn ${_current.optedIn} → ${state.optedIn}, '
+      'token ${_current.token == state.token ? 'aynı' : 'değişti'} (${_observers.length} observer)',
+    );
     final change = CorePushSubscriptionChangedState(previous: _current, current: state);
     _current = state;
     for (final observer in List.of(_observers)) {
@@ -323,7 +393,11 @@ final class CoreCloudNotificationDebug {
   CoreCloudNotificationDebug._();
 
   /// Native log seviyesi (Android logcat `CoreCloudNotification`, iOS konsol `[CoreCloudNotification]`).
-  Future<void> setLogLevel(CoreCloudNotificationLogLevel level) => CoreCloudNotification._invoke<void>('setLogLevel', <String, Object?>{'level': level.index});
+  /// `debug` ve üstünde Dart tarafındaki ayrıntılı loglar da açılır.
+  Future<void> setLogLevel(CoreCloudNotificationLogLevel level) {
+    CoreCloudNotification._logsEnabled = level.index >= CoreCloudNotificationLogLevel.debug.index;
+    return CoreCloudNotification._invoke<void>('setLogLevel', <String, Object?>{'level': level.index});
+  }
 
   /// OneSignal'daki görsel uyarı seviyesi; karşılığı yok.
   Future<void> setAlertLevel(CoreCloudNotificationLogLevel level) async {}

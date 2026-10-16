@@ -69,6 +69,7 @@ internal class CoreCloudNotificationPluginDelegate(context: Context, messenger: 
     // region Dart → native
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+        CoreCloudNotificationLog.v("Dart → native: ${call.method} ${call.arguments ?: ""}")
         when (call.method) {
             "initialize" -> try {
                 CoreCloudNotification.initialize(
@@ -164,6 +165,7 @@ internal class CoreCloudNotificationPluginDelegate(context: Context, messenger: 
     // region Native → Dart (CoreCloudNotification.Bridge)
 
     override fun willDisplay(notification: Map<String, Any?>, decide: (Boolean) -> Unit) {
+        CoreCloudNotificationLog.d("native → Dart: onWillDisplay ${notification["notificationId"]}")
         channel.invokeMethod("onWillDisplay", notification, object : MethodChannel.Result {
             override fun success(result: Any?) = decide(result != false)
             override fun error(code: String, message: String?, details: Any?) = decide(true)
@@ -172,14 +174,17 @@ internal class CoreCloudNotificationPluginDelegate(context: Context, messenger: 
     }
 
     override fun click(event: Map<String, Any?>) {
+        CoreCloudNotificationLog.d("native → Dart: onClick ${event["result"]}")
         channel.invokeMethod("onClick", event)
     }
 
     override fun permissionChanged(granted: Boolean) {
+        CoreCloudNotificationLog.d("native → Dart: onPermissionChanged $granted")
         channel.invokeMethod("onPermissionChanged", granted)
     }
 
     override fun subscriptionChanged(state: Map<String, Any?>) {
+        CoreCloudNotificationLog.d("native → Dart: onSubscriptionChanged $state")
         channel.invokeMethod("onSubscriptionChanged", state)
     }
 
@@ -197,6 +202,7 @@ internal class CoreCloudNotificationPluginDelegate(context: Context, messenger: 
 
     private fun requestPermission(fallbackToSettings: Boolean, result: MethodChannel.Result) {
         if (CoreCloudNotification.notificationsEnabled()) {
+            CoreCloudNotificationLog.d("requestPermission: izin zaten var")
             result.success(true)
             return
         }
@@ -206,6 +212,7 @@ internal class CoreCloudNotificationPluginDelegate(context: Context, messenger: 
             ContextCompat.checkSelfPermission(activity, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         if (!runtimePermission || !canRequestPermission()) {
             // Android 12 ve altı ya da kalıcı reddedilmiş: sistem penceresi açılamaz.
+            CoreCloudNotificationLog.d("requestPermission: sistem penceresi açılamıyor (SDK=${Build.VERSION.SDK_INT}), ayarlara yönlendirme=$fallbackToSettings")
             if (fallbackToSettings && activity != null) openNotificationSettings(activity)
             result.success(false)
             return
@@ -217,6 +224,7 @@ internal class CoreCloudNotificationPluginDelegate(context: Context, messenger: 
         pendingPermissionResult = result
         pendingFallbackToSettings = fallbackToSettings
         CoreCloudNotification.prefs.edit().putBoolean(CoreCloudNotification.K_PERMISSION_ASKED, true).apply()
+        CoreCloudNotificationLog.d("requestPermission: sistem izin penceresi açılıyor")
         ActivityCompat.requestPermissions(activity!!, arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_CODE)
     }
 
@@ -225,6 +233,7 @@ internal class CoreCloudNotificationPluginDelegate(context: Context, messenger: 
         val result = pendingPermissionResult ?: return true
         pendingPermissionResult = null
         val granted = grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
+        CoreCloudNotificationLog.d("requestPermission sonucu: granted=$granted")
         CoreCloudNotification.checkPermissionChange()
         val activity = binding?.activity
         if (!granted && pendingFallbackToSettings && activity != null &&

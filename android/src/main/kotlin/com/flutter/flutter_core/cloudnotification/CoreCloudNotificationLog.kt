@@ -24,4 +24,9 @@ internal object CoreCloudNotificationLog {
     fun d(message: String) {
         if (level >= 5) Log.d(TAG, message)
     }
+
+    /** İstek/yanıt gövdeleri ve kanal argümanları gibi en ayrıntılı loglar. */
+    fun v(message: String) {
+        if (level >= 6) Log.v(TAG, message)
+    }
 }
