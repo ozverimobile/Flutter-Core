@@ -12,6 +12,7 @@ export 'path_provider/path_provider.dart';
 export 'permission_manager/permission_manager.dart';
 export 'platform_channel/platform_channel.dart';
 export 'popup_manager/popup_manager.dart';
+export 'cloud_notification/cloud_notification.dart';
 export 'screen_recording_detector/screen_recording_detector.dart';
 export 'share/share.dart';
 export 'shared_preferences_manager/shared_preferences_manager.dart';
