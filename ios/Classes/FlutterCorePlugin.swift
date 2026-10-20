@@ -8,6 +8,7 @@ public class FlutterCorePlugin: NSObject, FlutterPlugin {
   // güçlü referans tutuyoruz.
   private static var screenRecordingDetector: ScreenRecordingDetector?
   private static var pushBridge: CoreCloudNotificationBridge?
+  private static var deviceIntegrityBridge: CoreDeviceIntegrityBridge?
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "flutter_core", binaryMessenger: registrar.messenger())
@@ -16,6 +17,7 @@ public class FlutterCorePlugin: NSObject, FlutterPlugin {
     registrar.register(SSProtectorFactory(messenger: registrar.messenger()), withId: "secure_image_viewer")
     screenRecordingDetector = ScreenRecordingDetector(messenger: registrar.messenger())
     pushBridge = CoreCloudNotificationBridge(registrar: registrar)
+    deviceIntegrityBridge = CoreDeviceIntegrityBridge(messenger: registrar.messenger())
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
