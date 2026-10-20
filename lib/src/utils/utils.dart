@@ -2,6 +2,7 @@ export 'android_screenshot_blocker/android_screenshot_blocker.dart';
 export 'app_settings/app_settings.dart';
 export 'code_push/code_push.dart';
 export 'device_info/device_info.dart';
+export 'device_integrity/device_integrity.dart';
 export 'input_formatter/input_formatter.dart';
 export 'jwt_decoder/jwt_decoder.dart';
 export 'maintenance/maintenance.dart';

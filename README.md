@@ -18,6 +18,7 @@
   - [Utils](#utils)
     - [App Settings](#app-settings)
     - [Device Info](#device-info)
+    - [Device Integrity (Root / Jailbreak)](#device-integrity-root--jailbreak)
     - [Input Formatter](#input-formatter)
     - [Jwt Decoder](#jwt-decoder)
     - [Maintenance Manager](#maintenance-manager)
@@ -139,6 +140,70 @@ flutter_core:
 ### Device Info
 
 - Cihaz ve işletim sistemi bilgilerini almak için kullanılır.
+
+<br>
+
+### Device Integrity (Root / Jailbreak)
+
+- Android'de root, iOS'ta jailbreak tespiti yapar. Ek olarak hook araçlarını (Frida, Xposed/LSPosed, Substrate, ElleKit...), emülatör/simülatörü, debugger'ı ve Android'de kilidi açık bootloader ile geliştirici ayarlarını raporlar. Kontroller native tarafta, arka plan thread'inde çalışır; tek bir kontrolün atlatılması sonucu gizlemesin diye her tehdit birbirinden bağımsız birçok yöntemle aranır.
+
+- Sonuç bulguların listesidir; nasıl tepki verileceğine (uyarı, özellik kapatma, sunucuya raporlama) uygulama karar verir.
+
+#### Kullanım
+
+```dart
+final result = await CoreDeviceIntegrity.check(); // hata fırlatmaz
+
+if (result.isCompromised) {
+  // Root/jailbreak veya hook var. Bulgular loglanabilir / sunucuya gönderilebilir:
+  // result.findings -> [CoreIntegrityFinding(rootOrJailbreak, su_binary, /system/xbin/su), ...]
+}
+
+// Daha sıkı politika:
+final strict = result.hasAny([
+  CoreIntegrityThreatType.rootOrJailbreak,
+  CoreIntegrityThreatType.hooking,
+  CoreIntegrityThreatType.debugger,
+  CoreIntegrityThreatType.emulator,
+]) || result.isCheckFailed;
+
+// Kısayol (failClosed: native kontrol çalışmazsa da true döner):
+final compromised = await CoreDeviceIntegrity.isCompromised(failClosed: true);
+```
+
+| Getter | Tür | Android | iOS |
+| --- | --- | --- | --- |
+| `isRootedOrJailbroken` | `rootOrJailbreak` | su/magisk/ksud binary'leri (sabit dizinler + `PATH`), `which su`, Magisk/KernelSU/APatch/SuperSU dosyaları ve uygulamaları, root gizleme uygulamaları, `test-keys`, `ro.debuggable`/`ro.secure`, Magisk property'leri, `/proc/self/mounts` ve `mountinfo`'da Magisk/KernelSU mount'ları, rw bağlanmış `/system`, yazılabilir sistem dizinleri, permissive SELinux | Cydia/Sileo/Zebra/Filza, rootful (unc0ver, checkra1n, Taurine...) ve rootless (Dopamine, palera1n: `/var/jb`) dosyaları (`FileManager`, `stat`, `lstat`, `access`, `fopen` ile ayrı ayrı), sistem dizinlerinin symlink olması, sandbox dışına yazabilme, `fork`, rw bağlanmış kök dosya sistemi, jailbreak URL şemaları |
+| `isHooked` | `hooking` | Xposed/LSPosed/EdXposed/VirtualXposed uygulamaları ve sınıfları, stack trace'te hook sınıfları, `/proc/self/maps`'te frida/lsposed/riru/zygisk/substrate/dobby kütüphaneleri, `gum-js-loop` gibi Frida thread'leri, 27042/27043 Frida portu | Yüklü dylib'lerde Substrate/ElleKit/libhooker/Frida/jailbreak gizleme tweak'leri (Liberty, Shadow, A-Bypass, FlyJB...), `DYLD_INSERT_LIBRARIES`, Frida portu |
+| `isEmulator` | `emulator` | `Build` alanları, `ro.kernel.qemu`, QEMU/Genymotion/BlueStacks/Nox/LDPlayer/MEmu dosyaları | Simülatör, Mac'te çalışan iOS uygulaması |
+| `isDebuggerAttached` | `debugger` | Java debugger, `TracerPid` (gdb/strace/frida), release build'in debuggable yapılması (yeniden paketlenmiş APK) | `P_TRACED` |
+| `isBootloaderUnlocked` | `bootloaderUnlocked` | `ro.boot.verifiedbootstate` ≠ green, `ro.boot.flash.locked=0`, `vbmeta` unlocked | – |
+| `isDeveloperModeEnabled` / `isAdbEnabled` | `developerMode` / `adbEnabled` | Geliştirici seçenekleri / USB hata ayıklama açık | – |
+
+- `isCompromised` yalnızca `rootOrJailbreak` ve `hooking`'i kapsar. Emülatör, debugger, bootloader ve geliştirici ayarları geliştirme sırasında normal olduğu için dahil değildir; gerekiyorsa `hasAny` ile politikaya eklenir.
+- iOS simülatöründe jailbreak kontrolleri yapılmaz (simülatör Mac'in dosya sistemini gördüğü için yanlış pozitif verir), yalnızca `emulator` bulgusu döner.
+- Android 11+ paket görünürlüğü için gereken `<queries>` listesi paketin manifest'inde tanımlıdır; uygulamada ek ayar gerekmez, `QUERY_ALL_PACKAGES` izni gerekmez.
+
+#### Kurulum (iOS, isteğe bağlı)
+
+- URL şeması kontrolünün çalışması için uygulamanın `Info.plist`'ine eklenir. Eklenmezse bu kontrol atlanır, diğerleri çalışmaya devam eder.
+
+```xml
+<key>LSApplicationQueriesSchemes</key>
+<array>
+  <string>cydia</string>
+  <string>sileo</string>
+  <string>zbra</string>
+  <string>filza</string>
+  <string>undecimus</string>
+  <string>activator</string>
+  <string>apt-repo</string>
+</array>
+```
+
+#### Sınırlar
+
+- İstemci tarafı tespit tek başına kesin değildir: Magisk DenyList + Shamiko, Zygisk modülleri veya iOS'ta jailbreak gizleme tweak'leri kontrollerin bir kısmını atlatabilir; uygulama kodu da patch'lenebilir. Ödeme, giriş gibi kritik işlemler için sunucu tarafında **Play Integrity API** (Android) ve **App Attest / DeviceCheck** (iOS) doğrulaması ile birlikte kullanılmalıdır.
 
 <br>
 

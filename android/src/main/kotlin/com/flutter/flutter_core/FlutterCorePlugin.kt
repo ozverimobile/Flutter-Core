@@ -15,6 +15,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import com.flutter.flutter_core.cloudnotification.CoreCloudNotificationPluginDelegate
+import com.flutter.flutter_core.integrity.CoreDeviceIntegrityPluginDelegate
 // Huawei importunuzu buraya eklemeyi unutmayın
 // import com.huawei.hms.api.HuaweiApiAvailability 
 
@@ -25,6 +26,7 @@ class FlutterCorePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     private lateinit var channel : MethodChannel
     private lateinit var contentResolver: ContentResolver
     private var push: CoreCloudNotificationPluginDelegate? = null
+    private var integrity: CoreDeviceIntegrityPluginDelegate? = null
 
     // --- FlutterPlugin Metotları ---
 
@@ -34,12 +36,15 @@ class FlutterCorePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
         channel.setMethodCallHandler(this)
         mContext = flutterPluginBinding.applicationContext
         push = CoreCloudNotificationPluginDelegate(flutterPluginBinding.applicationContext, flutterPluginBinding.binaryMessenger)
+        integrity = CoreDeviceIntegrityPluginDelegate(flutterPluginBinding.applicationContext, flutterPluginBinding.binaryMessenger)
     }
 
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
         push?.dispose()
         push = null
+        integrity?.dispose()
+        integrity = null
         mContext = null
     }
 
