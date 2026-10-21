@@ -11,6 +11,7 @@ abstract interface class ICorePermissionManager {
   Future<CorePermissionStatus> requestSystemPermission({required CorePermission permission});
   Future<CorePermissionStatus> requestPermission({required CorePermission permission, BuildContext? context, String? title, String? message, Widget? icon, bool showAskLaterOption = false, bool requestWhenPostponed = false});
   Future<Map<CorePermission, CorePermissionStatus>> requestMultiplePermissions({required List<CorePermission> permissions, BuildContext? context, String? title, String? message, Widget? icon, Map<CorePermission, String>? permissionLabels, Set<CorePermission> forcedPermissions = const {}, bool showCloseButton = true, String? requestButtonLabel, String? continueButtonLabel, String? settingsButtonLabel, String? retryButtonLabel, String? forcedLabel});
+  Future<Map<CorePermission, CorePermissionStatus>?> requestMultiplePermissionsCancellable({required List<CorePermission> permissions, BuildContext? context, String? title, String? message, Widget? icon, Map<CorePermission, String>? permissionLabels, Set<CorePermission> forcedPermissions = const {}, bool showCloseButton = true, String? requestButtonLabel, String? continueButtonLabel, String? settingsButtonLabel, String? retryButtonLabel, String? forcedLabel});
 }
 
 class CorePermissionManager implements ICorePermissionManager {
@@ -145,9 +146,50 @@ class CorePermissionManager implements ICorePermissionManager {
   /// denied, a "Tekrar Dene" (requestable again) or "Ayarlara Git" (permanently denied)
   /// button is shown. Statuses are refreshed when the user returns from the app settings.
   ///
-  /// Returns the latest status of every requested permission.
+  /// Returns the latest status of every requested permission. Closing the sheet with the close
+  /// button also returns the statuses; use [requestMultiplePermissionsCancellable] to tell it apart.
   @override
   Future<Map<CorePermission, CorePermissionStatus>> requestMultiplePermissions({
+    required List<CorePermission> permissions,
+    BuildContext? context,
+    String? title,
+    String? message,
+    Widget? icon,
+    Map<CorePermission, String>? permissionLabels,
+    Set<CorePermission> forcedPermissions = const {},
+    bool showCloseButton = true,
+    String? requestButtonLabel,
+    String? continueButtonLabel,
+    String? settingsButtonLabel,
+    String? retryButtonLabel,
+    String? forcedLabel,
+  }) async {
+    final result = await requestMultiplePermissionsCancellable(
+      permissions: permissions,
+      context: context,
+      title: title,
+      message: message,
+      icon: icon,
+      permissionLabels: permissionLabels,
+      forcedPermissions: forcedPermissions,
+      showCloseButton: showCloseButton,
+      requestButtonLabel: requestButtonLabel,
+      continueButtonLabel: continueButtonLabel,
+      settingsButtonLabel: settingsButtonLabel,
+      retryButtonLabel: retryButtonLabel,
+      forcedLabel: forcedLabel,
+    );
+    return result ?? {for (final p in permissions.toSet()) p: await getPermissionStatus(permission: p)};
+  }
+
+  /// Same sheet as [requestMultiplePermissions].
+  ///
+  /// Returns the latest status of every requested permission, or `null` if the user closed the
+  /// sheet with the close button (see [showCloseButton]). Use this when closing should mean
+  /// "cancel" (e.g. do not open the screen that needed the permissions). [requestMultiplePermissions]
+  /// treats closing as finishing and returns the statuses instead.
+  @override
+  Future<Map<CorePermission, CorePermissionStatus>?> requestMultiplePermissionsCancellable({
     required List<CorePermission> permissions,
     BuildContext? context,
     String? title,
@@ -222,7 +264,7 @@ class CorePermissionManager implements ICorePermissionManager {
         builder: sheet,
       );
     }
-    return result ?? {for (final p in uniquePermissions) p: await getPermissionStatus(permission: p)};
+    return result;
   }
 }
 

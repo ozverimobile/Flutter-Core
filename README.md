@@ -350,9 +350,19 @@ final compromised = await CoreDeviceIntegrity.isCompromised(failClosed: true);
   - `icon`: Üstteki varsayılan kalkan ikonunun yerine gösterilecek widget.
   - `permissionLabels`: Satırlarda gösterilecek metinler (`Map<CorePermission, String>`). Verilmeyen izinler için `CorePermission.title()` kullanılır.
   - `requestButtonLabel`, `continueButtonLabel`, `settingsButtonLabel`, `retryButtonLabel`: Buton metinleri.
-  - `showCloseButton` (varsayılan `true`): Sağ üstteki kapatma butonu. Kapatıldığında o anki durumlar döner.
+  - `showCloseButton` (varsayılan `true`): Sağ üstteki kapatma butonu. Kapatıldığında güncel durumlar döner.
 
 - Dönüş değeri, istenen her iznin son durumunu içeren `Map<CorePermission, CorePermissionStatus>`'tür.
+
+- Kapatmanın "vazgeç" anlamına gelmesi gerekiyorsa (örneğin izinleri isteyen ekran hiç açılmasın) aynı parametrelerle `requestMultiplePermissionsCancellable` kullanılır. Kullanıcı sheet'i kapatma butonuyla kapatırsa `null` döner, "Devam Et" ile geçerse durumlar döner:
+
+  ```dart
+  final statuses = await permissionManager.requestMultiplePermissionsCancellable(
+    context: context,
+    permissions: const [CorePermission.camera, CorePermission.notification],
+  );
+  if (statuses == null) return; // kullanıcı vazgeçti
+  ```
 
 - Not: Bu akış tekli `requestPermission`'daki "Sonra Hatırlat" (postpone) mantığını kullanmaz, durumları doğrudan sistemden okur.
 
