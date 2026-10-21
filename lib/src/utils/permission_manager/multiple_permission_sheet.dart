@@ -143,6 +143,9 @@ final class _MultiplePermissionSheetState extends State<MultiplePermissionSheet>
 
   void _close() => widget.popupManager.hidePopup<Map<CorePermission, CorePermissionStatus>>(id: widget.id, result: _result);
 
+  /// Close button: no result, so the caller can tell "closed" apart from "continued".
+  void _dismiss() => widget.popupManager.hidePopup<Map<CorePermission, CorePermissionStatus>>(id: widget.id);
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -234,7 +237,7 @@ final class _MultiplePermissionSheetState extends State<MultiplePermissionSheet>
             top: -8,
             right: -8,
             child: IconButton(
-              onPressed: _phase == _SheetPhase.requesting ? null : _close,
+              onPressed: _phase == _SheetPhase.requesting ? null : _dismiss,
               icon: Icon(Icons.close, color: context.colorScheme.onSurfaceVariant),
             ),
           ),
