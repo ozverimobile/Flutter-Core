@@ -11,8 +11,9 @@
 #   - PR'da `skip-version` label'ı varsa versiyon artırılmaz.
 #
 # Sonrasında yeni tag (skip-version ise development) otomatik olarak main'e merge edilir.
-# main ruleset ile korunduğu için bu adım, ruleset bypass listesindeki bir kullanıcının
-# PAT'ini içeren MAIN_SYNC_TOKEN secret'ını kullanır. Secret yoksa adım atlanır.
+# main ruleset ile korunduğu için bu adım, ruleset bypass listesine eklenmiş bir GitHub App'in
+# token'ını kullanır (RELEASE_APP_ID variable + RELEASE_APP_PRIVATE_KEY secret). Tanımlı
+# değilse main senkronu atlanır.
 name: Auto Version
 
 on:
@@ -30,12 +31,22 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      HAS_APP: ${{ vars.RELEASE_APP_ID != '' }}
     steps:
+      - name: Create GitHub App token
+        id: app-token
+        if: env.HAS_APP == 'true'
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           fetch-tags: true
-          token: ${{ secrets.MAIN_SYNC_TOKEN || github.token }}
+          token: ${{ steps.app-token.outputs.token || github.token }}
 
       - name: Determine bump type
         id: bump
@@ -128,11 +139,11 @@ jobs:
 
       - name: Merge into main
         env:
-          HAS_TOKEN: ${{ secrets.MAIN_SYNC_TOKEN != '' }}
+          HAS_TOKEN: ${{ steps.app-token.outputs.token != '' }}
           NEW: ${{ steps.release.outputs.version }}
         run: |
           if [[ "$HAS_TOKEN" != "true" ]]; then
-            echo "::warning::MAIN_SYNC_TOKEN tanımlı değil, main senkronu atlandı."
+            echo "::warning::RELEASE_APP_ID / RELEASE_APP_PRIVATE_KEY tanımlı değil, main senkronu atlandı."
             exit 0
           fi
 
