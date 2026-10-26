@@ -145,6 +145,8 @@ class CorePermissionManager implements ICorePermissionManager {
   /// requested one by one and each row is updated with the result. If any permission is
   /// denied, a "Tekrar Dene" (requestable again) or "Ayarlara Git" (permanently denied)
   /// button is shown. Statuses are refreshed when the user returns from the app settings.
+  /// Once every permission is granted (after the requests or on return from the settings),
+  /// the sheet closes itself as if the continue button was pressed.
   ///
   /// Returns the latest status of every requested permission. Closing the sheet with the close
   /// button also returns the statuses; use [requestMultiplePermissionsCancellable] to tell it apart.
