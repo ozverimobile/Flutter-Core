@@ -72,12 +72,17 @@ final class MultiplePermissionSheet extends StatefulWidget {
 final class _MultiplePermissionSheetState extends State<MultiplePermissionSheet> {
   static const _requestInterval = Duration(milliseconds: 300);
 
+  /// Lets the user see the green checks before the sheet closes itself.
+  static const _autoCloseDelay = Duration(milliseconds: 600);
+
   late final AppLifecycleListener _appLifecycleListener;
   late final Map<CorePermission, _ItemStatus> _statuses = {for (final p in widget.permissions) p: _ItemStatus.idle};
   final Map<CorePermission, String> _labels = {};
 
   _SheetPhase _phase = _SheetPhase.initial;
-  var _isWaitingForSettings = false;
+
+  /// The popup must be hidden only once: auto close, continue and close button can race.
+  var _isClosed = false;
 
   bool get _isTablet => MediaQuery.sizeOf(context).shortestSide >= 600;
   bool get _isAllGranted => _statuses.values.every((s) => s == _ItemStatus.granted);
@@ -123,28 +128,49 @@ final class _MultiplePermissionSheetState extends State<MultiplePermissionSheet>
       await Future<void>.delayed(_requestInterval);
     }
 
-    if (mounted) setState(() => _phase = _SheetPhase.completed);
+    if (!mounted) return;
+    setState(() => _phase = _SheetPhase.completed);
+    await _closeIfAllGranted();
   }
 
-  Future<void> _openSettings() async {
-    _isWaitingForSettings = true;
-    await openAppSettings();
-  }
+  Future<void> _openSettings() => openAppSettings();
 
+  /// Refreshes the statuses whenever the app comes back to the foreground, e.g. from the app
+  /// settings (via the settings button or not).
   Future<void> _onResume() async {
-    if (!_isWaitingForSettings) return;
-    _isWaitingForSettings = false;
+    // System permission dialogs also resume the app; [_requestAll] updates the statuses itself.
+    if (_phase == _SheetPhase.requesting) return;
     for (final permission in widget.permissions) {
-      final status = await (await permission.permission()).status;
-      _statuses[permission] = _ItemStatus.fromPermissionStatus(status);
+      final status = _ItemStatus.fromPermissionStatus(await (await permission.permission()).status);
+      // Before the first request, rows that were never asked stay idle; only grants are shown.
+      if (_phase == _SheetPhase.completed || status == _ItemStatus.granted) _statuses[permission] = status;
     }
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() {});
+    await _closeIfAllGranted();
   }
 
-  void _close() => widget.popupManager.hidePopup<Map<CorePermission, CorePermissionStatus>>(id: widget.id, result: _result);
+  /// Closes the sheet as if continue was pressed once every listed permission is granted.
+  ///
+  /// Granting only the forced permissions keeps the sheet open, so the optional ones can still be granted.
+  Future<void> _closeIfAllGranted() async {
+    if (!_isAllGranted) return;
+    await Future<void>.delayed(_autoCloseDelay);
+    if (mounted && _isAllGranted) _close();
+  }
+
+  void _close() {
+    if (_isClosed) return;
+    _isClosed = true;
+    widget.popupManager.hidePopup<Map<CorePermission, CorePermissionStatus>>(id: widget.id, result: _result);
+  }
 
   /// Close button: no result, so the caller can tell "closed" apart from "continued".
-  void _dismiss() => widget.popupManager.hidePopup<Map<CorePermission, CorePermissionStatus>>(id: widget.id);
+  void _dismiss() {
+    if (_isClosed) return;
+    _isClosed = true;
+    widget.popupManager.hidePopup<Map<CorePermission, CorePermissionStatus>>(id: widget.id);
+  }
 
   @override
   Widget build(BuildContext context) {
