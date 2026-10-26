@@ -54,16 +54,39 @@
 
 ---
 
-- Kullanılacak projede `paket ismi`, `url bilgisi` ve `ref` aşağıdaki gibi `pubspec.yaml` dosyasına eklenir. Ekranda çıkan kullanıcı adı ve şifre alanına devops bilgileri girilmelidir.
+- Paket git tag'leri ile versiyonlanır (`v2.0.5`, `v2.1.0` ...). `development` branch'ine yapılan her merge'de versiyon otomatik artırılır ve yeni tag atılır. Tüm sürümler için [CHANGELOG.md](CHANGELOG.md) dosyasına bakılabilir.
 
-- pubspec.yaml
+- pubspec.yaml — versiyon aralığı ile (önerilen, pub.dev'deki `^` kullanımı gibi):
 
 ```yaml
 flutter_core:
   git:
-    url: https://devops.ozdilek.com.tr/OZVERIDEVOPS/Ozveri-Mobile/_git/Ozd-Core
-    ref: development # Buraya en güncel versiyon'da eklenebilir.
+    url: https://github.com/ozverimobile/Flutter-Core.git
+    tag_pattern: v{{version}}
+  version: ^2.0.0
 ```
+
+- pubspec.yaml — sabit bir sürüme kilitlemek için:
+
+```yaml
+flutter_core:
+  git:
+    url: https://github.com/ozverimobile/Flutter-Core.git
+    ref: v2.0.5
+```
+
+## Versiyonlama
+
+`development`'a merge edilen her PR versiyonu otomatik artırır (`.github/workflows/auto-version.yml`):
+
+| PR label'ı / commit mesajı | Artış | Örnek |
+| --- | --- | --- |
+| (yok) | patch | 2.0.4 → 2.0.5 |
+| `minor` label'ı veya `#minor` | minor | 2.0.4 → 2.1.0 |
+| `major` label'ı veya `#major` | major | 2.0.4 → 3.0.0 |
+| `skip-version` label'ı | artırılmaz | — |
+
+`development` korumalı olduğu için workflow branch'e push etmez. Merge commit'inin üzerine `pubspec.yaml` versiyonunu ve `CHANGELOG.md`'yi güncelleyen bir release commit'i oluşturup sadece `vX.Y.Z` tag'ini push eder ve bir GitHub Release açar. Bu yüzden `development` üzerindeki `version` değeri eski kalır. Güncel versiyon için tag'lere / Releases sayfasına bakılmalıdır. `version` ve `CHANGELOG.md` elle güncellenmemelidir.
 
 <br>
 
