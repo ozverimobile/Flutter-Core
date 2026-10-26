@@ -9,6 +9,11 @@
 #   - PR'da `major` veya `minor` label'ı varsa ona göre artırılır.
 #   - Label yoksa merge commit mesajındaki #major / #minor anahtar kelimesine bakılır.
 #   - PR'da `skip-version` label'ı varsa versiyon artırılmaz.
+#
+# Sonrasında yeni tag (skip-version ise development) otomatik olarak main'e merge edilir.
+# main ruleset ile korunduğu için bu adım, ruleset bypass listesine eklenmiş bir GitHub App'in
+# token'ını kullanır (RELEASE_APP_ID variable + RELEASE_APP_PRIVATE_KEY secret). Tanımlı
+# değilse main senkronu atlanır.
 name: Auto Version
 
 on:
@@ -26,11 +31,22 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      HAS_APP: ${{ vars.RELEASE_APP_ID != '' }}
     steps:
+      - name: Create GitHub App token
+        id: app-token
+        if: env.HAS_APP == 'true'
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           fetch-tags: true
+          token: ${{ steps.app-token.outputs.token || github.token }}
 
       - name: Determine bump type
         id: bump
@@ -120,3 +136,46 @@ jobs:
           [[ -n "$LAST_TAG" ]] && ARGS+=(--notes-start-tag "$LAST_TAG")
           gh release create "v$NEW" "${ARGS[@]}"
           echo "### Released v$NEW (${{ steps.bump.outputs.type }})" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Merge into main
+        env:
+          HAS_TOKEN: ${{ steps.app-token.outputs.token != '' }}
+          NEW: ${{ steps.release.outputs.version }}
+        run: |
+          if [[ "$HAS_TOKEN" != "true" ]]; then
+            echo "::warning::RELEASE_APP_ID / RELEASE_APP_PRIVATE_KEY tanımlı değil, main senkronu atlandı."
+            exit 0
+          fi
+
+          if [[ -n "$NEW" ]]; then
+            SOURCE="v$NEW"
+            MESSAGE="chore(release): merge v$NEW into main"
+          else
+            SOURCE="origin/development"
+            MESSAGE="chore: merge development into main"
+          fi
+
+          git fetch origin main
+          git checkout -B main origin/main
+
+          # Release commit'leri development'ta olmadığı için pubspec.yaml / CHANGELOG.md her
+          # seferinde çakışır; bu iki dosya için kaynak (tag) her zaman doğrudur.
+          git merge --no-ff --no-commit "$SOURCE" || true
+          if [[ -n "$NEW" ]]; then
+            git checkout "$SOURCE" -- pubspec.yaml CHANGELOG.md
+          fi
+
+          if [[ -n "$(git diff --name-only --diff-filter=U)" ]]; then
+            echo "::error::main'e merge'de çakışma var, elle çözülmeli:"
+            git diff --name-only --diff-filter=U
+            exit 1
+          fi
+
+          if git diff --cached --quiet && [[ ! -f .git/MERGE_HEAD ]]; then
+            echo "main zaten güncel."
+            exit 0
+          fi
+
+          git commit -m "$MESSAGE"
+          git push origin main
+          echo "### main ← $SOURCE" >> "$GITHUB_STEP_SUMMARY"
