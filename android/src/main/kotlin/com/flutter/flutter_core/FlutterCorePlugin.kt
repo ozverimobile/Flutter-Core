@@ -5,6 +5,7 @@ import android.content.ContentResolver
 import android.content.Context
 import android.provider.Settings
 import android.view.WindowManager
+import java.util.Locale
 import androidx.annotation.NonNull
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -13,6 +14,8 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
+import com.flutter.flutter_core.cloudnotification.CoreCloudNotificationPluginDelegate
+import com.flutter.flutter_core.integrity.CoreDeviceIntegrityPluginDelegate
 // Huawei importunuzu buraya eklemeyi unutmayın
 // import com.huawei.hms.api.HuaweiApiAvailability 
 
@@ -22,6 +25,8 @@ class FlutterCorePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     private var activity: Activity? = null // Aktivite referansını tutmak için değişken
     private lateinit var channel : MethodChannel
     private lateinit var contentResolver: ContentResolver
+    private var push: CoreCloudNotificationPluginDelegate? = null
+    private var integrity: CoreDeviceIntegrityPluginDelegate? = null
 
     // --- FlutterPlugin Metotları ---
 
@@ -30,10 +35,16 @@ class FlutterCorePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "flutter_core")
         channel.setMethodCallHandler(this)
         mContext = flutterPluginBinding.applicationContext
+        push = CoreCloudNotificationPluginDelegate(flutterPluginBinding.applicationContext, flutterPluginBinding.binaryMessenger)
+        integrity = CoreDeviceIntegrityPluginDelegate(flutterPluginBinding.applicationContext, flutterPluginBinding.binaryMessenger)
     }
 
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
+        push?.dispose()
+        push = null
+        integrity?.dispose()
+        integrity = null
         mContext = null
     }
 
@@ -42,18 +53,22 @@ class FlutterCorePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         activity = binding.activity
+        push?.attach(binding)
     }
 
     override fun onDetachedFromActivityForConfigChanges() {
         activity = null
+        push?.detach()
     }
 
     override fun onReattachedToActivityForConfigChanges(binding: ActivityPluginBinding) {
         activity = binding.activity
+        push?.attach(binding)
     }
 
     override fun onDetachedFromActivity() {
         activity = null
+        push?.detach()
     }
 
     // --- MethodCallHandler ---
@@ -76,6 +91,11 @@ class FlutterCorePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
                 result.error("ERROR_GETTING_ID", "Failed to get Android ID", e.localizedMessage)
             }
         }
+        else if (call.method == "getLocalizedCountryNames") {
+            val languageCode = call.argument<String>("languageCode") ?: Locale.getDefault().language
+            val isoCodes = call.argument<List<String>>("isoCodes") ?: emptyList()
+            result.success(getLocalizedCountryNames(languageCode, isoCodes))
+        }
         else if (call.method == "setSecure") {
             val enabled = call.argument<Boolean>("enabled") ?: false
             setSecure(enabled)
@@ -84,6 +104,21 @@ class FlutterCorePlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
         else {
             result.notImplemented()
         }
+    }
+
+    /// Cihazın ICU verisinden, verilen dile gore ulke adlarini dondurur.
+    private fun getLocalizedCountryNames(languageCode: String, isoCodes: List<String>): Map<String, String> {
+        val targetLocale = Locale.forLanguageTag(languageCode.replace('_', '-'))
+        val names = HashMap<String, String>(isoCodes.size)
+        for (isoCode in isoCodes) {
+            val countryLocale = Locale.Builder().setRegion(isoCode).build()
+            val displayName = countryLocale.getDisplayCountry(targetLocale)
+            // ICU adi bulamazsa ISO kodunu doner; bu durumda Dart tarafi kendi adini kullansin.
+            if (displayName.isNotEmpty() && !displayName.equals(isoCode, ignoreCase = true)) {
+                names[isoCode] = displayName
+            }
+        }
+        return names
     }
 
     private fun getAndroidId(): String? {

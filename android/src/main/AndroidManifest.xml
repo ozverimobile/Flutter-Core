@@ -1,3 +1,78 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
   package="com.flutter.flutter_core">
+
+    <!-- CoreCloudNotification -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- CoreDeviceIntegrity: Android 11+ paket görünürlüğü. Bu liste CoreDeviceIntegrityChecker'daki
+         ROOT_PACKAGES + HOOK_PACKAGES ile aynı tutulmalıdır (QUERY_ALL_PACKAGES gerekmez). -->
+    <queries>
+        <package android:name="com.topjohnwu.magisk" />
+        <package android:name="io.github.vvb2060.magisk" />
+        <package android:name="io.github.huskydg.magisk" />
+        <package android:name="me.weishu.kernelsu" />
+        <package android:name="me.bmax.apatch" />
+        <package android:name="com.rifsxd.ksunext" />
+        <package android:name="eu.chainfire.supersu" />
+        <package android:name="com.noshufou.android.su" />
+        <package android:name="com.noshufou.android.su.elite" />
+        <package android:name="com.koushikdutta.superuser" />
+        <package android:name="com.thirdparty.superuser" />
+        <package android:name="com.yellowes.su" />
+        <package android:name="com.kingroot.kinguser" />
+        <package android:name="com.kingo.root" />
+        <package android:name="com.smedialink.oneclickroot" />
+        <package android:name="com.zhiqupk.root.global" />
+        <package android:name="com.alephzain.framaroot" />
+        <package android:name="com.koushikdutta.rommanager" />
+        <package android:name="com.koushikdutta.rommanager.license" />
+        <package android:name="com.dimonvideo.luckypatcher" />
+        <package android:name="com.chelpus.lackypatch" />
+        <package android:name="com.chelpus.luckypatcher" />
+        <package android:name="cc.madkite.freedom" />
+        <package android:name="com.ramdroid.appquarantine" />
+        <package android:name="com.ramdroid.appquarantinepro" />
+        <package android:name="com.android.vending.billing.InAppBillingService.COIN" />
+        <package android:name="com.android.vending.billing.InAppBillingService.LUCK" />
+        <package android:name="com.devadvance.rootcloak" />
+        <package android:name="com.devadvance.rootcloakplus" />
+        <package android:name="com.amphoras.hidemyroot" />
+        <package android:name="com.amphoras.hidemyrootadfree" />
+        <package android:name="com.formyhm.hiderootPremium" />
+        <package android:name="com.formyhm.hideroot" />
+        <package android:name="com.zachspong.temprootremovejb" />
+        <package android:name="com.tsng.hidemyapplist" />
+        <package android:name="de.robv.android.xposed.installer" />
+        <package android:name="org.meowcat.edxposed.manager" />
+        <package android:name="org.lsposed.manager" />
+        <package android:name="org.lsposed.lspatch" />
+        <package android:name="top.canyie.dreamland.manager" />
+        <package android:name="com.solohsu.android.edxp.manager" />
+        <package android:name="com.saurik.substrate" />
+        <package android:name="io.va.exposed" />
+        <package android:name="io.va.exposed64" />
+    </queries>
+
+    <application>
+        <service
+            android:name="com.flutter.flutter_core.cloudnotification.CoreCloudNotificationMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- Sunucu android.channelId / android.smallIcon göndermezse sistemin göstereceği bildirimler için. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="genel" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_core_notification" />
+        <!-- Push kullanmayan uygulamalarda açılışta FCM token üretilmesin; CoreCloudNotification.initialize token'ı kendisi ister. -->
+        <meta-data
+            android:name="firebase_messaging_auto_init_enabled"
+            android:value="false" />
+    </application>
 </manifest>

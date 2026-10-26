@@ -21,6 +21,7 @@ class CoreCreditCardSecurityCodeTextField extends StatelessWidget {
     this.focusNode,
     this.autofillHints,
     this.maxLength = 4,
+    this.errorMaxLines,
     super.key,
   });
 
@@ -40,6 +41,7 @@ class CoreCreditCardSecurityCodeTextField extends StatelessWidget {
   final FocusNode? focusNode;
   final Iterable<String>? autofillHints;
   final int maxLength;
+  final int? errorMaxLines;
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +68,7 @@ class CoreCreditCardSecurityCodeTextField extends StatelessWidget {
         prefixIcon: prefixIcon,
         hintText: hintText,
         labelText: labelText,
+        errorMaxLines: errorMaxLines,
       ),
     );
   }

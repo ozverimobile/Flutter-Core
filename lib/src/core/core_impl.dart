@@ -6,7 +6,6 @@ import 'package:flutter_core/flutter_core.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-
 abstract interface class ICore {
   Future<void> initialize();
   void closeKeyboard();
@@ -14,6 +13,7 @@ abstract interface class ICore {
   Future<void> updateApp({String? androidPackageName, String? iOSAppId, String? huaweiAppId, bool iosLaunchIntune = false});
   Future<void> vibrate({ImpactType type = ImpactType.mediumImpact});
 }
+
 // It's okay to be ignored
 // ignore: non_constant_identifier_names
 CoreImpl Core = CoreImpl._();
@@ -82,7 +82,7 @@ final class CoreImpl implements ICore {
     const intuneCompanyPortalIosUrlScheme = 'companyportal://';
     const intuneCompanyPortalIosAppId = '719171358';
 
-    final isHuawei = await CoreDeviceInfo.instance.isHuaweiApiAvailable();
+    final isHuawei = huaweiAppId != null && await CoreDeviceInfo.instance.isHuaweiApiAvailable();
     if (isHuawei) {
       // Launch App Gallery
       await CoreUrlLauncher.instance.launchStore(huaweiAppId: huaweiAppId);

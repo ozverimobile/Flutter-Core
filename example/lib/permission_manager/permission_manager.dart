@@ -37,6 +37,8 @@ class _PermissionManagerAppState extends State<PermissionManagerApp> {
                   _CameraPermissionButton(),
                   _PhotosPermissionButton(),
                   _LocationPermissionButton(),
+                  SizedBox(height: 24),
+                  _MultiplePermissionButton(),
                 ],
               ),
             ),
@@ -163,6 +165,67 @@ class _LocationPermissionButton extends StatelessWidget {
         }
       },
       child: const Text('Request Location Permission'),
+    );
+  }
+}
+
+class _MultiplePermissionButton extends StatefulWidget {
+  const _MultiplePermissionButton();
+
+  @override
+  State<_MultiplePermissionButton> createState() => _MultiplePermissionButtonState();
+}
+
+class _MultiplePermissionButtonState extends State<_MultiplePermissionButton> {
+  static const _permissions = [
+    CorePermission.camera,
+    CorePermission.microphone,
+    CorePermission.photos,
+    CorePermission.location,
+  ];
+
+  Map<CorePermission, CorePermissionStatus>? statuses;
+  final forcedPermissions = <CorePermission>{CorePermission.camera, CorePermission.microphone};
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        if (statuses != null)
+          for (final entry in statuses!.entries) Text('${entry.key.name}: ${entry.value.name}'),
+        const Text('Zorunlu izinler'),
+        Wrap(
+          spacing: 8,
+          children: [
+            for (final permission in _permissions)
+              FilterChip(
+                label: Text(permission.name),
+                selected: forcedPermissions.contains(permission),
+                onSelected: (selected) => setState(() => selected ? forcedPermissions.add(permission) : forcedPermissions.remove(permission)),
+              ),
+          ],
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            statuses = await _permissionManager.requestMultiplePermissions(
+              context: context,
+              title: 'Gerekli İzinler',
+              message: 'Uygulamayı kullanmaya başlamak için aşağıdaki izinlere ihtiyacımız var.',
+              permissions: _permissions,
+              forcedPermissions: forcedPermissions,
+              permissionLabels: const {
+                CorePermission.camera: 'Kamera Erişimi',
+                CorePermission.microphone: 'Mikrofon Erişimi',
+                CorePermission.photos: 'Fotoğraf Arşivi Erişimi',
+                CorePermission.location: 'Konum Servisleri',
+              },
+              continueButtonLabel: 'Uygulamayı Kullanmaya Başla',
+            );
+            setState(() {});
+          },
+          child: const Text('Request Multiple Permissions'),
+        ),
+      ],
     );
   }
 }

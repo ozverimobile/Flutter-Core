@@ -18,14 +18,17 @@
   - [Utils](#utils)
     - [App Settings](#app-settings)
     - [Device Info](#device-info)
+    - [Device Integrity (Root / Jailbreak)](#device-integrity-root--jailbreak)
     - [Input Formatter](#input-formatter)
     - [Jwt Decoder](#jwt-decoder)
+    - [Maintenance Manager](#maintenance-manager)
     - [Network Manager](#network-manager)
     - [Overlay Manager](#overlay-manager)
     - [Package Info](#package-info)
     - [Path Provider](#path-provider)
     - [Permission Manager](#permission-manager)
     - [Popup Manager](#popup-manager)
+    - [Cloud Notification](#cloud-notification)
     - [Share](#share)
     - [Shared Preferences Manager](#shared-preferences-manager)
     - [Sqflite Manager](#sqflite-manager)
@@ -43,6 +46,7 @@
     - [Sized Box](#sized-box)
     - [Text](#text)
     - [Text Field](#text-field)
+    - [Ülke Seçimli Telefon Alanı](#ülke-seçimli-telefon-alanı)
 
 <br>
 
@@ -50,16 +54,39 @@
 
 ---
 
-- Kullanılacak projede `paket ismi`, `url bilgisi` ve `ref` aşağıdaki gibi `pubspec.yaml` dosyasına eklenir. Ekranda çıkan kullanıcı adı ve şifre alanına devops bilgileri girilmelidir.
+- Paket git tag'leri ile versiyonlanır (`v2.0.5`, `v2.1.0` ...). `development` branch'ine yapılan her merge'de versiyon otomatik artırılır ve yeni tag atılır. Tüm sürümler için [CHANGELOG.md](CHANGELOG.md) dosyasına bakılabilir.
 
-- pubspec.yaml
+- pubspec.yaml — versiyon aralığı ile (önerilen, pub.dev'deki `^` kullanımı gibi):
 
 ```yaml
 flutter_core:
   git:
-    url: https://devops.ozdilek.com.tr/OZVERIDEVOPS/Ozveri-Mobile/_git/Ozd-Core
-    ref: development # Buraya en güncel versiyon'da eklenebilir.
+    url: https://github.com/ozverimobile/Flutter-Core.git
+    tag_pattern: v{{version}}
+  version: ^2.0.0
 ```
+
+- pubspec.yaml — sabit bir sürüme kilitlemek için:
+
+```yaml
+flutter_core:
+  git:
+    url: https://github.com/ozverimobile/Flutter-Core.git
+    ref: v2.0.5
+```
+
+## Versiyonlama
+
+`development`'a merge edilen her PR versiyonu otomatik artırır (`.github/workflows/auto-version.yml`):
+
+| PR label'ı / commit mesajı | Artış | Örnek |
+| --- | --- | --- |
+| (yok) | patch | 2.0.4 → 2.0.5 |
+| `minor` label'ı veya `#minor` | minor | 2.0.4 → 2.1.0 |
+| `major` label'ı veya `#major` | major | 2.0.4 → 3.0.0 |
+| `skip-version` label'ı | artırılmaz | — |
+
+`development` korumalı olduğu için workflow branch'e push etmez. Merge commit'inin üzerine `pubspec.yaml` versiyonunu ve `CHANGELOG.md`'yi güncelleyen bir release commit'i oluşturup sadece `vX.Y.Z` tag'ini push eder ve bir GitHub Release açar. Bu yüzden `development` üzerindeki `version` değeri eski kalır. Güncel versiyon için tag'lere / Releases sayfasına bakılmalıdır. `version` ve `CHANGELOG.md` elle güncellenmemelidir.
 
 <br>
 
@@ -139,6 +166,70 @@ flutter_core:
 
 <br>
 
+### Device Integrity (Root / Jailbreak)
+
+- Android'de root, iOS'ta jailbreak tespiti yapar. Ek olarak hook araçlarını (Frida, Xposed/LSPosed, Substrate, ElleKit...), emülatör/simülatörü, debugger'ı ve Android'de kilidi açık bootloader ile geliştirici ayarlarını raporlar. Kontroller native tarafta, arka plan thread'inde çalışır; tek bir kontrolün atlatılması sonucu gizlemesin diye her tehdit birbirinden bağımsız birçok yöntemle aranır.
+
+- Sonuç bulguların listesidir; nasıl tepki verileceğine (uyarı, özellik kapatma, sunucuya raporlama) uygulama karar verir.
+
+#### Kullanım
+
+```dart
+final result = await CoreDeviceIntegrity.check(); // hata fırlatmaz
+
+if (result.isCompromised) {
+  // Root/jailbreak veya hook var. Bulgular loglanabilir / sunucuya gönderilebilir:
+  // result.findings -> [CoreIntegrityFinding(rootOrJailbreak, su_binary, /system/xbin/su), ...]
+}
+
+// Daha sıkı politika:
+final strict = result.hasAny([
+  CoreIntegrityThreatType.rootOrJailbreak,
+  CoreIntegrityThreatType.hooking,
+  CoreIntegrityThreatType.debugger,
+  CoreIntegrityThreatType.emulator,
+]) || result.isCheckFailed;
+
+// Kısayol (failClosed: native kontrol çalışmazsa da true döner):
+final compromised = await CoreDeviceIntegrity.isCompromised(failClosed: true);
+```
+
+| Getter | Tür | Android | iOS |
+| --- | --- | --- | --- |
+| `isRootedOrJailbroken` | `rootOrJailbreak` | su/magisk/ksud binary'leri (sabit dizinler + `PATH`), `which su`, Magisk/KernelSU/APatch/SuperSU dosyaları ve uygulamaları, root gizleme uygulamaları, `test-keys`, `ro.debuggable`/`ro.secure`, Magisk property'leri, `/proc/self/mounts` ve `mountinfo`'da Magisk/KernelSU mount'ları, rw bağlanmış `/system`, yazılabilir sistem dizinleri, permissive SELinux | Cydia/Sileo/Zebra/Filza, rootful (unc0ver, checkra1n, Taurine...) ve rootless (Dopamine, palera1n: `/var/jb`) dosyaları (`FileManager`, `stat`, `lstat`, `access`, `fopen` ile ayrı ayrı), sistem dizinlerinin symlink olması, sandbox dışına yazabilme, `fork`, rw bağlanmış kök dosya sistemi, jailbreak URL şemaları |
+| `isHooked` | `hooking` | Xposed/LSPosed/EdXposed/VirtualXposed uygulamaları ve sınıfları, stack trace'te hook sınıfları, `/proc/self/maps`'te frida/lsposed/riru/zygisk/substrate/dobby kütüphaneleri, `gum-js-loop` gibi Frida thread'leri, 27042/27043 Frida portu | Yüklü dylib'lerde Substrate/ElleKit/libhooker/Frida/jailbreak gizleme tweak'leri (Liberty, Shadow, A-Bypass, FlyJB...), `DYLD_INSERT_LIBRARIES`, Frida portu |
+| `isEmulator` | `emulator` | `Build` alanları, `ro.kernel.qemu`, QEMU/Genymotion/BlueStacks/Nox/LDPlayer/MEmu dosyaları | Simülatör, Mac'te çalışan iOS uygulaması |
+| `isDebuggerAttached` | `debugger` | Java debugger, `TracerPid` (gdb/strace/frida), release build'in debuggable yapılması (yeniden paketlenmiş APK) | `P_TRACED` |
+| `isBootloaderUnlocked` | `bootloaderUnlocked` | `ro.boot.verifiedbootstate` ≠ green, `ro.boot.flash.locked=0`, `vbmeta` unlocked | – |
+| `isDeveloperModeEnabled` / `isAdbEnabled` | `developerMode` / `adbEnabled` | Geliştirici seçenekleri / USB hata ayıklama açık | – |
+
+- `isCompromised` yalnızca `rootOrJailbreak` ve `hooking`'i kapsar. Emülatör, debugger, bootloader ve geliştirici ayarları geliştirme sırasında normal olduğu için dahil değildir; gerekiyorsa `hasAny` ile politikaya eklenir.
+- iOS simülatöründe jailbreak kontrolleri yapılmaz (simülatör Mac'in dosya sistemini gördüğü için yanlış pozitif verir), yalnızca `emulator` bulgusu döner.
+- Android 11+ paket görünürlüğü için gereken `<queries>` listesi paketin manifest'inde tanımlıdır; uygulamada ek ayar gerekmez, `QUERY_ALL_PACKAGES` izni gerekmez.
+
+#### Kurulum (iOS, isteğe bağlı)
+
+- URL şeması kontrolünün çalışması için uygulamanın `Info.plist`'ine eklenir. Eklenmezse bu kontrol atlanır, diğerleri çalışmaya devam eder.
+
+```xml
+<key>LSApplicationQueriesSchemes</key>
+<array>
+  <string>cydia</string>
+  <string>sileo</string>
+  <string>zbra</string>
+  <string>filza</string>
+  <string>undecimus</string>
+  <string>activator</string>
+  <string>apt-repo</string>
+</array>
+```
+
+#### Sınırlar
+
+- İstemci tarafı tespit tek başına kesin değildir: Magisk DenyList + Shamiko, Zygisk modülleri veya iOS'ta jailbreak gizleme tweak'leri kontrollerin bir kısmını atlatabilir; uygulama kodu da patch'lenebilir. Ödeme, giriş gibi kritik işlemler için sunucu tarafında **Play Integrity API** (Android) ve **App Attest / DeviceCheck** (iOS) doğrulaması ile birlikte kullanılmalıdır.
+
+<br>
+
 ### Input Formatter
 
 - TextField içerisindeki metni maskelemek için yazıldı. Örnek: Telefon numarası (5XX XXX XXXX).
@@ -148,6 +239,72 @@ flutter_core:
 ### Jwt Decoder
 
 - Token içeriğini decode etmek için eklendi.
+
+<br>
+
+### Maintenance Manager
+
+- Firebase Remote Config üzerinden bakım modu kontrolü yapmak için eklenmiştir. `Core.initialize`'dan tamamen bağımsızdır; `CoreMaintenanceManager.instance.checkMaintenanceMode` çağrılmadığı sürece hiçbir etkisi yoktur. Aynı şekilde Firebase kurulu değilse, remote config instance'ı hazır değilse veya fetch başarısız olursa fonksiyon sessizce hiçbir şey yapmadan geri döner.
+- Remote Config'te `remoteConfigInstance` projenin kendisi tarafından oluşturulup parametre olarak verilir (fetch interval, default değerler vb. tamamen projenin kontrolündedir).
+- `maintenance_mode` adında bir Remote Config key'i beklenir. Değeri aşağıdaki alanları içeren bir JSON string olmalıdır:
+
+  ```json
+  {
+    "isMaintenanceModeActive": true,
+    "title": "Bakım Çalışması",
+    "content": "Uygulamamız kısa süreliğine bakımdadır.",
+    "maintenanceIcon": "https://example.com/maintenance.png",
+    "userIds": ["12345", "67890"],
+    "url": "https://example.com/status"
+  }
+  ```
+
+  - `isMaintenanceModeActive`: `true` değilse (null veya false) hiçbir şey gösterilmez.
+  - `title` / `content`: `null` bırakılırsa paket varsayılan bir metin gösterir.
+  - `maintenanceIcon`: `null` bırakılırsa varsayılan bir bakım ikonu gösterilir.
+  - `userIds`: doluysa yalnızca `checkMaintenanceMode`'a verilen `currentUserId` bu listede varsa ekran gösterilir; `null`/boşsa herkese gösterilir.
+  - `url`: doluysa varsayılan ekranda birincil aksiyon "Daha Fazla Bilgi" olur ve basılınca `CoreUrlLauncher` ile bu url açılır; altında ikincil bir "Tekrar Dene" metin butonu belirir (yalnızca `onRetry` verildiyse). `url` boşsa birincil aksiyon doğrudan "Tekrar Dene" olur.
+
+- Ekran tam sayfa, kapatılamayan (`PopScope(canPop: false)`) bir dialog olarak açılır; kullanıcı sistem geri tuşuyla veya barrier'a dokunarak kapatamaz. Basılan "Tekrar Dene" remote config'i yeniden fetch eder: bakım modu hâlâ aktifse ekran açık kalır, aktif değilse otomatik kapanır. Varsayılan tasarım yeterli değilse `builder` parametresiyle projeye özgü bir tasarım verilebilir; builder'a da aynı retry callback'i (ve `info.url` üzerinden) aynı veriler geçilir.
+
+  ```dart
+  await CoreMaintenanceManager.instance.checkMaintenanceMode(
+    context: context,
+    remoteConfigInstance: myRemoteConfig,
+    currentUserId: currentUser?.id,
+    // builder: (context, info, onRetry) => MyCustomMaintenanceView(info: info, onRetry: onRetry),
+  );
+  ```
+
+- Ekranı gören kullanıcıları loglamak için `onShown` callback'i verilebilir; ekran her açıldığında (fetch başarılı ve bakım aktifse) bir kez çağrılır. Paket herhangi bir analytics/logging aracını kendi sahiplenmez — hangi araç kullanılıyorsa (Firebase Analytics, kendi backend'iniz, vb.) çağrısı burada yapılır:
+
+  ```dart
+  await CoreMaintenanceManager.instance.checkMaintenanceMode(
+    context: context,
+    remoteConfigInstance: myRemoteConfig,
+    currentUserId: currentUser?.id,
+    onShown: (info) => FirebaseAnalytics.instance.logEvent(
+      name: 'maintenance_mode_shown',
+      parameters: {'title': info.title ?? ''},
+    ),
+  );
+  ```
+
+- Varsayılan görünümdeki illüstrasyon, pakete `assets/maintenance/maintenance_illustration.png` yolunda gömülüdür (bulunamazsa varsayılan bir ikona düşer). `maintenanceIcon` remote config'te verilirse onun yerine gösterilir.
+
+- Varsayılan tasarımın renkleri projenin kendi `Theme`'inden gelir (ekstra parametre gerekmez): arka plan projenin `scaffoldBackgroundColor`'ı (düz renk), metinler `onSurface`/`onSurfaceVariant`, butonlar `primary`/`onPrimary` kullanır — böylece hangi tema verilirse verilsin kontrast Material'ın kendi "on" renkleriyle garanti altına alınmış olur, ayrıca metin/buton rengi için ayrı parametre geçmeye gerek kalmaz. Dekoratif renk lekeleri `colorScheme.secondary`/`colorScheme.tertiary`'den türetilir. Bir projeye göre renk uymuyorsa, o projenin `ColorScheme`'ini/`ThemeData`'sını güncellemek yeterlidir.
+
+- İçerik ekranın altına yaslıdır; başlık/içerik metni uzayıp ekrana sığmazsa otomatik olarak scroll olur, kısa olduğunda ise alt kısımda sabit durur.
+
+- Remote Config'e gitmeden, elde hazır bir `MaintenanceModeInfo` ile ekranı doğrudan göstermek için (test/QA amaçlı, örneğin) `showMaintenanceMode` kullanılabilir:
+
+  ```dart
+  await CoreMaintenanceManager.instance.showMaintenanceMode(
+    context: context,
+    info: const MaintenanceModeInfo(isMaintenanceModeActive: true),
+    // onRetry veriliyorsa varsayılan görünümde "Tekrar Dene" butonu belirir.
+  );
+  ```
 
 <br>
 
@@ -179,11 +336,156 @@ flutter_core:
 
 - Proje izin yönetimini standardize etmek için yazılmıştır.
 
+#### Çoklu İzin İsteme
+
+- Kullanıcıdan aynı anda birden fazla izin istenmesi gerektiğinde `requestMultiplePermissions` kullanılır. İzinler tek bir sheet'te (tablette dialog) listelenir ve sırayla istenir.
+
+  ```dart
+  final statuses = await permissionManager.requestMultiplePermissions(
+    context: context,
+    title: 'Gerekli İzinler',
+    message: 'Uygulamayı kullanmaya başlamak için aşağıdaki izinlere ihtiyacımız var.',
+    permissions: const [
+      CorePermission.camera,
+      CorePermission.microphone,
+      CorePermission.photos,
+      CorePermission.location,
+    ],
+    forcedPermissions: const {CorePermission.camera, CorePermission.microphone},
+  );
+
+  if (statuses[CorePermission.camera]!.isGranted) { ... }
+  ```
+
+- Listedeki tüm izinler zaten verilmişse sheet hiç açılmaz, durumlar doğrudan döner.
+
+- Akış:
+  - Sheet açıldığında izinler kendi ikonlarıyla listelenir ve alttaki buton "İzin Ver" olur. Önceden verilmiş izinler baştan yeşil tik ile gösterilir.
+  - "İzin Ver"e basılınca verilmemiş izinler sırayla, otomatik olarak istenir. Her satır sonuca göre yeşil tik veya kırmızı çarpı olarak güncellenir.
+  - Reddedilen izin varsa (zorunlu olsun olmasın) "Devam Et"in üstünde ikinci bir buton çıkar: kalıcı olarak reddedilmiş izin varsa "Ayarlara Git", sadece tekrar istenebilir izin varsa (Android) "Tekrar Dene". Kullanıcı ayarlardan uygulamaya döndüğünde izin durumları otomatik yenilenir.
+
+- `forcedPermissions` (varsayılan boş): "Devam Et"in aktif olması için verilmesi gereken izinler. `permissions`'ın alt kümesi olmalıdır.
+  - Boş: İstekler tamamlandıktan sonra, reddedilen izin olsa bile "Devam Et" aktiftir.
+  - Tüm izinler: Hepsi verilene kadar "Devam Et" sönük kalır.
+  - Bir kısmı: Sadece zorunlu izinlerin hepsi verildiğinde "Devam Et" aktif olur, isteğe bağlı izinlerin reddedilmesi engellemez. Bu durumda zorunlu satırların altında küçük bir "Zorunlu" yazısı gösterilir (`forcedLabel` ile değiştirilebilir).
+
+- Diğer parametreler:
+  - `icon`: Üstteki varsayılan kalkan ikonunun yerine gösterilecek widget.
+  - `permissionLabels`: Satırlarda gösterilecek metinler (`Map<CorePermission, String>`). Verilmeyen izinler için `CorePermission.title()` kullanılır.
+  - `requestButtonLabel`, `continueButtonLabel`, `settingsButtonLabel`, `retryButtonLabel`: Buton metinleri.
+  - `showCloseButton` (varsayılan `true`): Sağ üstteki kapatma butonu. Kapatıldığında güncel durumlar döner.
+
+- Dönüş değeri, istenen her iznin son durumunu içeren `Map<CorePermission, CorePermissionStatus>`'tür.
+
+- Kapatmanın "vazgeç" anlamına gelmesi gerekiyorsa (örneğin izinleri isteyen ekran hiç açılmasın) aynı parametrelerle `requestMultiplePermissionsCancellable` kullanılır. Kullanıcı sheet'i kapatma butonuyla kapatırsa `null` döner, "Devam Et" ile geçerse durumlar döner:
+
+  ```dart
+  final statuses = await permissionManager.requestMultiplePermissionsCancellable(
+    context: context,
+    permissions: const [CorePermission.camera, CorePermission.notification],
+  );
+  if (statuses == null) return; // kullanıcı vazgeçti
+  ```
+
+- Not: Bu akış tekli `requestPermission`'daki "Sonra Hatırlat" (postpone) mantığını kullanmaz, durumları doğrudan sistemden okur.
+
 <br>
 
 ### Popup Manager
 
 - Projelerde gösterilecek `Loader`, `Dialog` ve `Bottom Sheet`'leri aynı yapıda kullanabilmek için eklenmiştir. `AdaptiveInfoDialog`, `DefaultAdaptiveAlertDialog`, `AdaptiveDatePicker`, `AdaptivePicker`, `UpdateAvailableDialog` ve `AdaptiveInputDialog` gibi işletim sistemi uyumlu dialog'lar eklenmiştir. Bu popup'ların hepsine id verilerek istenilen sırayla kapatılabilmesi mümkündür.
+
+<br>
+
+### Cloud Notification
+
+- Şirket içi push backend'inin istemcisi; **OneSignal SDK'sının yerine geçer**. API, OneSignal Flutter SDK v5 ile aynı yapıdadır: `OneSignal` yerine `CoreCloudNotification` (`.Notifications`, `.User`, `.Debug`). Gönderim APNs ve FCM üzerinden backend tarafından yapılır.
+
+- OneSignal ile aynı davranışlar:
+  - Uygulama bildirime dokunularak açıldıysa tıklama, click listener sonradan eklense de teslim edilir.
+  - Ön planda gelen bildirim, listener'lardan biri `preventDefault()` çağırmadıkça gösterilir; sonradan `notification.display()` ile gösterilebilir.
+  - `login`, `addTags`, `setLanguage` çağrıları cihaz kaydından önce yapılsa da kaybolmaz; ağ hatasında sonraki açılışta tekrar gönderilir.
+  - Login'de başka kullanıcıdan geçiliyorsa ve logout'ta önceki kullanıcının tag'leri silinir.
+  - iOS'ta uygulama açılınca badge sıfırlanır (`Info.plist` → `CoreCloudNotificationDisableBadgeClearing = YES` ile kapatılır).
+  - Bildirimdeki http(s) `url` dokunulunca tarayıcıda açılır (`initialize(..., openLaunchUrls: false)` ile kapatılır). Deep link şemaları uygulamaya bırakılır, `notification.launchUrl`'den okunur.
+
+- Ek olarak desteklenenler:
+  - Aksiyon butonları: `notification.buttons`, basılan buton `event.result.actionId` (iOS kategorisi ve Android aksiyonları SDK tarafından oluşturulur).
+  - `User.addEmail` / `removeEmail`, `User.addAlias(es)` / `removeAlias(es)` / `getAliases`.
+  - iOS badge artırma (`_badgeIncrement`) Notification Service Extension'da uygulanır; uygulama açılınca sıfırlanır.
+  - Android'de bildirim backend'den data-only gelir ve SDK tarafından çizilir: kanal (`_channelName` ile yoksa oluşturulur), ikon, ses, renk, görsel. Bu sayede "ulaştı" arka planda da sayılır.
+  - Backend `429` döndürürse `Retry-After` kadar beklenip tekrar denenir.
+
+- Farklar:
+  - Bildirim izni yokken cihaz backend'e kaydedilmez; izin verilince kaydolur.
+  - `logout` cihaz kaydını silmez (OneSignal ile aynı): kullanıcı, e-posta, alias ve tag'ler temizlenir, cihaz anonim bildirimleri almaya devam eder. Hiç bildirim istenmiyorsa `User.pushSubscription.optOut()`.
+  - `User.addSms` backend'de karşılığı olmadığı için şimdilik hiçbir şey yapmaz.
+
+#### Kullanım
+
+```dart
+try {
+  // runApp'ten önce; baseUrl verilmezse CoreCloudNotification.defaultBaseUrl
+  // enableLogs: adım adım Dart + native loglar (HTTP istek/yanıtları dahil); sonradan setLogsEnabled(bool)
+  await CoreCloudNotification.initialize(appId, enableLogs: kDebugMode);
+} on PlatformException catch (e) {
+  // e.code: INVALID_APP_ID, INVALID_BASE_URL, FIREBASE_NOT_CONFIGURED (Android), INITIALIZE_FAILED
+}
+CoreCloudNotification.Notifications.addClickListener((event) {
+  final data = event.notification.additionalData; // iç içe nesneler Map<String, dynamic>
+});
+CoreCloudNotification.Notifications.addForegroundWillDisplayListener((event) {
+  if (isChatOpen) event.preventDefault(); // senkron çağrılmalı
+});
+await CoreCloudNotification.Notifications.requestPermission(true); // true: kalıcı reddedildiyse ayarlara gönder
+await CoreCloudNotification.login(user.id);
+await CoreCloudNotification.User.addTags({'departmentId': 12});
+await CoreCloudNotification.logout();
+CoreCloudNotification.User.pushSubscription.id; // panelde hedef seçilen cihaz id'si
+```
+
+#### Kurulum
+
+- **Android**: Ek kurulum gerekmez. FCM servisi, `POST_NOTIFICATIONS` izni ve varsayılan `genel` kanalı paketten gelir. Uygulamadaki `google-services.json` (FlutterFire) kullanılır; bu Firebase projesinin service account JSON'u panelde uygulamanın Ayarlar sayfasına yüklenmelidir. Varsayılan bildirim ikonu `ic_stat_core_notification`'dır; uygulama `android/app/src/main/res/drawable/ic_stat_core_notification.png` koyarak değiştirir. Test sunucusu `http://` olduğu sürece uygulamada cleartext izni gerekir.
+- **iOS**: Xcode'da *Push Notifications* ve *Background Modes > Remote notifications* açılır. Uygulama kapalıyken "ulaştı" event'i ve bildirim görseli için bir **Notification Service Extension** gerekir:
+  1. Extension target'ı ekleyin (OneSignal'dan geçen projelerde mevcut `OneSignalNotificationServiceExtension` target'ı kullanılır), `NotificationService.swift`:
+     ```swift
+     import flutter_core_notification_extension
+     class NotificationService: CoreCloudNotificationService {}
+     ```
+  2. Podfile:
+     ```ruby
+     target 'OneSignalNotificationServiceExtension' do
+       use_frameworks!
+       pod 'flutter_core_notification_extension', :path => '.symlinks/plugins/flutter_core/ios'
+     end
+     ```
+  3. Uygulama ve extension aynı App Group'a sahip olmalı. Varsayılan ad OneSignal'ınkiyle aynıdır: `group.<bundle id>.onesignal`; farklıysa iki target'ın `Info.plist`'ine `CoreCloudNotificationAppGroup` yazılır.
+  4. Test sunucusu `http://` olduğu sürece iki target'ın `Info.plist`'inde ATS istisnası gerekir.
+
+#### OneSignal'dan geçiş
+
+1. `pubspec.yaml`'dan `onesignal_flutter` kaldırılır; `import 'package:onesignal_flutter/onesignal_flutter.dart';` satırları silinir (`flutter_core` zaten import ediliyorsa başka import gerekmez).
+2. İsimler değiştirilir:
+
+| OneSignal | CoreCloudNotification |
+| --- | --- |
+| `OneSignal.initialize(appId)` | `CoreCloudNotification.initialize(appId)` (panelden alınan `APP_ID`) |
+| `OneSignal.login` / `logout` | `CoreCloudNotification.login` / `logout` |
+| `OneSignal.Notifications.*`, `OneSignal.User.*`, `OneSignal.Debug.*` | `CoreCloudNotification.Notifications.*`, `.User.*`, `.Debug.*` (metot adları aynı) |
+| `OSNotification` | `CoreNotification` |
+| `OSNotificationClickEvent` / `OSNotificationClickResult` | `CoreNotificationClickEvent` / `CoreNotificationClickResult` |
+| `OSNotificationWillDisplayEvent` | `CoreNotificationWillDisplayEvent` |
+| `OSPushSubscriptionState` / `OSPushSubscriptionChangedState` | `CorePushSubscriptionState` / `CorePushSubscriptionChangedState` |
+| `OSLogLevel` | `CoreCloudNotificationLogLevel` |
+| v3: `OneSignal.shared.setAppId` | `CoreCloudNotification.initialize` |
+| v3: `setNotificationOpenedHandler((result) {...})` | `Notifications.addClickListener((event) {...})` |
+| v3: `setNotificationWillShowInForegroundHandler` + `event.complete(null)` | `Notifications.addForegroundWillDisplayListener` + `event.preventDefault()` |
+| v3: `setExternalUserId` / `removeExternalUserId` | `login` / `logout` |
+| v3: `promptUserForPushNotificationPermission()` | `Notifications.requestPermission(false)` |
+
+3. iOS: Podfile'da extension target'ındaki `OneSignalXCFramework` yerine `flutter_core_notification_extension`; `NotificationService.swift` yukarıdaki tek satıra indirilir.
+4. Android: `ic_stat_onesignal_default` ikonu varsa `ic_stat_core_notification` olarak yeniden adlandırılır.
 
 <br>
 
@@ -299,4 +601,126 @@ flutter_core:
 
 - `CorePhoneNumberTextField`: Bu sınıf, telefon numarası girmek için bir `TextFormField` widget'ıdır. Telefon numarası formatını (### ### ## ##) otomatik olarak uygulamak için bir maske kullanır ve kullanıcı girdilerini yalnızca sayılarla sınırlar.
 
+- `CorePhoneNumberTextField.withCountryPicker`: Aynı alanın ülke seçimli hâlidir. Ayrıntılar için bkz. [Ülke Seçimli Telefon Alanı](#ülke-seçimli-telefon-alanı).
+
 - `CoreSearchTextField`: Bu sınıf, arama yapmak için bir `TextFormField` widget'ıdır. Kullanıcının metin girdisine göre bir iptal düğmesi gösterir ve bu düğme metni temizlemek için kullanılabilir.
+
+<br>
+
+### Ülke Seçimli Telefon Alanı
+
+`CorePhoneNumberTextField.withCountryPicker`, telefon alanının ülke seçimli hâlidir. Alanın solundaki bayrak + ülke kodu butonuna basıldığında tam sayfa, aranabilir bir ülke seçim sayfası (bottom sheet) açılır. Seçilen ülkeye göre maske otomatik güncellenir.
+
+Varsayılan `CorePhoneNumberTextField` kullanımına **hiç dokunulmamıştır**; mevcut ekranlar aynen çalışmaya devam eder.
+
+Öne çıkanlar:
+
+- Alandaki metin **yalnızca ulusal numarayı** tutar; ülke kodu solda ayrı gösterilir.
+- 223 ülke, her biri kendi maskesiyle (`TR` -> `### ### ## ##`, `DE` -> `#### #######`).
+- Bayraklar asset değildir; ISO kodundan emoji olarak üretilir.
+- Ülke adları cihazın kendi dil verisinden gelir, uygulama dili değişince kendiliğinden güncellenir.
+
+#### Kullanım
+
+```dart
+CorePhoneNumberTextField.withCountryPicker(
+  hintText: 'Telefon',
+  initialCountryIsoCode: 'TR', // varsayılan ülke
+  onCountryChanged: (country) => print(country.isoCode),
+  onPhoneNumberChanged: (phone) {
+    phone.country.isoCode;   // TR
+    phone.number;            // 5551112233
+    phone.completeNumber;    // +905551112233
+    phone.isValid;           // maske tamamen dolduysa true
+  },
+  phoneNumberValidator: (phone) => phone.isValid ? null : 'Geçersiz numara',
+  countryPickerOptions: CoreCountryPickerOptions(
+    title: 'Ülke Seçin',
+    searchHintText: 'Ülke arayın...',
+    favoriteIsoCodes: ['TR', 'DE'], // listenin başına sabitlenir
+  ),
+)
+```
+
+#### `CorePhoneNumberController`
+
+`TextEditingController` yerine kullanılır; ülke ve numarayı tek yerden okumayı/yazmayı sağlar. `controller.text` aynen çalışmaya devam eder. Alana verildiğinde ülke seçimi ile controller birbirini otomatik günceller.
+
+```dart
+final controller = CorePhoneNumberController(isoCode: 'TR');
+
+CorePhoneNumberTextField.withCountryPicker(controller: controller);
+
+controller.text;                    // 555 111 22 33   (maskeli ulusal numara)
+controller.number;                  // 5551112233
+controller.country.isoCode;         // TR
+controller.completeNumber;          // +905551112233   (numara boşsa '')
+controller.formattedCompleteNumber; // +90 555 111 22 33
+controller.isValid;                 // maske doldu mu
+controller.phoneNumber;             // CorePhoneNumber
+
+controller.country = CoreCountry.fromIsoCode('DE')!; // maske otomatik güncellenir
+controller.number = '5551112233';
+controller.clearNumber();           // numarayı temizler, ülkeyi korur
+```
+
+Controller bir `ChangeNotifier` olduğu için `addListener` ile ülke/numara değişimleri dinlenebilir.
+
+#### Ülke adları ve dil
+
+Ülke adları **cihazın kendi dil verisinden** (ICU) alınır; ne pakette ne de projede çeviri tutmak gerekir. iOS, macOS ve Android'de çalışır; diğer platformlarda paket içindeki `tr` / `en` adlarına düşülür.
+
+Kullanıcı uygulama içinden dili değiştirdiğinde **ekstra bir şey yapmanız gerekmez**: ad `Localizations.localeOf(context)` üzerinden çözüldüğü için `MaterialApp.locale` değişimi ülke adlarını ve listenin alfabetik sırasını otomatik günceller. Yeni dilin adları arka planda yüklenir, hazır olduğunda liste kendini yeniler.
+
+Çözümleme sırası:
+
+1. `CoreCountryPickerOptions.nameResolver` (ekrana özel, en öncelikli)
+2. `CoreCountryLocalizations.register(...)` ile elle kaydedilmiş adlar
+3. Cihazdan gelen yerelleştirilmiş ad
+4. Paket içindeki `tr` / `en` adları
+
+Sadece belirli bir adı düzeltmek isterseniz:
+
+```dart
+CoreCountryLocalizations.register('tr', {'MK': 'Kuzey Makedonya'});
+```
+
+Cihazdan ad okumayı tamamen kapatmak için `CoreCountryLocalizations.useSystemNames = false;` yeterlidir.
+
+> Seçim sayfasının başlığı ve arama placeholder'ı sabit metindir; çok dilli uygulamalarda bunları `CoreCountryPickerOptions` üzerinden kendi çevirinizle vermelisiniz.
+
+#### `CoreCountryPickerSheet`
+
+Ülke seçim sayfası alandan bağımsız olarak da kullanılabilir:
+
+```dart
+final country = await CoreCountryPickerSheet.show(
+  context,
+  selected: seciliUlke,
+  options: const CoreCountryPickerOptions(favoriteIsoCodes: ['TR']),
+);
+```
+
+`CoreCountryPickerOptions` başlıca seçenekleri:
+
+| Seçenek | Açıklama |
+| --- | --- |
+| `title`, `searchHintText`, `emptyResultText` | Sayfadaki metinler |
+| `countries` | Listelenecek ülkeler (varsayılan: `kCoreCountries`) |
+| `favoriteIsoCodes` | Listenin başına sabitlenecek ülkeler |
+| `showDialCode`, `showCloseButton`, `showDragHandle` | Görünüm anahtarları |
+| `flagShape` | Bayrak şekli (`circle` / `rounded`) |
+| `borderRadius`, `backgroundColor`, `barrierColor` | Sayfa görünümü |
+| `isDismissible`, `enableDrag`, `useRootNavigator` | Sayfa davranışı |
+| `nameResolver` | Ülke adını özelleştirir |
+| `itemBuilder` | Liste satırını tamamen özelleştirir |
+
+#### `CoreCountry` ve `CoreCountryFlag`
+
+`CoreCountry`; ISO kodu, ülke kodu, ad ve maske bilgisini taşır. `CoreCountry.fromIsoCode('TR')` ve `CoreCountry.fromDialCode('+90')` ile erişilir; tüm liste `kCoreCountries` sabitindedir.
+
+`CoreCountryFlag` bayrağı tek başına çizmek için kullanılır. `CoreCountryFlagShape.circle` (varsayılan) bayrağı daireye sığdırır ve kenarlardan bir miktar kırpar; `CoreCountryFlagShape.rounded` ise bayrağın tamamını kırpmadan gösterir. Alan ve seçim sayfası aynı şekli `CoreCountryPickerOptions.flagShape` üzerinden kullanır.
+
+```dart
+CoreCountryFlag(country: CoreCountry.fromIsoCode('TR')!, size: 28);
+```

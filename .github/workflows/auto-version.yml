@@ -1,0 +1,181 @@
+# development'a her merge'de yeni versiyon tag'i (v<version>) üretir.
+#
+# development korumalı olduğu için bu workflow branch'e push ETMEZ. Bunun yerine merge
+# commit'inin üzerine pubspec.yaml versiyonunu ve CHANGELOG'u güncelleyen bir release
+# commit'i oluşturur, bu commit'e tag atar ve sadece tag'i push eder. Böylece tag'deki
+# pubspec.yaml her zaman doğru versiyonu gösterir. Versiyonun tek kaynağı git tag'leridir.
+#
+# Artış tipi (varsayılan: patch):
+#   - PR'da `major` veya `minor` label'ı varsa ona göre artırılır.
+#   - Label yoksa merge commit mesajındaki #major / #minor anahtar kelimesine bakılır.
+#   - PR'da `skip-version` label'ı varsa versiyon artırılmaz.
+#
+# Sonrasında yeni tag (skip-version ise development) otomatik olarak main'e merge edilir.
+# main ruleset ile korunduğu için bu adım, ruleset bypass listesine eklenmiş bir GitHub App'in
+# token'ını kullanır (RELEASE_APP_ID variable + RELEASE_APP_PRIVATE_KEY secret). Tanımlı
+# değilse main senkronu atlanır.
+name: Auto Version
+
+on:
+  push:
+    branches: [development]
+
+concurrency:
+  group: auto-version
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      HAS_APP: ${{ vars.RELEASE_APP_ID != '' }}
+    steps:
+      - name: Create GitHub App token
+        id: app-token
+        if: env.HAS_APP == 'true'
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          token: ${{ steps.app-token.outputs.token || github.token }}
+
+      - name: Determine bump type
+        id: bump
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          PR_JSON=$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" --jq '.[0] // {}')
+          LABELS=$(echo "$PR_JSON" | jq -r '[.labels[]?.name] | join(",")')
+          PR_TITLE=$(echo "$PR_JSON" | jq -r '.title // empty')
+          PR_NUMBER=$(echo "$PR_JSON" | jq -r '.number // empty')
+
+          if [[ ",$LABELS," == *",skip-version,"* ]]; then
+            TYPE=skip
+          elif [[ ",$LABELS," == *",major,"* ]] || [[ "$COMMIT_MSG" == *"#major"* ]]; then
+            TYPE=major
+          elif [[ ",$LABELS," == *",minor,"* ]] || [[ "$COMMIT_MSG" == *"#minor"* ]]; then
+            TYPE=minor
+          else
+            TYPE=patch
+          fi
+
+          [[ -z "$PR_TITLE" ]] && PR_TITLE=$(echo "$COMMIT_MSG" | head -n1)
+          [[ -n "$PR_NUMBER" ]] && PR_TITLE="$PR_TITLE (#$PR_NUMBER)"
+
+          echo "type=$TYPE" >> "$GITHUB_OUTPUT"
+          {
+            echo "title<<EOF"
+            echo "$PR_TITLE"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create release commit and tag
+        id: release
+        if: steps.bump.outputs.type != 'skip'
+        env:
+          TYPE: ${{ steps.bump.outputs.type }}
+          TITLE: ${{ steps.bump.outputs.title }}
+        run: |
+          LAST_TAG=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1)
+          if [[ -n "$LAST_TAG" ]]; then
+            CURRENT=${LAST_TAG#v}
+          else
+            CURRENT=$(grep -E '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*//; s/\+.*//')
+          fi
+          IFS=. read -r MAJOR MINOR PATCH <<< "$CURRENT"
+
+          case "$TYPE" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+          esac
+          NEW="$MAJOR.$MINOR.$PATCH"
+
+          sed -i -E "s/^version:.*/version: $NEW/" pubspec.yaml
+
+          # CHANGELOG geçmişi bir önceki tag'deki CHANGELOG'dan devam eder
+          PREV_CHANGELOG=""
+          [[ -n "$LAST_TAG" ]] && PREV_CHANGELOG=$(git show "$LAST_TAG:CHANGELOG.md" 2>/dev/null || true)
+          {
+            echo "## $NEW - $(date -u +%Y-%m-%d)"
+            echo
+            echo "* $TITLE"
+            echo
+            [[ -n "$PREV_CHANGELOG" ]] && echo "$PREV_CHANGELOG"
+            true
+          } > CHANGELOG.md
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add pubspec.yaml CHANGELOG.md
+          git commit -m "chore(release): v$NEW"
+          git tag -a "v$NEW" -m "v$NEW"
+          git push origin "v$NEW"
+
+          echo "version=$NEW" >> "$GITHUB_OUTPUT"
+          echo "last_tag=$LAST_TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        if: steps.bump.outputs.type != 'skip'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW: ${{ steps.release.outputs.version }}
+          LAST_TAG: ${{ steps.release.outputs.last_tag }}
+        run: |
+          ARGS=(--title "v$NEW" --generate-notes --verify-tag)
+          [[ -n "$LAST_TAG" ]] && ARGS+=(--notes-start-tag "$LAST_TAG")
+          gh release create "v$NEW" "${ARGS[@]}"
+          echo "### Released v$NEW (${{ steps.bump.outputs.type }})" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Merge into main
+        env:
+          HAS_TOKEN: ${{ steps.app-token.outputs.token != '' }}
+          NEW: ${{ steps.release.outputs.version }}
+        run: |
+          if [[ "$HAS_TOKEN" != "true" ]]; then
+            echo "::warning::RELEASE_APP_ID / RELEASE_APP_PRIVATE_KEY tanımlı değil, main senkronu atlandı."
+            exit 0
+          fi
+
+          if [[ -n "$NEW" ]]; then
+            SOURCE="v$NEW"
+            MESSAGE="chore(release): merge v$NEW into main"
+          else
+            SOURCE="origin/development"
+            MESSAGE="chore: merge development into main"
+          fi
+
+          git fetch origin main
+          git checkout -B main origin/main
+
+          # Release commit'leri development'ta olmadığı için pubspec.yaml / CHANGELOG.md her
+          # seferinde çakışır; bu iki dosya için kaynak (tag) her zaman doğrudur.
+          git merge --no-ff --no-commit "$SOURCE" || true
+          if [[ -n "$NEW" ]]; then
+            git checkout "$SOURCE" -- pubspec.yaml CHANGELOG.md
+          fi
+
+          if [[ -n "$(git diff --name-only --diff-filter=U)" ]]; then
+            echo "::error::main'e merge'de çakışma var, elle çözülmeli:"
+            git diff --name-only --diff-filter=U
+            exit 1
+          fi
+
+          if git diff --cached --quiet && [[ ! -f .git/MERGE_HEAD ]]; then
+            echo "main zaten güncel."
+            exit 0
+          fi
+
+          git commit -m "$MESSAGE"
+          git push origin main
+          echo "### main ← $SOURCE" >> "$GITHUB_STEP_SUMMARY"
