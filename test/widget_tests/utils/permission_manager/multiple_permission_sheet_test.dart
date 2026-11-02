@@ -90,4 +90,91 @@ void main() {
 
     expect(result, {CorePermission.camera: CorePermissionStatus.granted});
   });
+
+  testWidgets('caption row is drawn only when eyebrow or eyebrowLeading is given', (tester) async {
+    await pumpApp(tester);
+    unawaited(manager.requestMultiplePermissionsCancellable(permissions: const [CorePermission.camera]));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('leading')), findsNothing);
+    expect(find.text('Başlamadan önce'), findsOneWidget);
+    expect(find.text('birkaç izin.'), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.close));
+    await tester.pumpAndSettle();
+
+    unawaited(
+      manager.requestMultiplePermissionsCancellable(
+        permissions: const [CorePermission.camera],
+        eyebrow: 'VALET · İZİNLER',
+        eyebrowLeading: const SizedBox(key: ValueKey('leading')),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('VALET · İZİNLER'), findsOneWidget);
+    expect(find.byKey(const ValueKey('leading')), findsOneWidget);
+  });
+
+  testWidgets('title without highlight stays a single line', (tester) async {
+    await pumpApp(tester);
+    unawaited(manager.requestMultiplePermissionsCancellable(permissions: const [CorePermission.camera], title: 'Gerekli İzinler'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Gerekli İzinler'), findsOneWidget);
+    expect(find.text('birkaç izin.'), findsNothing);
+  });
+
+  testWidgets('description is replaced by the answer', (tester) async {
+    requestAnswer = PermissionStatus.denied;
+    await pumpApp(tester);
+    unawaited(
+      manager.requestMultiplePermissionsCancellable(
+        permissions: const [CorePermission.camera],
+        permissionDescriptions: const {CorePermission.camera: 'Araç fotoğrafı çekmek için'},
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Kamera'), findsOneWidget);
+    expect(find.text('Araç fotoğrafı çekmek için'), findsOneWidget);
+
+    await tester.tap(find.text('İzin Ver'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Araç fotoğrafı çekmek için'), findsNothing);
+    expect(find.text('Reddedildi'), findsOneWidget);
+  });
+
+  testWidgets('denied forced permission: missing title and note, continue disabled', (tester) async {
+    requestAnswer = PermissionStatus.permanentlyDenied;
+    await pumpApp(tester);
+    Map<CorePermission, CorePermissionStatus>? result;
+    var completed = false;
+    unawaited(
+      manager.requestMultiplePermissionsCancellable(
+        permissions: const [CorePermission.camera, CorePermission.photos],
+        forcedPermissions: const {CorePermission.photos},
+      ).then((value) {
+        result = value;
+        completed = true;
+      }),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Zorunlu'), findsNWidgets(2), reason: 'row badge and note badge');
+
+    await tester.tap(find.text('İzin Ver'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('2 izin'), findsOneWidget);
+    expect(find.text('eksik kaldı.'), findsOneWidget);
+    expect(find.text('Gerekli'), findsOneWidget);
+    expect(find.text('Ayarlara Git'), findsOneWidget);
+
+    await tester.tap(find.text('Devam Et'));
+    await tester.pumpAndSettle();
+
+    expect(completed, isFalse);
+    expect(result, isNull);
+  });
 }
