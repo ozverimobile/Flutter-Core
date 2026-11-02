@@ -1,3 +1,7 @@
+## 2.0.7 - 2026-11-02
+
+* İzin sayfaları: yeni tasarım (çoklu ve tekli) (#91)
+
 ## 2.0.6 - 2026-10-26
 
 * Feature/auto merge main (#90)
