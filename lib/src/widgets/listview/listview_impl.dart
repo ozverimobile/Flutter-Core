@@ -228,8 +228,15 @@ class _CoreListViewState extends State<CoreListView> with TickerProviderStateMix
     if (!_isBottom || _showIndicator) return;
 
     setState(() => _showIndicator = true);
-    await widget.onReachedEnd?.call();
-    setState(() => _showIndicator = false);
+    try {
+      await widget.onReachedEnd?.call();
+    } finally {
+      // `onReachedEnd` may outlive this widget (e.g. a slow request finishing
+      // after the user navigated away), so guard against a disposed State.
+      // `finally` also clears the indicator when the callback throws;
+      // otherwise `_showIndicator` stays true and pagination never fires again.
+      if (mounted) setState(() => _showIndicator = false);
+    }
   }
 
   bool get _isBottom {
