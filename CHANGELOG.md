@@ -1,3 +1,7 @@
+## 2.0.8 - 2026-11-09
+
+* CoreListView: dispose sonrası setState çökmesi düzeltildi (#92)
+
 ## 2.0.7 - 2026-11-02
 
 * İzin sayfaları: yeni tasarım (çoklu ve tekli) (#91)
