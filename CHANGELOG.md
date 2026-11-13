@@ -1,3 +1,7 @@
+## 2.0.9 - 2026-11-13
+
+* CoreListView: dispose sonrası post-frame callback çökmesi düzeltildi (#93)
+
 ## 2.0.8 - 2026-11-09
 
 * CoreListView: dispose sonrası setState çökmesi düzeltildi (#92)

@@ -196,6 +196,10 @@ class _CoreListViewState extends State<CoreListView> with TickerProviderStateMix
 
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // The State may be disposed before the first frame ends (e.g. the list
+      // is replaced in the same frame it was inserted). `context` throws on an
+      // unmounted State, so bail out.
+      if (!mounted || !_scrollController.hasClients) return;
       _primaryScrollController = PrimaryScrollController.maybeOf(context)?..attach(_position = _scrollController.position);
     });
   }
