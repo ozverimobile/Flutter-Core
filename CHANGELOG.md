@@ -1,0 +1,19 @@
+## 2.0.9 - 2026-11-13
+
+* CoreListView: dispose sonrası post-frame callback çökmesi düzeltildi (#93)
+
+## 2.0.8 - 2026-11-09
+
+* CoreListView: dispose sonrası setState çökmesi düzeltildi (#92)
+
+## 2.0.7 - 2026-11-02
+
+* İzin sayfaları: yeni tasarım (çoklu ve tekli) (#91)
+
+## 2.0.6 - 2026-10-26
+
+* Feature/auto merge main (#90)
+
+## 2.0.5 - 2026-10-26
+
+* Add automatic versioning on merge to development (#89)
