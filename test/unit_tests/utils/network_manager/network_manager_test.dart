@@ -300,5 +300,49 @@ void main() {
       expect(response.messages, isNull);
       expect(response.error, isNull);
     });
+
+    test('PATCH isteği atılıyor.', () async {
+      final networkManager = NetworkManager();
+      const data = Product(id: 1, name: 'test');
+      final response = await networkManager.request<Product, Product>(path: RequestPath.patchRequestTest, type: RequestType.patch, data: data, responseEntityModel: const Product());
+      expect(response.succeeded, true);
+      expect(response.data, isA<Product>());
+      expect(response.data!.id, data.id);
+      expect(response.data!.name, data.name);
+      expect(response.statusCode, 200);
+      expect(response.messages, isNull);
+      expect(response.error, isNull);
+      // Sahte sunucu bu yolda yalnız PATCH kabul eder; 200 dönmesi yöntemin PATCH olduğunu gösterir.
+    });
+
+    test('PATCH yolu başka yöntemi reddediyor.', () async {
+      final networkManager = NetworkManager();
+      const data = Product(id: 1, name: 'test');
+      final response = await networkManager.request<Product, Product>(path: RequestPath.patchRequestTest, type: RequestType.post, data: data, responseEntityModel: const Product());
+      expect(response.statusCode, 405);
+      final dioException = response.error! as DioException;
+      expect(dioException.response?.statusMessage, 'Method Not Allowed');
+    });
+
+    test('PATCH isteği atılıyor (primitiveRequest).', () async {
+      final networkManager = NetworkManager();
+      const data = Product(id: 1, name: 'test');
+      final response = await networkManager.primitiveRequest<String>(path: RequestPath.patchRequestTestForPrimitiveRequest, type: RequestType.patch, data: data);
+      expect(response.succeeded, true);
+      expect(response.data, isA<String>());
+      expect(response.data, data.name);
+      expect(response.statusCode, 200);
+      expect(response.messages, isNull);
+      expect(response.error, isNull);
+    });
+
+    test('PATCH yolu başka yöntemi reddediyor (primitiveRequest).', () async {
+      final networkManager = NetworkManager();
+      const data = Product(id: 1, name: 'test');
+      final response = await networkManager.primitiveRequest<String>(path: RequestPath.patchRequestTestForPrimitiveRequest, type: RequestType.put, data: data);
+      expect(response.statusCode, 405);
+      final dioException = response.error! as DioException;
+      expect(dioException.response?.statusMessage, 'Method Not Allowed');
+    });
   });
 }

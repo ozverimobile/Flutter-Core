@@ -15,6 +15,7 @@ enum RequestPath implements BaseRequestPath {
   listResponseControlTest('/listResponseControlTest'),
   objectResponseControlTest('/objectResponseControlTest'),
   primitiveResponseControlTest('/primitiveResponseControlTest'),
+  patchRequestTest('/patchRequestTest'),
 
   /// For Primitive Request
   dataControlTestForPrimitiveRequest('/dataControlTestForPrimitiveRequest'),
@@ -27,6 +28,7 @@ enum RequestPath implements BaseRequestPath {
   generalErrorRequestTestForPrimitiveRequest('/generalErrorRequestTestForPrimitiveRequest'),
   uint8ListControlTestForPrimitiveRequest('/uint8ListControlTestForPrimitiveRequest'),
   primitiveTypeControlTestForPrimitiveRequest('/primitiveTypeControlTestForPrimitiveRequest'),
+  patchRequestTestForPrimitiveRequest('/patchRequestTestForPrimitiveRequest'),
   ;
 
   const RequestPath(this.value);
