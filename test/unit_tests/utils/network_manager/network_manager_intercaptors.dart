@@ -55,6 +55,10 @@ class NetworkManagerIntercaptors extends InterceptorsWrapper with NetworkManager
       uint8ListControlTestForPrimitiveRequest(options, handler);
     } else if (options.path == RequestPath.primitiveTypeControlTestForPrimitiveRequest.value) {
       primitiveTypeControlTestForPrimitiveRequest(options, handler);
+    } else if (options.path == RequestPath.patchRequestTest.value) {
+      patchRequestTest(options, handler);
+    } else if (options.path == RequestPath.patchRequestTestForPrimitiveRequest.value) {
+      patchRequestTestForPrimitiveRequest(options, handler);
     } else {
       handler.next(options);
     }
@@ -450,6 +454,53 @@ mixin NetworkManagerIntercaptorsMixin {
     handler.resolve(
       Response(
         data: 'test',
+        requestOptions: options,
+        statusCode: 200,
+        statusMessage: 'OK',
+      ),
+    );
+  }
+
+  /// Yalnız PATCH kabul eder; başka yöntemle gelen istek 405 ile reddedilir.
+  bool _rejectIfNotPatch(RequestOptions options, RequestInterceptorHandler handler) {
+    if (options.method == 'PATCH') return false;
+    handler.reject(
+      DioException.badResponse(
+        statusCode: 405,
+        requestOptions: options,
+        response: Response(
+          requestOptions: options,
+          statusCode: 405,
+          statusMessage: 'Method Not Allowed',
+        ),
+      ),
+    );
+    return true;
+  }
+
+  void patchRequestTest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (_rejectIfNotPatch(options, handler)) return;
+    final map = <String, dynamic>{
+      'data': options.data,
+      'succeeded': true,
+      'messages': <dynamic>[],
+    };
+    handler.resolve(
+      Response(
+        data: map,
+        requestOptions: options,
+        statusCode: 200,
+        statusMessage: 'OK',
+      ),
+    );
+  }
+
+  void patchRequestTestForPrimitiveRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (_rejectIfNotPatch(options, handler)) return;
+    final data = options.data as Map<String, dynamic>;
+    handler.resolve(
+      Response(
+        data: data['name'],
         requestOptions: options,
         statusCode: 200,
         statusMessage: 'OK',
