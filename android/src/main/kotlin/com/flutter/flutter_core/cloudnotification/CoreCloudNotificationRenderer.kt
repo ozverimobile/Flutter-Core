@@ -22,6 +22,9 @@ internal object CoreCloudNotificationRenderer {
     const val DEFAULT_CHANNEL_ID = "genel"
     private const val DEFAULT_CHANNEL_NAME = "Genel"
 
+    /** Özetin PendingIntent request code'u, alt bildirimin butonlarıyla çakışmasın. */
+    private const val SUMMARY_REQUEST_INDEX = 29
+
     /** Uygulama kendi ikonunu aynı isimle `res/drawable` altına koyarak ezebilir. */
     private const val DEFAULT_SMALL_ICON = "ic_stat_core_notification"
 
@@ -64,7 +67,30 @@ internal object CoreCloudNotificationRenderer {
             builder.setLargeIcon(image)
                 .setStyle(NotificationCompat.BigPictureStyle().bigPicture(image).bigLargeIcon(null as Bitmap?))
         }
+        val group = CoreCloudNotificationGrouping.groupOf(payload.data)
+        group?.let { builder.setGroup(it) }
         compat.notify(payload.androidNotificationId, builder.build())
+        group?.let { showGroupSummary(context, compat, payload, it) }
+    }
+
+    /**
+     * Grubun özet bildirimi ([CoreCloudNotificationGrouping]). Her yeni bildirimde son bildirimin
+     * başlığı ve dokunma hedefiyle yenilenir; sessizdir (ses alt bildirimden gelir).
+     */
+    @SuppressLint("MissingPermission")
+    private fun showGroupSummary(context: Context, compat: NotificationManagerCompat, payload: CoreCloudNotificationPayload, group: String) {
+        val summary = NotificationCompat.Builder(context, resolveChannel(context, payload))
+            .setSmallIcon(resolveSmallIcon(context, payload.smallIcon))
+            .setContentTitle(payload.title)
+            .setContentText(payload.body)
+            .setStyle(NotificationCompat.InboxStyle().setSummaryText(payload.title))
+            .setGroup(group)
+            .setGroupSummary(true)
+            .setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN)
+            .setAutoCancel(true)
+            .setContentIntent(contentIntent(context, payload, index = SUMMARY_REQUEST_INDEX))
+        payload.color?.let { runCatching { summary.setColor(Color.parseColor(it)) } }
+        compat.notify(CoreCloudNotificationGrouping.summaryId(group), summary.build())
     }
 
     fun cancelAll(context: Context) {
