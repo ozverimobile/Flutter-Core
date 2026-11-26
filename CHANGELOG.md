@@ -1,3 +1,7 @@
+## 2.0.11 - 2026-11-26
+
+* CloudNotification (iOS): VoIP (PushKit) token kaydı (#95)
+
 ## 2.0.10 - 2026-11-19
 
 * Patch request type (#94)
