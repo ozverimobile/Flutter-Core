@@ -463,6 +463,26 @@ CoreCloudNotification.User.pushSubscription.id; // panelde hedef seçilen cihaz 
   3. Uygulama ve extension aynı App Group'a sahip olmalı. Varsayılan ad OneSignal'ınkiyle aynıdır: `group.<bundle id>.onesignal`; farklıysa iki target'ın `Info.plist`'ine `CoreCloudNotificationAppGroup` yazılır.
   4. Test sunucusu `http://` olduğu sürece iki target'ın `Info.plist`'inde ATS istisnası gerekir.
 
+#### Gelen arama push'u (VoIP, iOS)
+
+SDK PushKit'e kaydolmaz; Apple her VoIP push'ta aynı çağrıda CallKit'e arama raporlanmasını istediği için `PKPushRegistry` uygulamada kalır. Uygulama token'ı SDK'ya verir, SDK token'ı cihaz kaydına bağlar (`PUT /api/apps/{appId}/devices/{deviceId}/voip-token`; her yeni `POST /devices`'tan sonra yeniden):
+
+```swift
+import flutter_core
+
+func pushRegistry(_ registry: PKPushRegistry, didUpdate credentials: PKPushCredentials, for type: PKPushType) {
+  CoreCloudNotificationVoip.setToken(credentials.token)
+}
+
+func pushRegistry(_ registry: PKPushRegistry, didInvalidatePushTokenFor type: PKPushType) {
+  CoreCloudNotificationVoip.invalidateToken() // DELETE …/voip-token
+}
+```
+
+- Dart `initialize`'dan önce çağrılabilir; gönderim `initialize`'dan sonra yapılır.
+- VoIP token'ı verilmiş uygulamada bildirim izni olmasa da cihaz kaydolur (arama push'u izin istemez); `subscribed` kapalı gider, izin verilince açılır. VoIP kullanmayan uygulamada davranış değişmez.
+- Çıkışta ayrıca bir şey gerekmez.
+
 #### OneSignal'dan geçiş
 
 1. `pubspec.yaml`'dan `onesignal_flutter` kaldırılır; `import 'package:onesignal_flutter/onesignal_flutter.dart';` satırları silinir (`flutter_core` zaten import ediliyorsa başka import gerekmez).

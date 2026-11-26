@@ -59,6 +59,62 @@ final class CoreCloudNotificationManager {
     }
   }
 
+  // MARK: - VoIP (PushKit)
+
+  /// Uygulamanın PushKit token'ı (`pushRegistry(_:didUpdate:for:)`). Saklanır; cihaz kaydı varsa
+  /// `PUT devices/{id}/voip-token` gider, yoksa kayıttan hemen sonra. Her yeni `POST /devices`'tan
+  /// sonra yeniden gönderilir (sunucu yeni kayıt açabilir).
+  func setVoipToken(_ pushToken: Data) {
+    let token = pushToken.map { String(format: "%02x", $0) }.joined()
+    guard !token.isEmpty else { return }
+    if defaults.string(forKey: Key.voipToken) != token {
+      CoreCloudNotificationLog.i("VoIP token: \(token)")
+      defaults.set(token, forKey: Key.voipToken)
+    }
+    queue.async { self.syncLocked() }
+  }
+
+  /// `didInvalidatePushTokenFor`: token sunucudan silinir (`DELETE devices/{id}/voip-token`).
+  func clearVoipToken() {
+    CoreCloudNotificationLog.d("VoIP token geçersizleşti, siliniyor")
+    defaults.removeObject(forKey: Key.voipToken)
+    queue.async {
+      guard let registered = self.defaults.string(forKey: Key.registeredVoip) else { return }
+      self.defaults.removeObject(forKey: Key.registeredVoip)
+      guard let api = CoreCloudNotificationAPI(store: self.store),
+            let deviceId = registered.split(separator: ":").first.map(String.init)
+      else { return }
+      if case let .fail(_, message) = api.sendSync("DELETE", "devices/\(deviceId)/voip-token", nil) {
+        // 404: kayıtlı token zaten yok.
+        CoreCloudNotificationLog.d("VoIP token silinemedi: \(message)")
+      }
+    }
+  }
+
+  private var voipToken: String? {
+    let token = defaults.string(forKey: Key.voipToken) ?? ""
+    return token.isEmpty ? nil : token
+  }
+
+  /// Kayıttaki VoIP token'ı sunucudakinden farklıysa gönderir. `false`: cihaz kaydı sunucuda yok
+  /// (404), çağıran yeniden kaydolur.
+  private func syncVoipLocked(api: CoreCloudNotificationAPI, deviceId: String) -> Bool {
+    guard let token = voipToken else { return true }
+    let marker = "\(deviceId):\(token)"
+    guard defaults.string(forKey: Key.registeredVoip) != marker else { return true }
+    CoreCloudNotificationLog.d("sync: VoIP token gönderiliyor")
+    switch api.sendSync("PUT", "devices/\(deviceId)/voip-token", ["token": token]) {
+    case .ok:
+      defaults.set(marker, forKey: Key.registeredVoip)
+      CoreCloudNotificationLog.i("VoIP token kaydedildi")
+      return true
+    case let .fail(status, message):
+      CoreCloudNotificationLog.w("VoIP token kaydedilemedi: \(message)")
+      scheduleRetryIfRateLimited(status)
+      return status != 404
+    }
+  }
+
   func onForeground() {
     guard started else { return }
     CoreCloudNotificationLog.d("Uygulama ön plana geldi: sync, session, events")
@@ -199,7 +255,9 @@ final class CoreCloudNotificationManager {
 
   // MARK: - Backend senkronizasyonu (sadece kuyrukta)
 
-  private func desiredState() -> [String: Any] {
+  /// [authorized] `false` yalnız VoIP token'ı olan uygulamada olur: cihaz arama push'u için kayıtlı
+  /// kalır, bildirim aboneliği kapalı gider.
+  private func desiredState(authorized: Bool = true) -> [String: Any] {
     [
       "externalUserId": defaults.string(forKey: Key.externalUserId) ?? "",
       "email": defaults.string(forKey: Key.email) ?? "",
@@ -208,7 +266,7 @@ final class CoreCloudNotificationManager {
       "language": defaults.string(forKey: Key.language) ?? CoreCloudNotificationManager.deviceLanguage,
       "timezone": TimeZone.current.identifier,
       "appVersion": Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "",
-      "subscribed": defaults.object(forKey: Key.subscribed) as? Bool ?? true,
+      "subscribed": (defaults.object(forKey: Key.subscribed) as? Bool ?? true) && authorized,
     ]
   }
 
@@ -221,11 +279,14 @@ final class CoreCloudNotificationManager {
       CoreCloudNotificationLog.d("sync: atlandı, APNs token henüz yok")
       return
     }
-    guard CoreCloudNotificationManager.isAuthorizedSync() else {
+    // Bildirim izni yoksa cihaz kaydı beklenir. İstisna: VoIP token'ı olan uygulama (gelen arama
+    // push'u bildirim izni istemez); cihaz kaydolur, bildirim aboneliği kapalı gider.
+    let authorized = CoreCloudNotificationManager.isAuthorizedSync()
+    guard authorized || voipToken != nil else {
       CoreCloudNotificationLog.d("Bildirim izni yok, cihaz kaydı bekletiliyor")
       return
     }
-    let desired = desiredState()
+    let desired = desiredState(authorized: authorized)
     var deviceId = store.deviceId
 
     let needsRegister = deviceId == nil ||
@@ -238,6 +299,14 @@ final class CoreCloudNotificationManager {
       deviceId = id
     }
     guard let deviceId else { return }
+
+    if !syncVoipLocked(api: api, deviceId: deviceId) {
+      if retryOn404 {
+        clearDeviceLocked()
+        syncLocked(retryOn404: false)
+      }
+      return
+    }
 
     let synced = defaults.dictionary(forKey: Key.synced) ?? [:]
     let patch = CoreCloudNotificationManager.diff(desired: desired, synced: synced)
@@ -292,6 +361,8 @@ final class CoreCloudNotificationManager {
       var synced = desired
       synced["subscribed"] = true
       store.deviceId = id
+      // Yeni (ya da yeniden) kayıt: VoIP token'ı bu kayda tekrar gönderilir.
+      defaults.removeObject(forKey: Key.registeredVoip)
       defaults.set(token, forKey: Key.registeredToken)
       defaults.set(api.endpoint.absoluteString, forKey: Key.registeredEndpoint)
       defaults.set(false, forKey: Key.needsRegister)
