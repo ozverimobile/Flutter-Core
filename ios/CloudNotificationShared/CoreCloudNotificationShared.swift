@@ -56,6 +56,10 @@ public final class CoreCloudNotificationStore {
     public static let language = "corecloudnotification.language"
     public static let subscribed = "corecloudnotification.subscribed"
     public static let pendingEvents = "corecloudnotification.pendingEvents"
+    /// PushKit (VoIP) token'ı (hex); uygulama `CoreCloudNotificationVoip` ile verir.
+    public static let voipToken = "corecloudnotification.voipToken"
+    /// Sunucuya gönderilmiş VoIP token'ı ve kaydı: "<deviceId>:<token>".
+    public static let registeredVoip = "corecloudnotification.registeredVoip"
   }
 
   public let appGroup: String
