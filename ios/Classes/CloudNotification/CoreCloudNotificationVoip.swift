@@ -9,8 +9,9 @@ import Foundation
 /// - `PUT /api/apps/{appId}/devices/{deviceId}/voip-token`, cihaz kaydı varsa hemen, yoksa
 ///   kayıttan sonra; her yeni `POST /devices`'tan sonra yeniden.
 /// - Token geçersizleşince `DELETE …/voip-token`.
-/// - VoIP token'ı verilmiş uygulamada bildirim izni olmasa da cihaz kaydolur (arama push'u izin
-///   istemez); bildirim aboneliği (`subscribed`) kapalı gider, izin verilince açılır.
+/// - VoIP token'ı verilmiş uygulamada bildirim izni olmasa da cihaz `subscribed: true` kaydolur:
+///   arama push'u izin istemez ve push servisi aboneliği kapalı cihaza göndermez. İzin yokken iOS
+///   normal bildirimleri zaten göstermez. Abonelik yalnız `setSubscribed(false)` ile kapanır.
 ///
 /// ```swift
 /// import flutter_core
