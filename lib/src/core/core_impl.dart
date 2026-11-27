@@ -11,6 +11,7 @@ abstract interface class ICore {
   void closeKeyboard();
   String doubleToCurrency(double value);
   Future<void> updateApp({String? androidPackageName, String? iOSAppId, String? huaweiAppId, bool iosLaunchIntune = false});
+  Future<int?> updateStalenessDays();
   Future<void> vibrate({ImpactType type = ImpactType.mediumImpact});
 }
 
@@ -113,6 +114,25 @@ final class CoreImpl implements ICore {
         // Launch App Store
         await CoreUrlLauncher.instance.launchStore(iosAppId: iOSAppId);
       }
+    }
+  }
+
+  /// Google Play'deki guncellemenin bu cihaza kac gundur sunuldugu
+  /// (Play In-App Updates `clientVersionStalenessDays`).
+  ///
+  /// Yalnizca Android'de ve uygulama Play'den kurulduysa dolar. iOS'ta,
+  /// Play hizmeti olmayan cihazda (Huawei), Play'den kurulmamis uygulamada,
+  /// guncelleme yoksa ya da Play bilgiyi vermezse `null` doner.
+  @override
+  Future<int?> updateStalenessDays() async {
+    if (!Platform.isAndroid) return null;
+    try {
+      final updateInfo = await InAppUpdate.checkForUpdate();
+      if (updateInfo.updateAvailability != UpdateAvailability.updateAvailable) return null;
+      return updateInfo.clientVersionStalenessDays;
+    } catch (e) {
+      CoreLogger.log(e, color: LogColors.red);
+      return null;
     }
   }
 

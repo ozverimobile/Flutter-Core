@@ -144,7 +144,7 @@ flutter_core:
 
 ---
 
-- Projelerde genel olarak kullandığımız fonksiyonları içermektedir. `closeKeyboard`, `doubleToCurrency` ve `updateApp` gibi fonksiyonlar içerimektedir. `initialize` fonksiyonu `runApp` fonksiyonundan önce çağırılmalıdır.
+- Projelerde genel olarak kullandığımız fonksiyonları içermektedir. `closeKeyboard`, `doubleToCurrency`, `updateApp` ve `updateStalenessDays` (Android: Play guncellemesinin cihaza kac gundur sunuldugu) gibi fonksiyonlar içerimektedir. `initialize` fonksiyonu `runApp` fonksiyonundan önce çağırılmalıdır.
 
 <br>
 

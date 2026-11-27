@@ -1,3 +1,7 @@
+## 2.0.14 - 2026-11-27
+
+* Core.updateStalenessDays: Play güncellemesinin cihaza kaç gündür sunulduğu (Android) (#99)
+
 ## 2.0.13 - 2026-11-27
 
 * CloudNotification (iOS): izinsiz cihaz VoIP için subscribed: true (#97)
