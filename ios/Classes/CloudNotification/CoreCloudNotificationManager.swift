@@ -255,9 +255,10 @@ final class CoreCloudNotificationManager {
 
   // MARK: - Backend senkronizasyonu (sadece kuyrukta)
 
-  /// [authorized] `false` yalnız VoIP token'ı olan uygulamada olur: cihaz arama push'u için kayıtlı
-  /// kalır, bildirim aboneliği kapalı gider.
-  private func desiredState(authorized: Bool = true) -> [String: Any] {
+  /// `subscribed` yalnız kullanıcının kendi abonelik tercihi (`setSubscribed`); bildirim iznine
+  /// bağlı değil. İzinsiz kayıt yalnız VoIP token'ı olan uygulamada olur: push servisi yalnız
+  /// `subscribed: true` cihaza gönderir, arama push'u (VoIP) izin istemez (backend 2026-11-27).
+  private func desiredState() -> [String: Any] {
     [
       "externalUserId": defaults.string(forKey: Key.externalUserId) ?? "",
       "email": defaults.string(forKey: Key.email) ?? "",
@@ -266,7 +267,7 @@ final class CoreCloudNotificationManager {
       "language": defaults.string(forKey: Key.language) ?? CoreCloudNotificationManager.deviceLanguage,
       "timezone": TimeZone.current.identifier,
       "appVersion": Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "",
-      "subscribed": (defaults.object(forKey: Key.subscribed) as? Bool ?? true) && authorized,
+      "subscribed": defaults.object(forKey: Key.subscribed) as? Bool ?? true,
     ]
   }
 
@@ -280,13 +281,14 @@ final class CoreCloudNotificationManager {
       return
     }
     // Bildirim izni yoksa cihaz kaydı beklenir. İstisna: VoIP token'ı olan uygulama (gelen arama
-    // push'u bildirim izni istemez); cihaz kaydolur, bildirim aboneliği kapalı gider.
+    // push'u bildirim izni istemez); cihaz `subscribed: true` kaydolur. Push servisi aboneliği
+    // kapalı cihaza arama push'u da göndermez; izin yokken iOS normal bildirimleri zaten göstermez.
     let authorized = CoreCloudNotificationManager.isAuthorizedSync()
     guard authorized || voipToken != nil else {
       CoreCloudNotificationLog.d("Bildirim izni yok, cihaz kaydı bekletiliyor")
       return
     }
-    let desired = desiredState(authorized: authorized)
+    let desired = desiredState()
     var deviceId = store.deviceId
 
     let needsRegister = deviceId == nil ||
