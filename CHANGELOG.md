@@ -1,3 +1,7 @@
+## 2.0.13 - 2026-11-27
+
+* CloudNotification (iOS): izinsiz cihaz VoIP için subscribed: true (#97)
+
 ## 2.0.12 - 2026-11-27
 
 * Bildirim gruplama: Android grup kancası ve özet bildirim (#98)

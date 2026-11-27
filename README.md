@@ -497,7 +497,7 @@ func pushRegistry(_ registry: PKPushRegistry, didInvalidatePushTokenFor type: PK
 ```
 
 - Dart `initialize`'dan önce çağrılabilir; gönderim `initialize`'dan sonra yapılır.
-- VoIP token'ı verilmiş uygulamada bildirim izni olmasa da cihaz kaydolur (arama push'u izin istemez); `subscribed` kapalı gider, izin verilince açılır. VoIP kullanmayan uygulamada davranış değişmez.
+- VoIP token'ı verilmiş uygulamada bildirim izni olmasa da cihaz `subscribed: true` kaydolur: arama push'u izin istemez ve push servisi aboneliği kapalı cihaza (arama push'u dahil) göndermez. İzin yokken iOS normal bildirimleri zaten göstermez. Abonelik yalnız `setSubscribed(false)` ile kapanır. VoIP kullanmayan uygulamada davranış değişmez.
 - Çıkışta ayrıca bir şey gerekmez.
 
 #### OneSignal'dan geçiş
