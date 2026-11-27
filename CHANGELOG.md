@@ -1,3 +1,7 @@
+## 2.0.12 - 2026-11-27
+
+* Bildirim gruplama: Android grup kancası ve özet bildirim (#98)
+
 ## 2.0.11 - 2026-11-26
 
 * CloudNotification (iOS): VoIP (PushKit) token kaydı (#95)

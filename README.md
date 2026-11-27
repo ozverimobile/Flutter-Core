@@ -463,6 +463,23 @@ CoreCloudNotification.User.pushSubscription.id; // panelde hedef seçilen cihaz 
   3. Uygulama ve extension aynı App Group'a sahip olmalı. Varsayılan ad OneSignal'ınkiyle aynıdır: `group.<bundle id>.onesignal`; farklıysa iki target'ın `Info.plist`'ine `CoreCloudNotificationAppGroup` yazılır.
   4. Test sunucusu `http://` olduğu sürece iki target'ın `Info.plist`'inde ATS istisnası gerekir.
 
+#### Bildirim gruplama (Android)
+
+iOS aynı `thread-id`'li bildirimleri kendisi gruplar (backend `aps.thread-id` gönderir). Android'de bildirimi SDK çizdiği için grubu uygulama söyler: `CoreCloudNotificationGrouping.resolver` bildirimin `data` alanlarından grup anahtarı döner, `null` dönerse bildirim gruplanmaz. Anahtar dönen bildirimler aynı grupta toplanır ve grup başına bir özet bildirim gösterilir; gruptaki son bildirim silinince özet de kalkar.
+
+Uygulama kapalıyken gelen push'ta da çalışsın diye `Application.onCreate` içinde verilir:
+
+```kotlin
+import com.flutter.flutter_core.cloudnotification.CoreCloudNotificationGrouping
+
+CoreCloudNotificationGrouping.resolver = { data ->
+    // Ör. sohbet mesajları sohbet kimliğiyle gruplanır.
+    if (data["type"] == "1201") data["data"] else null
+}
+```
+
+Resolver hata atarsa bildirim gruplanmadan gösterilir.
+
 #### Gelen arama push'u (VoIP, iOS)
 
 SDK PushKit'e kaydolmaz; Apple her VoIP push'ta aynı çağrıda CallKit'e arama raporlanmasını istediği için `PKPushRegistry` uygulamada kalır. Uygulama token'ı SDK'ya verir, SDK token'ı cihaz kaydına bağlar (`PUT /api/apps/{appId}/devices/{deviceId}/voip-token`; her yeni `POST /devices`'tan sonra yeniden):
