@@ -1,3 +1,23 @@
+## 2.0.14 - 2026-11-27
+
+* Core.updateStalenessDays: Play güncellemesinin cihaza kaç gündür sunulduğu (Android) (#99)
+
+## 2.0.13 - 2026-11-27
+
+* CloudNotification (iOS): izinsiz cihaz VoIP için subscribed: true (#97)
+
+## 2.0.12 - 2026-11-27
+
+* Bildirim gruplama: Android grup kancası ve özet bildirim (#98)
+
+## 2.0.11 - 2026-11-26
+
+* CloudNotification (iOS): VoIP (PushKit) token kaydı (#95)
+
+## 2.0.10 - 2026-11-19
+
+* Patch request type (#94)
+
 ## 2.0.9 - 2026-11-13
 
 * CoreListView: dispose sonrası post-frame callback çökmesi düzeltildi (#93)
